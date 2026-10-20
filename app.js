@@ -74,6 +74,7 @@ function setTab(tab) {
 function canGo(step) {
   if (step <= 1) return true;
   if (!state.report) return false;
+  if (state.report.blocked && step >= 3) return false;
   if (step === 4) return allDecided();
   return true;
 }
@@ -152,7 +153,7 @@ function normalizedView() {
     <div class="panel-body">
       <dl class="kv" style="grid-template-columns: 210px 1fr; margin-bottom:8px">${head}</dl>
       <p class="small muted" style="margin:0 0 8px">머리글 인식: ${cols}</p>
-      ${columnAlertBox(r)}
+      ${documentAlertBox(r)}${columnAlertBox(r)}
       ${warns.length ? `<ul class="warn-list">${warns.map((w) => `<li>${h(w)}</li>`).join('')}</ul>` : ''}
       <p class="small muted" style="margin:8px 0">셀에 마우스를 올리면 원문 위치(줄·열)와 원문 값을 보여 줍니다. 날짜는 ISO 형식, 직급은 약어, 국적은 ISO 3166-1 alpha-3로 맞춥니다.</p>
       <div class="table-wrap"><table class="grid fal-table"><thead><tr><th>6.<span class="fal">No.</span></th>${ROW_FIELDS.map((f) => `<th>${f.fal}. ${h(f.ko)}<span class="fal">${h(f.en)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
@@ -161,6 +162,11 @@ function normalizedView() {
 }
 
 // ---------------- 2단계 ----------------
+function documentAlertBox(r) {
+  const al = r.documentAlerts || [];
+  if (!al.length) return '';
+  return `<div class="flash flash-error" role="alert" style="margin-bottom:12px"><b>명부 판독 실패 — 이 결과로 승인할 수 없습니다</b><ul class="small" style="margin:4px 0 0 18px">${al.map((x) => `<li>${h(x.detail)}</li>`).join('')}</ul><div class="small">표의 머리글을 FAL 5 항목으로 지정하거나 원문을 사람이 직접 확인해야 합니다. 아래 목록에 변경이 적게 보여도 '변경 없음'이라는 뜻이 아닙니다.</div></div>`;
+}
 function columnAlertBox(r) {
   const al = r.columnAlerts || [];
   if (!al.length) return '';
@@ -216,7 +222,7 @@ function step2() {
     <span class="chip" style="cursor:default"><span class="dot cosmetic"></span>표기만 다름 <span class="n">${s.cosmetic}</span> <span class="muted small">접힘·경보 안 함</span></span>
     <span class="muted small">행 순서 이동 ${s.rowsMoved}명(경보 안 함) · 인물 대응 ${r.pairs.length}쌍</span>
   </div>
-  ${columnAlertBox(r)}
+  ${documentAlertBox(r)}${columnAlertBox(r)}
   <div class="compare">
     <div>
       <div class="panel">
@@ -231,7 +237,7 @@ function step2() {
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
     <span class="spacer"></span>
-    <button type="button" class="btn btn-primary" data-act="next">다음: 영향·승인</button>
+    <button type="button" class="btn btn-primary" data-act="next" ${r.blocked ? 'disabled title="명부 판독 실패로 승인 단계로 갈 수 없습니다"' : ''}>다음: 영향·승인</button>
   </div>`;
 }
 
@@ -430,12 +436,17 @@ function renderEval() {
   el.innerHTML = `
   <h2 class="section-title">평가 결과 — 대조·분류 엔진, 합성 데이터</h2>
   <p class="section-lead">합성 수정본 쌍 320개(개발 140 · 홀드아웃 H1·H2 60 · H3 60 · H4 60), 라벨된 실질 변경 ${total}건. 각 홀드아웃은 한 번만 씁니다. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 주장하지 않으며 후속 PoC 과제입니다.</p>
+  <h3 class="section-title">1. 개발에 쓰지 않은 서식 — 첫 측정</h3>
+  <div class="panel" style="margin-top:8px"><div class="panel-head"><h3>H1·H2 1회차(한국어 머리글 · 약어 머리글·미국식 날짜)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
+    <div class="panel-body">${metricTable(first, 'H1·H2 1회차')}
+    <p class="small" style="margin:8px 0 0">이 결과를 본 뒤 엔진 버그 3건(한쪽 버전에만 있는 열을 변경으로 잡음, 미국식 날짜의 입항일·메일 날짜 해석)을 고쳤으므로 H1·H2는 더 이상 깨끗한 홀드아웃이 아닙니다. 그래서 H3를 새로 만들었습니다.</p></div></div>
+  <h3 class="section-title" style="margin-top:24px">2. 처음 보는 서식 스트레스 테스트 — 약점 확인</h3>
   <div class="two-col">
-    <div class="panel"><div class="panel-head"><h3>대표값: H4 1회차(개선 후 처음 보는 서식)</h3><span class="muted small">쌍 ${h4.engine.pairs} · 오류 ${h4.engine.labels.suspect}</span></div>
+    <div class="panel"><div class="panel-head"><h3>H4 1회차(개선 후, 처음 보는 언어의 머리글)</h3><span class="muted small">쌍 ${h4.engine.pairs} · 오류 ${h4.engine.labels.suspect}</span></div>
       <div class="panel-body">${metricTable(h4, 'H4 1회차', true)}
-      <p class="small" style="margin:8px 0 0"><b>실패:</b> 독일어·인도네시아어 머리글에서 머리글 행 자체를 찾지 못해(머리글 행 판정에는 별칭 사전으로 5개 이상 인식이 필요) 명부를 0행으로 읽었습니다. 추정 매핑·열 단위 경보는 머리글 행을 찾은 뒤에만 동작하므로 쓰이지 못했습니다. 엔진은 메일 지시만 처리했고(R8 8건 탐지, 오경보 ${h4.engine.falseAlarms.total}건), 기준선도 같은 파서를 빌려 쓰므로 0건 탐지입니다. 검수 범위는 셀 수가 0이라 계산할 수 없습니다. 결과를 보고 고치지 않았습니다.</p>
+      <p class="small" style="margin:8px 0 0"><b>실패:</b> 독일어·인도네시아어 머리글에서 머리글 행 자체를 찾지 못해(머리글 행 판정에는 별칭 사전으로 5개 이상 인식이 필요) 명부를 0행으로 읽었습니다. 추정 매핑·열 단위 경보는 머리글 행을 찾은 뒤에만 동작하므로 쓰이지 못했습니다. 엔진은 메일 지시만 처리했고(R8 8건 탐지, 오경보 ${h4.engine.falseAlarms.total}건), 기준선도 같은 파서를 빌려 쓰므로 0건 탐지입니다. 검수 범위는 셀 수가 0이라 계산할 수 없습니다. 당시 엔진은 경고 문구만 띄우고 진행했습니다(조용한 실패). <b>이 결과를 본 뒤 명부를 읽지 못하면 승인 단계로 못 가게 막는 문서 단위 차단을 넣었습니다</b>(수치는 다시 재지 않음, <code>node eval/fail-loud-check.mjs</code>: 60쌍 모두 차단).</p>
       <p class="small muted" style="margin:6px 0 0">빠진 실제 오류(엔진): ${missed(h4)}. 설계: <code>eval/H4-spec.md</code></p></div></div>
-    <div class="panel"><div class="panel-head"><h3>H3 1회차(개선 전 처음 보는 서식)</h3><span class="muted small">쌍 ${h3.engine.pairs} · 오류 ${h3.engine.labels.suspect}</span></div>
+    <div class="panel"><div class="panel-head"><h3>H3 1회차(개선 전, 처음 보는 날짜·머리글)</h3><span class="muted small">쌍 ${h3.engine.pairs} · 오류 ${h3.engine.labels.suspect}</span></div>
       <div class="panel-body">${metricTable(h3, 'H3 1회차', true)}
       <p class="small" style="margin:8px 0 0">두 자리 연도 만료일을 판독 불가로 처리해 모든 만료일 칸에 R6 경보(오경보 대부분), 머리글 <code>Nacionalidad</code>·<code>Lugar de nacimiento</code> 미인식, 메일 "should be 값" 문형 미해석. 이 결과를 본 뒤 일반화 개선(두 자리 연도, 추정 매핑, 열 단위 경보, 정정 문형)을 했습니다.</p>
       <p class="small muted" style="margin:6px 0 0">빠진 실제 오류(엔진): ${missed(h3)}. 설계: <code>eval/H3-spec.md</code></p></div></div>
@@ -445,10 +456,7 @@ function renderEval() {
     <div class="panel"><div class="panel-head"><h3>오류 유형별 — H4 1회차</h3></div><div class="panel-body">${ruleTable(h4)}</div></div>
     <div class="panel"><div class="panel-head"><h3>오류 유형별 — H3 1회차</h3></div><div class="panel-body">${ruleTable(h3)}</div></div>
   </div>
-  <h3 class="section-title" style="margin-top:24px">참고값 (대표값 아님)</h3>
-  <div class="panel" style="margin-top:8px"><div class="panel-head"><h3>H1·H2 1회차(수정 전)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
-    <div class="panel-body">${metricTable(first, 'H1·H2 1회차')}
-    <p class="small" style="margin:8px 0 0">이 결과를 본 뒤 엔진 버그 3건(한쪽 버전에만 있는 열을 변경으로 잡음, 미국식 날짜의 입항일·메일 날짜 해석)을 고쳤으므로 H1·H2는 더 이상 깨끗한 홀드아웃이 아닙니다. 그래서 H3를 새로 만들었습니다.</p></div></div>
+  <h3 class="section-title" style="margin-top:24px">3. 참고값 (결과를 본 뒤 고친 코드로 다시 잰 값)</h3>
   <div class="two-col" style="margin-top:16px">
     <div class="panel"><div class="panel-head"><h3>홀드아웃 H1·H2 — 버그 수정 후 재실행(규칙 수정에 사용됨, 참고값)</h3></div><div class="panel-body">${metricTable(cur, 'H1·H2 수정 후', true)}<p class="small muted" style="margin:8px 0 0">기준선1 행 = 행 번호 대조, 기준선2 ID키 = 신분증번호 키 대조. 머리글 별칭 사전은 고치지 않았습니다.</p></div></div>
     <div class="panel"><div class="panel-head"><h3>개발 세트 (튜닝에 사용, 참고값)</h3></div><div class="panel-body">${metricTable(dev, '개발 세트', true)}<p class="small muted" style="margin:8px 0 0">규칙과 생성기를 같은 사람이 만들었기 때문에 개발 세트 수치는 낙관적입니다.</p></div></div>
@@ -460,7 +468,7 @@ function renderEval() {
       <li>오류 유형·비율은 설계자가 정했습니다. 실제 현장 오류 분포가 아닙니다.</li>
       <li>기준선은 엔진의 머리글 인식을 빌려 쓴 유리한 조건입니다(사람이 열을 맞춘 엑셀 대조).</li>
       <li>머리글 겹침(정규화 기준): H2는 12개 중 3개(LAST NAME·BIRTH PLACE·SEX), H3는 1개(Doc. Type)가 개발용과 같고, H4는 겹치지 않습니다.</li>
-      <li>머리글 행 판정이 별칭 사전에 의존해, 처음 보는 언어의 머리글(H4)에서는 명부 전체를 읽지 못합니다.</li>
+      <li>머리글 행 판정이 별칭 사전에 의존해, 처음 보는 언어의 머리글(H4)에서는 명부 전체를 읽지 못합니다. 지금은 이 경우 진행을 막고 사람에게 넘기며, 실서비스는 LLM 추출로 머리글을 FAL 5 항목에 매핑하고 회사별 서식을 PoC 초기에 등록합니다.</li>
     </ul></div></div>
     <div class="panel"><div class="panel-head"><h3>재현 방법</h3></div><div class="panel-body small">
       <p><code class="cmd">node eval/run.mjs --split all</code> → <code>docs/eval-result.json</code>, <code>docs/eval-result.md</code> (개발·H1·H2, 현재 코드, 시드 ${ev.current.seed})</p>

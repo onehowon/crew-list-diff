@@ -205,8 +205,8 @@ export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
 const P = (x) => (x == null ? '—' : `${(x * 100).toFixed(1)}%`);
 const N = (x, d = 2) => (x == null ? '—' : Number(x).toFixed(d));
 export const SECTION_TITLE = {
-  holdout4: 'H4 1회차(개선 후 처음 보는 서식) — 대표값',
-  holdout3: 'H3 1회차(개선 전 처음 보는 서식)',
+  holdout4: 'H4 1회차(개선 후, 처음 보는 언어의 머리글)',
+  holdout3: 'H3 1회차(개선 전, 처음 보는 날짜·머리글)',
   holdoutFirst: 'H1·H2 1회차(수정 전)',
   holdout: '홀드아웃 H1·H2 — 버그 수정 후 재실행(규칙 수정에 사용됨, 참고값)',
   dev: '개발 세트 (튜닝에 사용, 참고값)',
@@ -281,8 +281,14 @@ export function assembleReport(current, { h4 = null, h3 = null, first = null } =
   L.push('- 검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 항상 "검수 대상에서 빠진 실제 오류 수"와 함께 본다.');
   L.push('- 각 홀드아웃은 한 번만 쓴다. `node eval/run.mjs --split h3|h4`는 결과 파일이 있으면 재실행을 거부한다. 개발·H1·H2 참고값은 `node eval/run.mjs --split all`(현재 코드).');
   L.push('');
+  if (first) {
+    L.push('# 1. 개발에 쓰지 않은 서식 — H1·H2 1회차 (수정 전 첫 측정)', '');
+    L.push('H1(한국어 머리글)·H2(약어 머리글·미국식 날짜). 원본 docs/eval-holdout-first-run.json. 이 결과를 본 뒤 버그 3건을 고쳤으므로 이후 H1·H2 재실행 값은 참고값이다.', '');
+    L.push(toMarkdown({ ...first, splits: { holdout: first.splits.holdout }, parserWarnings: { holdout: first.parserWarnings.holdout } }, { header: false, titles: { holdout: SECTION_TITLE.holdoutFirst } }));
+  }
   if (h4 && h3) {
-    L.push('# 대표값: H4 1회차(개선 후 처음 보는 서식) / 바로 아래 H3 1회차(개선 전 처음 보는 서식)', '');
+    L.push('# 2. 처음 보는 서식 스트레스 테스트 — H3·H4 각 1회차', '');
+    L.push('- H3: 두 자리 연도·스페인어 혼합 머리글. 실제 오류는 거의 놓치지 않았지만(92건 중 1건) 판독 불가 경보가 셀마다 쏟아졌다(쌍당 18.68).', '- H3를 본 뒤 일반화 개선(두 자리 연도, 열 단위 경보, 값 모양 추정 매핑, 메일 정정 문형)을 하고 새 서식 H4로 1회 쟀다.', '- H4: 독일어·인도네시아어 머리글. 머리글 행을 찾지 못해 60쌍 모두 명부를 0행으로 읽었다. 당시 엔진은 경고 문구만 띄우고 진행했다(조용한 실패).', '- H4를 본 뒤 문서 단위 판독 실패 차단을 추가했다(lib/engine.js documentAlerts). 성능 수치는 다시 계산하지 않았고, 차단 동작만 `node eval/fail-loud-check.mjs`로 확인한다: H4 60쌍 모두 차단, 판독 실패인데 통과 0.', '- 결론: 규칙 기반 머리글 인식은 처음 보는 언어·서식에 약하다. 실제 서비스는 LLM 추출로 머리글을 FAL 5 항목에 매핑하고, 회사별 서식을 PoC 초기에 등록하며, 판독 실패는 반드시 사람에게 넘긴다.', '');
     L.push(compareTable(h4, h3), '');
   }
   if (h4) {
@@ -293,8 +299,8 @@ export function assembleReport(current, { h4 = null, h3 = null, first = null } =
     L.push(`원본: docs/eval-H3-first-run.json (시드 ${h3.h3Seed}, 실행 ${h3.generatedAt}), 설계 eval/H3-spec.md. 이 결과를 본 뒤 일반화 개선(e7d1d41)을 했음.`, '');
     L.push(toMarkdown(h3, { header: false }));
   }
-  L.push('# 참고값 (대표값 아님)', '');
-  if (first) {
+  L.push('# 3. 참고값', '');
+  if (false) {
     L.push('H1·H2 1회차(수정 전) 원본: docs/eval-holdout-first-run.json. 이 결과를 본 뒤 엔진 버그 3건을 고쳤으므로 H1·H2는 더 이상 깨끗한 홀드아웃이 아님.', '');
     L.push(toMarkdown({ ...first, splits: { holdout: first.splits.holdout }, parserWarnings: { holdout: first.parserWarnings.holdout } }, { header: false, titles: { holdout: SECTION_TITLE.holdoutFirst } }));
   }
