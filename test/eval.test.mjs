@@ -52,3 +52,14 @@ test('홀드아웃 H3: 결정적, 쌍 60, 머리글은 기존과 1개(Doc. Type)
   const old = new Set(['D1', 'D2', 'D3', 'H1', 'H2'].flatMap((id) => LAYOUTS[id].cols.map(([, h]) => normHeader(h))));
   assert.deepEqual(LAYOUTS.H3.cols.map(([, h]) => normHeader(h)).filter((x) => old.has(x)), ['doctype']);
 });
+
+test('홀드아웃 H4: 결정적, 쌍 60, 머리글이 기존 레이아웃과 겹치지 않음, 열 순서는 쌍마다 다름', async () => {
+  const { generateH4 } = await import('../eval/gen.mjs');
+  assert.equal(JSON.stringify(generateH4()), JSON.stringify(generateH4()));
+  const ds = generateH4();
+  assert.equal(ds.pairs.length, 60);
+  const old = new Set(['D1', 'D2', 'D3', 'H1', 'H2', 'H3'].flatMap((id) => LAYOUTS[id].cols.map(([, h]) => normHeader(h))));
+  assert.deepEqual(LAYOUTS.H4.cols.map(([, h]) => normHeader(h)).filter((x) => old.has(x)), []);
+  const heads = new Set(ds.pairs.map((p) => p.a.split('\n').find((l) => l.includes('Nachname'))));
+  assert.ok(heads.size > 30);
+});

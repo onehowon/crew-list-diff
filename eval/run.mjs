@@ -5,7 +5,7 @@
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generate, generateH3, stats, DEFAULT_SEED, H3_SEED } from './gen.mjs';
+import { generate, generateH3, generateH4, stats, DEFAULT_SEED, H3_SEED, H4_SEED } from './gen.mjs';
 import { compareCrewLists } from '../lib/engine.js';
 import { baselineRowNumber, baselineIdKey } from './baselines.mjs';
 
@@ -180,10 +180,11 @@ function finalize(agg, kind) {
 export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
   const ds = generate(seed);
   const h3 = splits.includes('holdout3') ? generateH3(H3_SEED) : null;
-  const result = { seed, h3Seed: h3 ? H3_SEED : undefined, generatedAt: null, splits: {}, dataset: { ...stats(ds), ...(h3 ? stats(h3) : {}) } };
+  const h4 = splits.includes('holdout4') ? generateH4(H4_SEED) : null;
+  const result = { seed, h3Seed: h3 ? H3_SEED : undefined, h4Seed: h4 ? H4_SEED : undefined, generatedAt: null, splits: {}, dataset: { ...stats(ds), ...(h3 ? stats(h3) : {}), ...(h4 ? stats(h4) : {}) } };
   const warnSample = {};
   for (const split of splits) {
-    const pairs = split === 'holdout3' ? h3.pairs : ds.pairs.filter((p) => p.split === split);
+    const pairs = split === 'holdout3' ? h3.pairs : split === 'holdout4' ? h4.pairs : ds.pairs.filter((p) => p.split === split);
     const E = newAgg(), B1 = newAgg(), B2 = newAgg();
     const warns = new Map();
     for (const pair of pairs) {
@@ -204,7 +205,8 @@ export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
 const P = (x) => (x == null ? '—' : `${(x * 100).toFixed(1)}%`);
 const N = (x, d = 2) => (x == null ? '—' : Number(x).toFixed(d));
 export const SECTION_TITLE = {
-  holdout3: '홀드아웃 H3 1회차 (대표값)',
+  holdout4: 'H4 1회차(개선 후 처음 보는 서식) — 대표값',
+  holdout3: 'H3 1회차(개선 전 처음 보는 서식)',
   holdoutFirst: 'H1·H2 1회차(수정 전)',
   holdout: '홀드아웃 H1·H2 — 버그 수정 후 재실행(규칙 수정에 사용됨, 참고값)',
   dev: '개발 세트 (튜닝에 사용, 참고값)',
@@ -281,15 +283,17 @@ const readJson = (f) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : n
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
   const split = arg('--split', 'dev');
-  // h3: 깨끗한 홀드아웃 H3 1회 실행 전용. 이미 결과 파일이 있으면 다시 실행하지 않는다(재실행·덮어쓰기 방지).
-  if (split === 'h3') {
-    const out = join(ROOT, 'docs/eval-H3-first-run.json');
-    if (existsSync(out) && !process.argv.includes('--force-rerun')) { console.error('H3 1회차 결과가 이미 있습니다: docs/eval-H3-first-run.json (재실행 금지)'); process.exit(2); }
-    const res = runEval({ splits: ['holdout3'] });
+  // h3·h4: 깨끗한 홀드아웃 1회 실행 전용. 이미 결과 파일이 있으면 다시 실행하지 않는다(재실행·덮어쓰기 방지).
+  const ONCE = { h3: { split: 'holdout3', file: 'eval-H3-first-run' }, h4: { split: 'holdout4', file: 'eval-H4-first-run' } };
+  if (ONCE[split]) {
+    const { split: sp, file } = ONCE[split];
+    const out = join(ROOT, `docs/${file}.json`);
+    if (existsSync(out)) { console.error(`${split.toUpperCase()} 1회차 결과가 이미 있습니다: docs/${file}.json (재실행 금지)`); process.exit(2); }
+    const res = runEval({ splits: [sp] });
     res.generatedAt = new Date().toISOString();
-    const md = toMarkdown(res, { titles: { holdout3: SECTION_TITLE.holdout3 } });
+    const md = toMarkdown(res, { titles: { [sp]: SECTION_TITLE[sp] } });
     writeFileSync(out, JSON.stringify(res, null, 2) + '\n');
-    writeFileSync(join(ROOT, 'docs/eval-H3-first-run.md'), md);
+    writeFileSync(join(ROOT, `docs/${file}.md`), md);
     console.log(md);
     process.exit(0);
   }

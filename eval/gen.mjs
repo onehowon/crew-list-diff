@@ -82,6 +82,9 @@ export function fmtDate(iso, fmt) {
     case 'YMD.': return `${y}.${pad(m)}.${pad(d)}`;
     case 'MDY/': return `${pad(m)}/${pad(d)}/${y}`;
     case 'YMD/': return `${y}/${pad(m)}/${pad(d)}`;
+    case 'DMY-YY': return `${pad(d)}-${pad(m)}-${String(y).slice(2)}`;
+    case 'DMY-': return `${pad(d)}-${pad(m)}-${y}`;
+    case 'YMDc': return `${y}${pad(m)}${pad(d)}`;
     case 'DMONYY': return `${pad(d)} ${MON[m - 1]} ${String(y).slice(2)}`;
     default: throw new Error(fmt);
   }
@@ -122,8 +125,14 @@ export const LAYOUTS = {
     pre: (h) => [[`Vessel Name: ${h.ship}`], [`Voyage: ${h.voy}`], [`ETA: ${fmtDate(h.date, 'YMD/')}`], [`Port of Arrival: ${h.port}`]],
     cols: [['no', '#'], ['rank', 'Rank (Cargo)'], ['familyName', '7. Family name (Apellido)'], ['givenNames', '8. Given names (Nombres)'], ['nationality', 'Nacionalidad'], ['gender', 'Sexo'], ['dob', 'Date of Birth (Fecha de nac.)'], ['pob', 'Lugar de nacimiento'], ['idType', 'Doc. Type'], ['idNumber', 'Passport/SIRB No.'], ['idIssuer', 'Issuing State'], ['idExpiry', 'Expiry date']],
   },
+  // ---- 홀드아웃 H4: eval/H4-spec.md (일반화 개선 후 설계, 1회만 실행). 열 순서는 쌍마다 무작위 ----
+  H4: {
+    id: 'H4', split: 'holdout4', delim: ';', date: 'DMY-YY', dateExp: 'YMDc', rank: 'abbr', gender: 'LP', idType: 'de', mail: 'id4', shuffleCols: true,
+    pre: (h) => [[`Schiffsname: ${h.ship}`], [`Reise-Nr.: ${h.voy}`], [`ETA: ${fmtDate(h.date, 'DMY-').replace(/-/g, '.')}`], [`Hafen: ${h.port}`]],
+    cols: [['no', 'Lfd. Nr.'], ['familyName', 'Nachname'], ['givenNames', 'Vorname(n)'], ['rank', 'Dienstgrad / Jabatan'], ['nationality', 'Staatsangehörigkeit'], ['dob', 'Geburtsdatum'], ['pob', 'Geburtsort / Tempat lahir'], ['gender', 'Geschlecht'], ['idType', 'Ausweisart'], ['idNumber', 'Nomor Paspor'], ['idIssuer', 'Ausstellungsstaat'], ['idExpiry', 'Gültig bis / Berlaku s.d.']],
+  },
 };
-export const SPLIT_LAYOUTS = { dev: ['D1', 'D2', 'D3'], holdout: ['H1', 'H2'], holdout3: ['H3'] };
+export const SPLIT_LAYOUTS = { dev: ['D1', 'D2', 'D3'], holdout: ['H1', 'H2'], holdout3: ['H3'], holdout4: ['H4'] };
 
 function fmtRank(c, style) {
   if (style === 'full') return RANK_FULL[c];
@@ -133,12 +142,14 @@ function fmtRank(c, style) {
 function fmtGender(g, style) {
   if (style === 'Male') return g === 'M' ? 'Male' : 'Female';
   if (style === 'ko') return g === 'M' ? '남' : '여';
+  if (style === 'LP') return g === 'M' ? 'L' : 'P';
   return g;
 }
 function fmtIdType(t, style) {
   if (style === 'ko') return t === 'PASSPORT' ? '여권' : '선원수첩';
   if (style === 'short') return t === 'PASSPORT' ? 'PP' : 'SB';
   if (style === 'sirb') return t === 'PASSPORT' ? 'PASSPORT' : 'SIRB';
+  if (style === 'de') return t === 'PASSPORT' ? 'Reisepass' : 'Seefahrtsbuch';
   return t === 'PASSPORT' ? 'Passport' : "Seaman's book";
 }
 export function fmtCell(f, p, L) {
@@ -226,15 +237,17 @@ function makeRoster(seed, idx) {
 function mailName(p, style) {
   if (style === 'en2') return `${title(p.givenNames)} ${title(p.familyName)}`;
   if (style === 'en3') return `${p.givenNames} ${p.familyName}`;
+  if (style === 'id4') return `${p.familyName}, ${p.givenNames}`;
   return `${p.familyName} ${p.givenNames}`;
 }
 const title = (s) => s.toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
 function mailRank(c, style) { return style === 'en2' ? RANK_FULL[c] : c; }
-function mailDate(iso, style) { return style === 'ko' ? fmtDate(iso, 'YMD.') : style === 'en2' ? fmtDate(iso, 'MDY/') : style === 'en3' ? fmtDate(iso, 'YMD/') : iso; }
+function mailDate(iso, style) { return style === 'ko' ? fmtDate(iso, 'YMD.') : style === 'en2' ? fmtDate(iso, 'MDY/') : style === 'en3' ? fmtDate(iso, 'YMD/') : style === 'id4' ? fmtDate(iso, 'DMY-') : iso; }
 const FIELD_WORD = {
   en1: { dob: 'date of birth', idNumber: 'passport number', givenNames: 'given name', pob: 'place of birth', idExpiry: 'passport expiry date' },
   en2: { dob: 'birth date', idNumber: 'travel document number', givenNames: 'first name', pob: 'birthplace', idExpiry: 'document expiry' },
   en3: { dob: 'DOB', idNumber: 'passport no.', givenNames: 'first name', pob: 'place of birth', idExpiry: 'passport expiry' },
+  id4: { dob: 'tanggal lahir (DOB)', idNumber: 'no. paspor', givenNames: 'nama depan', pob: 'tempat lahir', idExpiry: 'masa berlaku paspor' },
   ko: { dob: '생년월일', idNumber: '여권번호', givenNames: '이름', pob: '출생지', idExpiry: '여권 만료일' },
 };
 function mailValue(f, v, style, r) {
@@ -246,23 +259,27 @@ const T = {
     en1: (p, h, r) => r.pick([`${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')} will sign off at ${h.port} on ${mailDate(addDays(h.date, 1), 'en1')}.`, `Please note ${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')} to disembark at ${h.port} for repatriation.`]),
     en2: (p, h) => `OFF-SIGNER: ${mailRank(p.rank, 'en2')} ${mailName(p, 'en2')} - disembarking ${title(h.port)} ${mailDate(addDays(h.date, 1), 'en2')}.`,
     ko: (p, h) => `${p.rank} ${mailName(p, 'ko')} ${h.port}에서 하선 예정입니다.`,
+    id4: (p, h) => `Mohon dicatat: ${p.rank} ${mailName(p, 'id4')} sign off di ${h.port}.`,
     en3: (p, h) => `Pls be advised that ${p.rank} ${mailName(p, 'en3')} will disembark at ${h.port}.`,
   },
   sign_on: {
     en1: (p, h, r) => r.pick([`${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')} (passport ${p.idNumber}) will join the vessel at ${h.port}.`, `New crew: ${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')}, ${p.nationality}, to sign on at ${h.port}.`]),
     en2: (p, h) => `ON-SIGNER: ${mailRank(p.rank, 'en2')} ${mailName(p, 'en2')}, PP NO. ${p.idNumber}, embarking ${title(h.port)}.`,
     ko: (p, h) => `${p.rank} ${mailName(p, 'ko')}(여권 ${p.idNumber}) ${h.port}에서 승선합니다.`,
+    id4: (p, h) => `Crew baru: ${p.rank} ${mailName(p, 'id4')} (paspor ${p.idNumber}) join di ${h.port}.`,
     en3: (p) => `Joining: ${p.rank} ${mailName(p, 'en3')}, PPT ${p.idNumber}, ${p.nationality}.`,
   },
   rank_change: {
     en1: (p, o, n, r) => r.pick([`${mailName(p, 'en1')} promoted from ${o} to ${n} with effect from arrival.`, `Rank change: ${mailName(p, 'en1')} ${o} -> ${n}.`]),
     en2: (p, o, n) => `${mailName(p, 'en2')} upgraded from ${RANK_FULL[o]} to ${RANK_FULL[n]}.`,
     ko: (p, o, n) => `${mailName(p, 'ko')} 직급 변경: ${o} → ${n}`,
+    id4: (p, o, n) => `Kenaikan jabatan ${mailName(p, 'id4')}: ${o} menjadi ${n}.`,
     en3: (p, o, n) => `Promotion - ${mailName(p, 'en3')} from ${o} to ${n}.`,
   },
   correction: {
     en1: (p, f, v, r) => r.pick([`Please correct ${FIELD_WORD.en1[f]} of ${mailName(p, 'en1')} to ${v}.`, `${FIELD_WORD.en1[f][0].toUpperCase() + FIELD_WORD.en1[f].slice(1)} of ${mailName(p, 'en1')} should read ${f === 'givenNames' || f === 'pob' ? `"${v}"` : v}.`]),
     en2: (p, f, v) => `Kindly amend ${FIELD_WORD.en2[f]} for ${mailName(p, 'en2')} to read ${v}.`,
+    id4: (p, f, v, r) => (r.chance(0.5) ? `Mohon koreksi ${FIELD_WORD.id4[f]} ${mailName(p, 'id4')} menjadi ${v}.` : `Koreksi data ${p.familyName} ${p.givenNames}, ${FIELD_WORD.id4[f]}: ${mailValue(f, p[f], 'id4', r)} -> ${v}`),
     en3: (p, f, v) => `Kindly correct the ${FIELD_WORD.en3[f]} of ${mailName(p, 'en3')}, should be ${v}.`,
     ko: (p, f, v) => `${mailName(p, 'ko')} ${FIELD_WORD.ko[f]} ${f === 'givenNames' || f === 'pob' ? `"${v}"` : v}(으)로 정정 바랍니다.`.replace('(으)로', /[가-힣]$/.test(v) ? '으로' : '로'),
   },
@@ -270,6 +287,7 @@ const T = {
 const NOISE = {
   en1: { head: (h) => ['Dear Agent,', '', `Please find attached the revised crew list for ${h.ship} V.${h.voy}.`], extra: (h) => `Joining crew will arrive by air on ${addDays(h.date, -1)}.`, none: 'No crew change at this port.', tail: ['', 'Best regards,', 'Crewing Dept. (demo)'] },
   en2: { head: () => ['Good day,', '', 'Attached pls find updated crew list.'], extra: () => 'Crew change subject to immigration clearance.', none: 'No crew change.', tail: ['', 'Rgds,', 'Manning (demo)'] },
+  id4: { head: (h) => ['Selamat siang Bapak/Ibu,', '', `Terlampir crew list revisi untuk ${h.ship}.`], extra: (h) => `Crew change di ${h.port} sesuai jadwal.`, none: 'Tidak ada pergantian crew.', tail: ['', 'Terima kasih,', 'Crewing (demo)'] },
   en3: { head: () => ['Hi Sir/Maam,', '', 'Pls see attached crew list.'], extra: () => 'Crew change via Manila, flight details to follow.', none: 'No crew change this port.', tail: ['', 'Thanks and regards,', 'Crewing (demo)'] },
   ko: { head: (h) => ['대리점 담당자님 안녕하세요.', '', `${h.ship} ${h.voy} 항차 수정 선원명부 송부드립니다.`], extra: () => '교대 인원은 항공편으로 전날 도착합니다.', none: '이번 기항에는 선원 교대가 없습니다.', tail: ['', '감사합니다.', '선원관리팀 (데모)'] },
 };
@@ -284,7 +302,9 @@ function makePair(seed, i, roster, split) {
   const r = new Rng(seed * 17 + i * 7919 + 3);
   const lays = SPLIT_LAYOUTS[split];
   const LA = LAYOUTS[lays[i % lays.length]];
-  const LB = lays.length > 1 && r.chance(0.2) ? LAYOUTS[r.pick(lays.filter((x) => x !== LA.id))] : LA;
+  let LB = lays.length > 1 && r.chance(0.2) ? LAYOUTS[r.pick(lays.filter((x) => x !== LA.id))] : LA;
+  let LAx = LA;
+  if (LA.shuffleCols) { LAx = { ...LA, cols: r.shuffle(LA.cols) }; LB = LAx; }
   const style = LA.mail;
   const h = roster.head;
   const taken = new Set(roster.taken);
@@ -477,7 +497,7 @@ function makePair(seed, i, roster, split) {
   lines.push(...N.tail);
   for (const d of dirs) for (const l of d.labels) { l.line = d.line; if (!l.key) l.key = `R8|L${d.line}`; }
 
-  const ra = renderList(LA, h, A.map((p) => ({ p, ov: {} })));
+  const ra = renderList(LAx, h, A.map((p) => ({ p, ov: {} })));
   const rb = renderList(LB, h, Bfinal);
   const rowPidsA = A.map((p) => p.pid);
   const rowPidsB = Bfinal.map((e) => e.p.pid);
@@ -494,7 +514,7 @@ function makePair(seed, i, roster, split) {
     }
   });
   return {
-    id: `${split === 'holdout3' ? 'h3-' : ''}pair-${String(i + 1).padStart(3, '0')}`, split, roster: roster.idx, layoutA: LA.id, layoutB: LB.id, mailStyle: style, shuffled,
+    id: `${split === 'holdout3' ? 'h3-' : split === 'holdout4' ? 'h4-' : ''}pair-${String(i + 1).padStart(3, '0')}`, split, roster: roster.idx, layoutA: LA.id, layoutB: LB.id, mailStyle: style, shuffled,
     a: ra.text, b: rb.text, mail: lines.join('\n') + '\n', rowPidsA, rowPidsB, labels, cosmetic, events, cellsB: rowPidsB.length * FIELDS.length,
   };
 }
@@ -515,6 +535,14 @@ export const H3_SEED = 20261101;
 export function generateH3(seed = H3_SEED) {
   const rosters = Array.from({ length: 36 }, (_, k) => makeRoster(seed, k));
   const pairs = Array.from({ length: 60 }, (_, i) => makePair(seed, i, rosters[i % 36], 'holdout3'));
+  return { seed, rosters: rosters.length, pairs };
+}
+
+// 홀드아웃 H4: 새 시드·새 명부 36개·쌍 60개 (eval/H4-spec.md)
+export const H4_SEED = 20261115;
+export function generateH4(seed = H4_SEED) {
+  const rosters = Array.from({ length: 36 }, (_, k) => makeRoster(seed, k));
+  const pairs = Array.from({ length: 60 }, (_, i) => makePair(seed, i, rosters[i % 36], 'holdout4'));
   return { seed, rosters: rosters.length, pairs };
 }
 
