@@ -5,7 +5,7 @@
   "description": "선원명부(IMO FAL Form 5) 변경대조 도우미 PoC (데모, 합성 데이터)",
   "type": "module",
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test test/*.test.mjs",
     "gen": "node eval/gen.mjs",
     "eval": "node eval/run.mjs",
     "serve": "python3 -m http.server 8810"
