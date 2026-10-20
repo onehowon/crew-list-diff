@@ -396,6 +396,7 @@ function metricRows(r) {
     row('검수 범위 비율', (x) => pc(x.review.ratio)),
     row(`검수 대상에서 빠진 실제 오류 수 (전체 ${e.review.errorsTotal})`, (x) => String(x.review.missedErrorsOutside), 'key'),
     row('근거 연결률', (x) => (x.evidence ? pc(x.evidence.rate) : '—')),
+    row('쌍당 열 단위 서식 경보 (셀 오경보와 별도)', (x) => (x.columnAlerts ? `${x.columnAlerts.perPair.toFixed(2)} (${x.columnAlerts.total})` : x.evidence ? '— (도입 전)' : '—')),
   ].join('');
 }
 function metricTable(r, caption, compact = false) {

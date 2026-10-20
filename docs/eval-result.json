@@ -1,6 +1,6 @@
 {
   "seed": 20261020,
-  "generatedAt": "2026-10-20T08:21:52.016Z",
+  "generatedAt": "2026-10-20T08:27:26.571Z",
   "splits": {
     "dev": {
       "engine": {
@@ -119,6 +119,10 @@
           "suspect": 0
         },
         "items": 749,
+        "columnAlerts": {
+          "total": 0,
+          "perPair": 0
+        },
         "missedChangesSample": []
       },
       "baselineRow": {
@@ -266,10 +270,10 @@
         },
         "cosmeticCells": 993,
         "substantiveRecall": {
-          "detected": 323,
+          "detected": 326,
           "total": 326,
-          "missed": 3,
-          "rate": 0.99079754601227
+          "missed": 0,
+          "rate": 1
         },
         "falseAlarms": {
           "total": 0,
@@ -277,13 +281,11 @@
           "cosmeticAlarms": 0
         },
         "review": {
-          "units": 158,
-          "perPair": 2.6333333333333333,
-          "ratio": 0.012610743076063533,
-          "missedErrorsOutside": 3,
-          "missedErrorsByRule": {
-            "R7": 3
-          },
+          "units": 161,
+          "perPair": 2.683333333333333,
+          "ratio": 0.01285018756484955,
+          "missedErrorsOutside": 0,
+          "missedErrorsByRule": {},
           "errorsTotal": 84
         },
         "perRule": {
@@ -325,9 +327,9 @@
           },
           "R7": {
             "n": 8,
-            "detected": 5,
-            "asSuspect": 5,
-            "ruleCorrect": 5
+            "detected": 8,
+            "asSuspect": 8,
+            "ruleCorrect": 8
           },
           "R8": {
             "n": 12,
@@ -337,11 +339,11 @@
           }
         },
         "suspect": {
-          "tp": 81,
+          "tp": 84,
           "fp": 1,
-          "fn": 3,
-          "precision": 0.9878048780487805,
-          "recall": 0.9642857142857143
+          "fn": 0,
+          "precision": 0.9882352941176471,
+          "recall": 1
         },
         "expected": {
           "n": 167,
@@ -355,14 +357,13 @@
         "confusion": {
           "expected>expected": 165,
           "check>check": 75,
-          "suspect>suspect": 81,
-          "suspect>none": 3,
+          "suspect>suspect": 84,
           "expected>suspect": 1,
           "expected>check": 1
         },
         "evidence": {
-          "items": 323,
-          "ok": 323,
+          "items": 326,
+          "ok": 326,
           "rate": 1
         },
         "matching": {
@@ -375,12 +376,12 @@
           "expected": 8,
           "suspect": 0
         },
-        "items": 323,
-        "missedChangesSample": [
-          "pair-155 R98-17|nationality (suspect R7)",
-          "pair-160 R103-6|nationality (suspect R7)",
-          "pair-194 R101-14|nationality (suspect R7)"
-        ]
+        "items": 326,
+        "columnAlerts": {
+          "total": 0,
+          "perPair": 0
+        },
+        "missedChangesSample": []
       },
       "baselineRow": {
         "pairs": 60,
@@ -393,24 +394,23 @@
         },
         "cosmeticCells": 993,
         "substantiveRecall": {
-          "detected": 311,
+          "detected": 313,
           "total": 326,
-          "missed": 15,
-          "rate": 0.9539877300613497
+          "missed": 13,
+          "rate": 0.9601226993865031
         },
         "falseAlarms": {
-          "total": 4255,
-          "perPair": 70.91666666666667,
+          "total": 4284,
+          "perPair": 71.4,
           "cosmeticAlarms": 653
         },
         "review": {
-          "units": 5402,
-          "perPair": 90.03333333333333,
-          "ratio": 0.43115970947402027,
-          "missedErrorsOutside": 14,
+          "units": 5460,
+          "perPair": 91,
+          "ratio": 0.4357889695905499,
+          "missedErrorsOutside": 12,
           "missedErrorsByRule": {
-            "R8": 12,
-            "R7": 2
+            "R8": 12
           },
           "errorsTotal": 84
         },
@@ -441,7 +441,7 @@
           },
           "R7": {
             "n": 8,
-            "detected": 6
+            "detected": 8
           },
           "R8": {
             "n": 12,
@@ -460,24 +460,23 @@
         },
         "cosmeticCells": 993,
         "substantiveRecall": {
-          "detected": 312,
+          "detected": 314,
           "total": 326,
-          "missed": 14,
-          "rate": 0.9570552147239264
+          "missed": 12,
+          "rate": 0.9631901840490797
         },
         "falseAlarms": {
-          "total": 1126,
-          "perPair": 18.766666666666666,
+          "total": 955,
+          "perPair": 15.916666666666666,
           "cosmeticAlarms": 955
         },
         "review": {
-          "units": 1463,
-          "perPair": 24.383333333333333,
-          "ratio": 0.11676909569798069,
-          "missedErrorsOutside": 14,
+          "units": 1294,
+          "perPair": 21.566666666666666,
+          "ratio": 0.10328038949636842,
+          "missedErrorsOutside": 12,
           "missedErrorsByRule": {
-            "R8": 12,
-            "R7": 2
+            "R8": 12
           },
           "errorsTotal": 84
         },
@@ -508,7 +507,7 @@
           },
           "R7": {
             "n": 8,
-            "detected": 6
+            "detected": 8
           },
           "R8": {
             "n": 12,
@@ -583,10 +582,13 @@
       "10번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×1"
     ],
     "holdout": [
-      "알 수 없는 열 머리글: \"NAT'Y\" (4열) ×63",
-      "알 수 없는 열 머리글: \"TRAVEL DOC.\" (9열) ×63",
-      "FAL 5 항목 열 없음: nationality ×63",
-      "FAL 5 항목 열 없음: idType ×63"
+      "추정 매핑: \"NAT'Y\" (4열) → nationality (값 모양: ISO 국가 코드) ×63",
+      "추정 매핑: \"TRAVEL DOC.\" (9열) → idType (값 모양: 신분증 종류 값) ×63",
+      "6번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×5",
+      "8번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×4",
+      "7번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×4",
+      "9번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×1",
+      "5번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×1"
     ]
   }
 }

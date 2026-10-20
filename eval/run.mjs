@@ -50,7 +50,7 @@ export function evaluateEngine(pair) {
   const rep = compareCrewLists({ a: pair.a, b: pair.b, mail: pair.mail });
   const preds = rep.items.map((it) => ({ key: engineItemKey(pair, it), cls: it.class, rules: (it.rules || []).map((r) => r.id), line: it.directive?.line ?? null, ev: evidenceOk(pair, rep, it), kind: it.kind }));
   const matchOk = rep.pairs.filter((p) => pair.rowPidsA[p.a.index] === pair.rowPidsB[p.b.index]).length;
-  return { preds, matching: { pairs: rep.pairs.length, correct: matchOk }, cells: rep.totalCells, warnings: [...rep.A.warnings, ...rep.B.warnings, ...rep.noticeWarnings] };
+  return { preds, columnAlerts: rep.columnAlerts.length, matching: { pairs: rep.pairs.length, correct: matchOk }, cells: rep.totalCells, warnings: [...rep.A.warnings, ...rep.B.warnings, ...rep.noticeWarnings] };
 }
 
 // 기준선 경보 → 라벨 검출 여부
@@ -75,7 +75,7 @@ function newAgg() {
     perRule: Object.fromEntries(RULE_IDS.map((r) => [r, { n: 0, detected: 0, asSuspect: 0, ruleCorrect: 0 }])),
     suspect: { tp: 0, fp: 0, fn: 0 }, expected: { n: 0, correct: 0, predicted: 0, predictedWrong: 0, predictedButTruthSuspect: 0 },
     confusion: {}, evidence: { items: 0, ok: 0 }, matching: { pairs: 0, correct: 0 }, items: 0,
-    hardNegatives: { n: 0, expected: 0, suspect: 0 }, missedChanges: [],
+    hardNegatives: { n: 0, expected: 0, suspect: 0 }, missedChanges: [], columnAlerts: 0,
   };
 }
 
@@ -89,6 +89,7 @@ function scoreEngine(agg, pair, res) {
   addLabels(agg, pair);
   agg.cells += res.cells;
   agg.matching.pairs += res.matching.pairs; agg.matching.correct += res.matching.correct;
+  agg.columnAlerts += res.columnAlerts || 0;
   const byKey = new Map();
   for (const p of res.preds) { if (!byKey.has(p.key)) byKey.set(p.key, p); }
   const labelKeys = new Set(pair.labels.map((l) => l.key));
@@ -170,6 +171,7 @@ function finalize(agg, kind) {
     o.matching = { ...agg.matching, accuracy: pct(agg.matching.correct, agg.matching.pairs) };
     o.hardNegatives = agg.hardNegatives;
     o.items = agg.items;
+    o.columnAlerts = { total: agg.columnAlerts, perPair: agg.columnAlerts / agg.pairs };
     o.missedChangesSample = agg.missedChanges.slice(0, 40);
   }
   return o;
@@ -230,6 +232,7 @@ export function toMarkdown(res, { titles = {}, header = true } = {}) {
     L.push(`| 검수 범위 비율 | ${P(e.review.ratio)} | ${P(b1.review.ratio)} | ${P(b2.review.ratio)} |`);
     L.push(`| **검수 대상에서 빠진 실제 오류 수** (전체 오류 ${e.review.errorsTotal}) | **${e.review.missedErrorsOutside}** | **${b1.review.missedErrorsOutside}** | **${b2.review.missedErrorsOutside}** |`);
     L.push(`| 근거 연결률 | ${P(e.evidence.rate)} (${e.evidence.ok}/${e.evidence.items}) | — | — |`);
+    L.push(`| 쌍당 열 단위 서식 경보 (셀 오경보와 별도) | ${e.columnAlerts ? `${N(e.columnAlerts.perPair)} (${e.columnAlerts.total})` : '— (이 기능 도입 전)'} | — | — |`);
     L.push('');
     L.push(`- 예상된 변경 정확도(지시 문장까지 맞음): ${P(e.expected.accuracy)} (${e.expected.correct}/${e.expected.n}) · 예상 판정 정밀도 ${P(e.expected.precision)} · 예상으로 판정했지만 실제 오류: ${e.expected.predictedButTruthSuspect}건`);
     L.push(`- 정상 정정인데 오류 모양(R1·R2)인 사례 ${e.hardNegatives.n}건 → 예상 ${e.hardNegatives.expected} · 오류 의심 ${e.hardNegatives.suspect}`);
