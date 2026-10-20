@@ -1,0 +1,592 @@
+{
+  "seed": 20261020,
+  "generatedAt": "2026-10-20T08:06:43.297Z",
+  "splits": {
+    "dev": {
+      "engine": {
+        "pairs": 140,
+        "cellsInRevised": 31207,
+        "labels": {
+          "total": 749,
+          "expected": 372,
+          "check": 159,
+          "suspect": 218
+        },
+        "cosmeticCells": 2339,
+        "substantiveRecall": {
+          "detected": 749,
+          "total": 749,
+          "missed": 0,
+          "rate": 1
+        },
+        "falseAlarms": {
+          "total": 0,
+          "perPair": 0,
+          "cosmeticAlarms": 0
+        },
+        "review": {
+          "units": 377,
+          "perPair": 2.692857142857143,
+          "ratio": 0.012080622937161535,
+          "missedErrorsOutside": 0,
+          "missedErrorsByRule": {},
+          "errorsTotal": 218
+        },
+        "perRule": {
+          "R1": {
+            "n": 17,
+            "detected": 17,
+            "asSuspect": 17,
+            "ruleCorrect": 17
+          },
+          "R2": {
+            "n": 20,
+            "detected": 20,
+            "asSuspect": 20,
+            "ruleCorrect": 20
+          },
+          "R3": {
+            "n": 30,
+            "detected": 30,
+            "asSuspect": 30,
+            "ruleCorrect": 30
+          },
+          "R4": {
+            "n": 22,
+            "detected": 22,
+            "asSuspect": 22,
+            "ruleCorrect": 22
+          },
+          "R5": {
+            "n": 27,
+            "detected": 27,
+            "asSuspect": 27,
+            "ruleCorrect": 27
+          },
+          "R6": {
+            "n": 21,
+            "detected": 21,
+            "asSuspect": 21,
+            "ruleCorrect": 21
+          },
+          "R7": {
+            "n": 24,
+            "detected": 24,
+            "asSuspect": 24,
+            "ruleCorrect": 24
+          },
+          "R8": {
+            "n": 57,
+            "detected": 57,
+            "asSuspect": 57,
+            "ruleCorrect": 57
+          }
+        },
+        "suspect": {
+          "tp": 218,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1,
+          "recall": 1
+        },
+        "expected": {
+          "n": 372,
+          "correct": 372,
+          "predicted": 372,
+          "predictedWrong": 0,
+          "predictedButTruthSuspect": 0,
+          "accuracy": 1,
+          "precision": 1
+        },
+        "confusion": {
+          "expected>expected": 372,
+          "check>check": 159,
+          "suspect>suspect": 218
+        },
+        "evidence": {
+          "items": 749,
+          "ok": 749,
+          "rate": 1
+        },
+        "matching": {
+          "pairs": 2678,
+          "correct": 2678,
+          "accuracy": 1
+        },
+        "hardNegatives": {
+          "n": 12,
+          "expected": 12,
+          "suspect": 0
+        },
+        "items": 749,
+        "missedChangesSample": []
+      },
+      "baselineRow": {
+        "pairs": 140,
+        "cellsInRevised": 31207,
+        "labels": {
+          "total": 749,
+          "expected": 372,
+          "check": 159,
+          "suspect": 218
+        },
+        "cosmeticCells": 2339,
+        "substantiveRecall": {
+          "detected": 707,
+          "total": 749,
+          "missed": 42,
+          "rate": 0.9439252336448598
+        },
+        "falseAlarms": {
+          "total": 10117,
+          "perPair": 72.26428571428572,
+          "cosmeticAlarms": 1115
+        },
+        "review": {
+          "units": 12591,
+          "perPair": 89.93571428571428,
+          "ratio": 0.403467170827058,
+          "missedErrorsOutside": 41,
+          "missedErrorsByRule": {
+            "R8": 41
+          },
+          "errorsTotal": 218
+        },
+        "perRule": {
+          "R1": {
+            "n": 17,
+            "detected": 17
+          },
+          "R2": {
+            "n": 20,
+            "detected": 20
+          },
+          "R3": {
+            "n": 30,
+            "detected": 30
+          },
+          "R4": {
+            "n": 22,
+            "detected": 22
+          },
+          "R5": {
+            "n": 27,
+            "detected": 27
+          },
+          "R6": {
+            "n": 21,
+            "detected": 21
+          },
+          "R7": {
+            "n": 24,
+            "detected": 24
+          },
+          "R8": {
+            "n": 57,
+            "detected": 16
+          }
+        }
+      },
+      "baselineId": {
+        "pairs": 140,
+        "cellsInRevised": 31207,
+        "labels": {
+          "total": 749,
+          "expected": 372,
+          "check": 159,
+          "suspect": 218
+        },
+        "cosmeticCells": 2339,
+        "substantiveRecall": {
+          "detected": 708,
+          "total": 749,
+          "missed": 41,
+          "rate": 0.945260347129506
+        },
+        "falseAlarms": {
+          "total": 2180,
+          "perPair": 15.571428571428571,
+          "cosmeticAlarms": 2180
+        },
+        "review": {
+          "units": 2941,
+          "perPair": 21.007142857142856,
+          "ratio": 0.09424167654692857,
+          "missedErrorsOutside": 41,
+          "missedErrorsByRule": {
+            "R8": 41
+          },
+          "errorsTotal": 218
+        },
+        "perRule": {
+          "R1": {
+            "n": 17,
+            "detected": 17
+          },
+          "R2": {
+            "n": 20,
+            "detected": 20
+          },
+          "R3": {
+            "n": 30,
+            "detected": 30
+          },
+          "R4": {
+            "n": 22,
+            "detected": 22
+          },
+          "R5": {
+            "n": 27,
+            "detected": 27
+          },
+          "R6": {
+            "n": 21,
+            "detected": 21
+          },
+          "R7": {
+            "n": 24,
+            "detected": 24
+          },
+          "R8": {
+            "n": 57,
+            "detected": 16
+          }
+        }
+      }
+    },
+    "holdout": {
+      "engine": {
+        "pairs": 60,
+        "cellsInRevised": 12529,
+        "labels": {
+          "total": 326,
+          "expected": 167,
+          "check": 75,
+          "suspect": 84
+        },
+        "cosmeticCells": 993,
+        "substantiveRecall": {
+          "detected": 323,
+          "total": 326,
+          "missed": 3,
+          "rate": 0.99079754601227
+        },
+        "falseAlarms": {
+          "total": 0,
+          "perPair": 0,
+          "cosmeticAlarms": 0
+        },
+        "review": {
+          "units": 158,
+          "perPair": 2.6333333333333333,
+          "ratio": 0.012610743076063533,
+          "missedErrorsOutside": 3,
+          "missedErrorsByRule": {
+            "R7": 3
+          },
+          "errorsTotal": 84
+        },
+        "perRule": {
+          "R1": {
+            "n": 10,
+            "detected": 10,
+            "asSuspect": 10,
+            "ruleCorrect": 10
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7,
+            "asSuspect": 7,
+            "ruleCorrect": 7
+          },
+          "R3": {
+            "n": 12,
+            "detected": 12,
+            "asSuspect": 12,
+            "ruleCorrect": 12
+          },
+          "R4": {
+            "n": 14,
+            "detected": 14,
+            "asSuspect": 14,
+            "ruleCorrect": 14
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9,
+            "asSuspect": 9,
+            "ruleCorrect": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12,
+            "asSuspect": 12,
+            "ruleCorrect": 12
+          },
+          "R7": {
+            "n": 8,
+            "detected": 5,
+            "asSuspect": 5,
+            "ruleCorrect": 5
+          },
+          "R8": {
+            "n": 12,
+            "detected": 12,
+            "asSuspect": 12,
+            "ruleCorrect": 12
+          }
+        },
+        "suspect": {
+          "tp": 81,
+          "fp": 1,
+          "fn": 3,
+          "precision": 0.9878048780487805,
+          "recall": 0.9642857142857143
+        },
+        "expected": {
+          "n": 167,
+          "correct": 165,
+          "predicted": 165,
+          "predictedWrong": 0,
+          "predictedButTruthSuspect": 0,
+          "accuracy": 0.9880239520958084,
+          "precision": 1
+        },
+        "confusion": {
+          "expected>expected": 165,
+          "check>check": 75,
+          "suspect>suspect": 81,
+          "suspect>none": 3,
+          "expected>suspect": 1,
+          "expected>check": 1
+        },
+        "evidence": {
+          "items": 323,
+          "ok": 323,
+          "rate": 1
+        },
+        "matching": {
+          "pairs": 1067,
+          "correct": 1067,
+          "accuracy": 1
+        },
+        "hardNegatives": {
+          "n": 8,
+          "expected": 8,
+          "suspect": 0
+        },
+        "items": 323,
+        "missedChangesSample": [
+          "pair-155 R98-17|nationality (suspect R7)",
+          "pair-160 R103-6|nationality (suspect R7)",
+          "pair-194 R101-14|nationality (suspect R7)"
+        ]
+      },
+      "baselineRow": {
+        "pairs": 60,
+        "cellsInRevised": 12529,
+        "labels": {
+          "total": 326,
+          "expected": 167,
+          "check": 75,
+          "suspect": 84
+        },
+        "cosmeticCells": 993,
+        "substantiveRecall": {
+          "detected": 311,
+          "total": 326,
+          "missed": 15,
+          "rate": 0.9539877300613497
+        },
+        "falseAlarms": {
+          "total": 4255,
+          "perPair": 70.91666666666667,
+          "cosmeticAlarms": 653
+        },
+        "review": {
+          "units": 5402,
+          "perPair": 90.03333333333333,
+          "ratio": 0.43115970947402027,
+          "missedErrorsOutside": 14,
+          "missedErrorsByRule": {
+            "R8": 12,
+            "R7": 2
+          },
+          "errorsTotal": 84
+        },
+        "perRule": {
+          "R1": {
+            "n": 10,
+            "detected": 10
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7
+          },
+          "R3": {
+            "n": 12,
+            "detected": 12
+          },
+          "R4": {
+            "n": 14,
+            "detected": 14
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12
+          },
+          "R7": {
+            "n": 8,
+            "detected": 6
+          },
+          "R8": {
+            "n": 12,
+            "detected": 0
+          }
+        }
+      },
+      "baselineId": {
+        "pairs": 60,
+        "cellsInRevised": 12529,
+        "labels": {
+          "total": 326,
+          "expected": 167,
+          "check": 75,
+          "suspect": 84
+        },
+        "cosmeticCells": 993,
+        "substantiveRecall": {
+          "detected": 312,
+          "total": 326,
+          "missed": 14,
+          "rate": 0.9570552147239264
+        },
+        "falseAlarms": {
+          "total": 1126,
+          "perPair": 18.766666666666666,
+          "cosmeticAlarms": 955
+        },
+        "review": {
+          "units": 1463,
+          "perPair": 24.383333333333333,
+          "ratio": 0.11676909569798069,
+          "missedErrorsOutside": 14,
+          "missedErrorsByRule": {
+            "R8": 12,
+            "R7": 2
+          },
+          "errorsTotal": 84
+        },
+        "perRule": {
+          "R1": {
+            "n": 10,
+            "detected": 10
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7
+          },
+          "R3": {
+            "n": 12,
+            "detected": 12
+          },
+          "R4": {
+            "n": 14,
+            "detected": 14
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12
+          },
+          "R7": {
+            "n": 8,
+            "detected": 6
+          },
+          "R8": {
+            "n": 12,
+            "detected": 0
+          }
+        }
+      }
+    }
+  },
+  "dataset": {
+    "dev": {
+      "pairs": 140,
+      "persons": 2817,
+      "labels": 749,
+      "byTruth": {
+        "expected": 372,
+        "check": 159,
+        "suspect": 218
+      },
+      "byRule": {
+        "R8": 57,
+        "R6": 21,
+        "R7": 24,
+        "R4": 22,
+        "R5": 27,
+        "R3": 30,
+        "R2": 20,
+        "R1": 17
+      },
+      "cosmetic": 2339,
+      "shuffled": 45,
+      "layouts": {
+        "D1": 47,
+        "D2": 47,
+        "D3": 46
+      }
+    },
+    "holdout": {
+      "pairs": 60,
+      "persons": 1134,
+      "labels": 326,
+      "byTruth": {
+        "expected": 167,
+        "check": 75,
+        "suspect": 84
+      },
+      "byRule": {
+        "R4": 14,
+        "R2": 7,
+        "R8": 12,
+        "R5": 9,
+        "R3": 12,
+        "R1": 10,
+        "R6": 12,
+        "R7": 8
+      },
+      "cosmetic": 993,
+      "shuffled": 22,
+      "layouts": {
+        "H1": 30,
+        "H2": 30
+      }
+    }
+  },
+  "parserWarnings": {
+    "dev": [
+      "7번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×19",
+      "6번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×14",
+      "5번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×10",
+      "8번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×9",
+      "9번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×5",
+      "10번째 줄: 지시 표현은 있으나 대상 인물을 찾지 못함 ×1"
+    ],
+    "holdout": [
+      "알 수 없는 열 머리글: \"NAT'Y\" (4열) ×63",
+      "알 수 없는 열 머리글: \"TRAVEL DOC.\" (9열) ×63",
+      "FAL 5 항목 열 없음: nationality ×63",
+      "FAL 5 항목 열 없음: idType ×63"
+    ]
+  }
+}
