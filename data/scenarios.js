@@ -142,4 +142,20 @@ function scenario3() {
   return { id: 3, title: '정정 요청 미반영', desc: '한국어 메일로 받은 정정·하선·직급 변경 요청 중 일부가 수정본에 반영되지 않았고, 중복 행과 판독 불가 칸이 있습니다.', a: falCsv(a), b: falCsv(b), mail };
 }
 
-export const SCENARIOS = [scenario1(), scenario2(), scenario3()];
+// 처음 보는 서식: 일부 독일어 머리글, 알 수 없는 비고 열, 두 자리 연도 만료일
+function scenario4() {
+  const a = base();
+  const b = base().map((r) => ({ ...r }));
+  find(b, 'SANTOS').nationality = 'IDN'; // 지시 없음 → 확인 필요(추정 매핑 열)
+  find(b, 'AUNG').idExpiry = '2032-08-31'; // 지시 없음 → 확인 필요
+  const yy = (iso) => { const [y, m, d] = iso.split('-'); return `${d} ${MON[+m - 1]} ${y.slice(2)}`; };
+  const csv = [
+    `Schiffsname: ${HEAD.ship}`, `ETA: ${HEAD.date}`, '',
+    'No.,Family name,Given names,Rank,Staatsangehörigkeit,Date of birth,Bemerkung,Gender,Doc type,Passport No.,Issued by,Gültig bis',
+    ...b.map((r, i) => [i + 1, q(r.familyName), q(r.givenNames), ABBR[r.rank] || r.rank, r.nationality, r.dob, `ok ${i % 3}`, r.gender, r.idType, r.idNumber, r.idIssuer, yy(r.idExpiry)].join(',')),
+  ].join('\n') + '\n';
+  const mail = ['Dear Agent,', '', 'Please find attached the revised crew list (new template from owner).', '', 'Best regards,', 'Crewing Dept. (demo)'].join('\n') + '\n';
+  return { id: 4, title: '처음 보는 서식', desc: '선주가 바꾼 양식: 일부 독일어 머리글, 알 수 없는 비고 열, 두 자리 연도 만료일. 추정 매핑과 열 단위 서식 경보를 보여 줍니다.', a: falCsv(a), b: csv, mail };
+}
+
+export const SCENARIOS = [scenario1(), scenario2(), scenario3(), scenario4()];

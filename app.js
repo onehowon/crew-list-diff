@@ -28,7 +28,7 @@ const ORDER = { suspect: 0, check: 1, expected: 2 };
 const state = {
   tab: params.get('tab') || 'demo',
   step: Math.min(4, Math.max(1, Number(params.get('step')) || 1)),
-  scenario: Math.min(3, Math.max(1, Number(params.get('scenario')) || 1)),
+  scenario: Math.min(4, Math.max(1, Number(params.get('scenario')) || 1)),
   inputs: null,
   report: null,
   view: 'B',
@@ -152,6 +152,7 @@ function normalizedView() {
     <div class="panel-body">
       <dl class="kv" style="grid-template-columns: 210px 1fr; margin-bottom:8px">${head}</dl>
       <p class="small muted" style="margin:0 0 8px">머리글 인식: ${cols}</p>
+      ${columnAlertBox(r)}
       ${warns.length ? `<ul class="warn-list">${warns.map((w) => `<li>${h(w)}</li>`).join('')}</ul>` : ''}
       <p class="small muted" style="margin:8px 0">셀에 마우스를 올리면 원문 위치(줄·열)와 원문 값을 보여 줍니다. 날짜는 ISO 형식, 직급은 약어, 국적은 ISO 3166-1 alpha-3로 맞춥니다.</p>
       <div class="table-wrap"><table class="grid fal-table"><thead><tr><th>6.<span class="fal">No.</span></th>${ROW_FIELDS.map((f) => `<th>${f.fal}. ${h(f.ko)}<span class="fal">${h(f.en)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
@@ -160,6 +161,12 @@ function normalizedView() {
 }
 
 // ---------------- 2단계 ----------------
+function columnAlertBox(r) {
+  const al = r.columnAlerts || [];
+  if (!al.length) return '';
+  const src = (x) => x.sources.map((s) => (s === 'A' ? '최초본' : '수정본')).join('·');
+  return `<div class="flash flash-warn" style="margin-bottom:12px"><b>열 단위 서식 확인 필요 ${al.length}건</b> — 셀마다 경보하지 않고 열당 한 번 알립니다.<ul class="small" style="margin:4px 0 0 18px">${al.map((x) => `<li>${src(x)} ${x.col}열 "${h(x.header)}"${x.field ? ` (${h(FIELD[x.field].ko)})` : ''}: ${h(x.detail)}</li>`).join('')}</ul></div>`;
+}
 function valueText(c) {
   if (!c) return '';
   if (c.status === 'ok') return c.value;
@@ -209,6 +216,7 @@ function step2() {
     <span class="chip" style="cursor:default"><span class="dot cosmetic"></span>표기만 다름 <span class="n">${s.cosmetic}</span> <span class="muted small">접힘·경보 안 함</span></span>
     <span class="muted small">행 순서 이동 ${s.rowsMoved}명(경보 안 함) · 인물 대응 ${r.pairs.length}쌍</span>
   </div>
+  ${columnAlertBox(r)}
   <div class="compare">
     <div>
       <div class="panel">
@@ -267,7 +275,9 @@ function detailPanel() {
   if (it.notes?.length) {
     ev += `<p class="small muted" style="margin:10px 0 0">참고: 값의 모양이 ${it.notes.map((n) => `${n.id} ${n.title}`).join(', ')} 패턴과 같지만, 메일이 이 값을 명시했으므로 예상된 변경으로 분류했습니다.</p>`;
   }
-  if (it.class === 'check' && !it.directive && !it.rules?.length) ev += `<p class="small" style="margin:12px 0 0"><b>근거</b> · 이 변경을 설명하는 메일 지시도, 위반한 규칙도 없습니다. 근거가 부족하면 기본값은 확인 필요입니다.</p>`;
+  if (it.evidence?.inferredColumn) ev += `<p class="small" style="margin:12px 0 0"><b>추정 매핑</b> · 이 항목의 열은 머리글을 사전에서 찾지 못해 값 모양·열 순서로 추정해 매핑했습니다. 열이 맞는지 확인하세요.</p>`;
+  if (it.evidence?.formatAlert) ev += `<p class="small" style="margin:12px 0 0"><b>열 서식 확인 필요</b> · 이 열은 값을 해석하지 못해 원문 문자열로만 비교했습니다. 원문이 바뀌었으므로 확인 필요로 남깁니다.</p>`;
+  if (it.class === 'check' && !it.directive && !it.rules?.length && !it.evidence?.formatAlert) ev += `<p class="small" style="margin:12px 0 0"><b>근거</b> · 이 변경을 설명하는 메일 지시도, 위반한 규칙도 없습니다. 근거가 부족하면 기본값은 확인 필요입니다.</p>`;
   const m = it.match ? `<dl class="kv" style="margin-top:12px"><dt>인물 대응</dt><dd>${h({ idNumber: '신분증번호 일치', 'idNumber~confusable': '신분증번호(혼동 문자 무시) 일치', 'name+dob': '성명+생년월일', name: '성명 유사도', 'name(dob 판독 불가)': '성명(생년월일 판독 불가)' }[it.match.method] || it.match.method)} · 신뢰도 ${it.match.confidence.toFixed(2)}</dd><dt>분류 이유</dt><dd>${h(it.reason)}</dd></dl>` : `<dl class="kv" style="margin-top:12px"><dt>분류 이유</dt><dd>${h(it.reason)}</dd></dl>`;
   return `${head}<div class="panel-body">${src}${ev}${m}</div>`;
 }
@@ -413,18 +423,28 @@ function renderEval() {
   const ev = state.eval;
   if (!ev) { el.innerHTML = '<p class="muted">평가 결과를 불러오는 중…</p>'; return; }
   if (ev.error) { el.innerHTML = `<div class="flash flash-error">평가 결과 파일을 읽지 못했습니다: ${h(ev.error)}. <code class="cmd">node eval/run.mjs --split all</code> 실행 후 다시 여세요.</div>`; return; }
-  const h3 = ev.h3.splits.holdout3, first = ev.first.splits.holdout, cur = ev.current.splits.holdout, dev = ev.current.splits.dev;
+  const h3 = ev.h3.splits.holdout3, h4 = ev.h4.splits.holdout4, first = ev.first.splits.holdout, cur = ev.current.splits.holdout, dev = ev.current.splits.dev;
   const ds = ev.current.dataset;
-  const missed = (r) => Object.entries(r.engine.review.missedErrorsByRule).map(([k, v]) => `${k} ${v}건`).join(', ') || '없음';
+  const missed = (r) => Object.entries(r.engine.review.missedErrorsByRule).map(([k, v]) => `${k} ${v}`).join(', ') || '없음';
+  const total = ds.dev.labels + ds.holdout.labels + ev.h3.dataset.holdout3.labels + ev.h4.dataset.holdout4.labels;
   el.innerHTML = `
   <h2 class="section-title">평가 결과 — 대조·분류 엔진, 합성 데이터</h2>
-  <p class="section-lead">합성 명부에서 만든 수정본 쌍 260개(개발 140 · 홀드아웃 H1·H2 60 · 홀드아웃 H3 60), 라벨된 실질 변경 ${ds.dev.labels + ds.holdout.labels + ev.h3.dataset.holdout3.labels}건. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 이 평가로 주장하지 않으며 후속 PoC 과제입니다.</p>
-  <div class="panel"><div class="panel-head"><h3>대표값: 홀드아웃 H3 1회차 (엔진 고정 후 설계·1회만 실행)</h3><span class="muted small">쌍 ${h3.engine.pairs} · 라벨 ${h3.engine.labels.total} · 오류 ${h3.engine.labels.suspect} · 시드 ${ev.h3.h3Seed}</span></div>
-    <div class="panel-body">${metricTable(h3, 'H3 1회차')}
-    <p class="small muted" style="margin:8px 0 0">검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 범위를 줄인 대가로 놓친 오류가 없는지 <b>검수 대상에서 빠진 실제 오류 수</b>를 함께 봅니다. 엔진이 검수 대상에서 뺀 실제 오류: ${missed(h3)}.</p>
-    <p class="small" style="margin:6px 0 0">H3에서 드러난 문제(고치지 않음): 두 자리 연도 만료일(<code>DD MMM YY</code>)을 판독 불가로 처리해 모든 만료일 칸에 R6 경보가 붙음(오경보 대부분, 승선 인원도 오류 의심으로 분류) · R4 만료는 오류 의심으로는 잡혔지만 근거 규칙이 R6로 붙음 · 머리글 <code>Nacionalidad</code>·<code>Lugar de nacimiento</code> 미인식(국적·출생지 변경을 보지 못함) · 메일 "should be 값" 문형의 정정 값을 해석하지 못해 확인 필요로 분류. 설계: <code>eval/H3-spec.md</code></p></div></div>
-  <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>오류 유형별 (H3 1회차)</h3></div><div class="panel-body">${ruleTable(h3)}
-    <p class="small muted" style="margin:8px 0 0">정상 정정인데 오류 모양(R1·R2)인 사례 ${h3.engine.hardNegatives.n}건 → 예상된 변경 ${h3.engine.hardNegatives.expected}건, 오류 의심 ${h3.engine.hardNegatives.suspect}건. 예상된 변경 정확도(지시 문장까지 일치) ${pc(h3.engine.expected.accuracy)}, 예상으로 분류했지만 실제 오류 ${h3.engine.expected.predictedButTruthSuspect}건. 인물 대응 정확도 ${pc(h3.engine.matching.accuracy)}.</p></div></div>
+  <p class="section-lead">합성 수정본 쌍 320개(개발 140 · 홀드아웃 H1·H2 60 · H3 60 · H4 60), 라벨된 실질 변경 ${total}건. 각 홀드아웃은 한 번만 씁니다. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 주장하지 않으며 후속 PoC 과제입니다.</p>
+  <div class="two-col">
+    <div class="panel"><div class="panel-head"><h3>대표값: H4 1회차(개선 후 처음 보는 서식)</h3><span class="muted small">쌍 ${h4.engine.pairs} · 오류 ${h4.engine.labels.suspect}</span></div>
+      <div class="panel-body">${metricTable(h4, 'H4 1회차', true)}
+      <p class="small" style="margin:8px 0 0"><b>실패:</b> 독일어·인도네시아어 머리글에서 머리글 행 자체를 찾지 못해(머리글 행 판정에는 별칭 사전으로 5개 이상 인식이 필요) 명부를 0행으로 읽었습니다. 추정 매핑·열 단위 경보는 머리글 행을 찾은 뒤에만 동작하므로 쓰이지 못했습니다. 엔진은 메일 지시만 처리했고(R8 8건 탐지, 오경보 ${h4.engine.falseAlarms.total}건), 기준선도 같은 파서를 빌려 쓰므로 0건 탐지입니다. 검수 범위는 셀 수가 0이라 계산할 수 없습니다. 결과를 보고 고치지 않았습니다.</p>
+      <p class="small muted" style="margin:6px 0 0">빠진 실제 오류(엔진): ${missed(h4)}. 설계: <code>eval/H4-spec.md</code></p></div></div>
+    <div class="panel"><div class="panel-head"><h3>H3 1회차(개선 전 처음 보는 서식)</h3><span class="muted small">쌍 ${h3.engine.pairs} · 오류 ${h3.engine.labels.suspect}</span></div>
+      <div class="panel-body">${metricTable(h3, 'H3 1회차', true)}
+      <p class="small" style="margin:8px 0 0">두 자리 연도 만료일을 판독 불가로 처리해 모든 만료일 칸에 R6 경보(오경보 대부분), 머리글 <code>Nacionalidad</code>·<code>Lugar de nacimiento</code> 미인식, 메일 "should be 값" 문형 미해석. 이 결과를 본 뒤 일반화 개선(두 자리 연도, 추정 매핑, 열 단위 경보, 정정 문형)을 했습니다.</p>
+      <p class="small muted" style="margin:6px 0 0">빠진 실제 오류(엔진): ${missed(h3)}. 설계: <code>eval/H3-spec.md</code></p></div></div>
+  </div>
+  <p class="small muted" style="margin:8px 0 0">기준선1 행 = 같은 행 번호끼리 문자열 대조, 기준선2 ID키 = 신분증번호로 행을 맞춘 뒤 문자열 대조. 검수 범위 = 개별 확인 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수이며, 항상 <b>검수 대상에서 빠진 실제 오류 수</b>와 함께 봅니다. 열 단위 서식 경보는 셀 오경보와 따로 셉니다.</p>
+  <div class="two-col" style="margin-top:16px">
+    <div class="panel"><div class="panel-head"><h3>오류 유형별 — H4 1회차</h3></div><div class="panel-body">${ruleTable(h4)}</div></div>
+    <div class="panel"><div class="panel-head"><h3>오류 유형별 — H3 1회차</h3></div><div class="panel-body">${ruleTable(h3)}</div></div>
+  </div>
   <h3 class="section-title" style="margin-top:24px">참고값 (대표값 아님)</h3>
   <div class="panel" style="margin-top:8px"><div class="panel-head"><h3>H1·H2 1회차(수정 전)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
     <div class="panel-body">${metricTable(first, 'H1·H2 1회차')}
@@ -436,14 +456,15 @@ function renderEval() {
   <div class="two-col" style="margin-top:16px">
     <div class="panel"><div class="panel-head"><h3>한계</h3></div><div class="panel-body"><ul class="facts small">
       <li>평가 대상은 대조·분류 엔진입니다. PDF·스캔 이미지에서 표를 뽑는 단계(실서비스의 LLM 추출)는 평가하지 않았습니다.</li>
-      <li>메일은 생성기 문형(영어 3종·한국어 1종)으로 만들었고, 메일 파서는 규칙 기반입니다. 실제 메일의 다양한 문체에서는 연결률이 낮아질 수 있습니다(H3의 "should be" 문형이 그 예).</li>
+      <li>메일은 생성기 문형(영어 3종·한국어 1종·인도네시아어 혼합 1종)으로 만들었고, 메일 파서는 규칙 기반입니다. 실제 메일의 다양한 문체에서는 연결률이 낮아질 수 있습니다(H3의 "should be" 문형이 그 예).</li>
       <li>오류 유형·비율은 설계자가 정했습니다. 실제 현장 오류 분포가 아닙니다.</li>
       <li>기준선은 엔진의 머리글 인식을 빌려 쓴 유리한 조건입니다(사람이 열을 맞춘 엑셀 대조).</li>
-      <li>머리글 겹침(정규화 기준): H2는 12개 중 3개(LAST NAME·BIRTH PLACE·SEX), H3는 1개(Doc. Type)가 개발용과 같습니다.</li>
+      <li>머리글 겹침(정규화 기준): H2는 12개 중 3개(LAST NAME·BIRTH PLACE·SEX), H3는 1개(Doc. Type)가 개발용과 같고, H4는 겹치지 않습니다.</li>
+      <li>머리글 행 판정이 별칭 사전에 의존해, 처음 보는 언어의 머리글(H4)에서는 명부 전체를 읽지 못합니다.</li>
     </ul></div></div>
     <div class="panel"><div class="panel-head"><h3>재현 방법</h3></div><div class="panel-body small">
       <p><code class="cmd">node eval/run.mjs --split all</code> → <code>docs/eval-result.json</code>, <code>docs/eval-result.md</code> (개발·H1·H2, 현재 코드, 시드 ${ev.current.seed})</p>
-      <p>H3 1회차 원본: <code>docs/eval-H3-first-run.json</code> — <code>node eval/run.mjs --split h3</code>는 결과 파일이 있으면 재실행을 거부합니다.</p>
+      <p>H4·H3 1회차 원본: <code>docs/eval-H4-first-run.json</code>, <code>docs/eval-H3-first-run.json</code> — <code>node eval/run.mjs --split h3|h4</code>는 결과 파일이 있으면 재실행을 거부합니다.</p>
       <p>H1·H2 1회차 원본: <code>docs/eval-holdout-first-run.json</code> (커밋 기록으로 시점 확인 가능)</p>
       <p class="muted">이 화면의 수치는 위 JSON 파일을 그대로 읽어 표시합니다.</p></div></div>
   </div>`;
@@ -528,8 +549,8 @@ function download() {
 
 async function loadEval() {
   try {
-    const [cur, first, h3] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
-    state.eval = { current: cur, first, h3 };
+    const [cur, first, h3, h4] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json', 'docs/eval-H4-first-run.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
+    state.eval = { current: cur, first, h3, h4 };
   } catch (err) {
     state.eval = { error: err.message };
   }
