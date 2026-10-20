@@ -2,7 +2,7 @@
 // 사용: node eval/run.mjs                 개발 세트만(개발·튜닝 중 기본값)
 //       node eval/run.mjs --split all     개발 + 홀드아웃(최종 평가). 결과를 docs/eval-result.{json,md}에 저장
 // 수치는 실행 결과를 그대로 저장한다(손으로 고치지 않음).
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generate, generateH3, stats, DEFAULT_SEED, H3_SEED } from './gen.mjs';
@@ -201,17 +201,25 @@ export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
 // ---- 보고서(Markdown) ----
 const P = (x) => (x == null ? '—' : `${(x * 100).toFixed(1)}%`);
 const N = (x, d = 2) => (x == null ? '—' : Number(x).toFixed(d));
-export function toMarkdown(res) {
+export const SECTION_TITLE = {
+  holdout3: '홀드아웃 H3 1회차 (대표값)',
+  holdoutFirst: 'H1·H2 1회차(수정 전)',
+  holdout: '홀드아웃 H1·H2 — 버그 수정 후 재실행(규칙 수정에 사용됨, 참고값)',
+  dev: '개발 세트 (튜닝에 사용, 참고값)',
+};
+export function toMarkdown(res, { titles = {}, header = true } = {}) {
   const L = [];
-  L.push('# 평가 결과 (합성 데이터)', '');
-  L.push(`- 생성: \`node eval/run.mjs --split all\` · 시드 ${res.seed} · Node ${process.version}`);
-  L.push('- 대상: 대조·분류 엔진(lib/). 메일 해석은 규칙 기반(데모). 실제 서비스의 LLM 추출 성능은 이 평가에 포함되지 않음.');
-  L.push('- **합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있음.** 대표값은 개발·튜닝에 쓰지 않은 **홀드아웃** 레이아웃(H1 한국어 머리글, H2 약어 머리글·미국식 날짜) 결과.');
-  L.push('- 검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 항상 "검수 대상에서 빠진 실제 오류 수"와 함께 본다.');
-  L.push('');
+  if (header) L.push('# 평가 결과 (합성 데이터)', '');
+  if (header) {
+    L.push(`- 시드 ${res.seed}${res.h3Seed ? ` · H3 시드 ${res.h3Seed}` : ''} · Node ${process.version}`);
+    L.push('- 대상: 대조·분류 엔진(lib/). 메일 해석은 규칙 기반(데모). 실제 서비스의 LLM 추출 성능은 이 평가에 포함되지 않음.');
+    L.push('- **합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있음.**');
+    L.push('- 검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 항상 "검수 대상에서 빠진 실제 오류 수"와 함께 본다.');
+    L.push('');
+  }
   for (const [split, r] of Object.entries(res.splits)) {
     const e = r.engine, b1 = r.baselineRow, b2 = r.baselineId;
-    L.push(`## ${split === 'holdout' ? '홀드아웃 (대표값)' : '개발 세트'} — 쌍 ${e.pairs}개, 라벨 ${e.labels.total}건 (예상 ${e.labels.expected} · 확인 ${e.labels.check} · 오류 ${e.labels.suspect}), 표기만 다른 셀 ${e.cosmeticCells}개`, '');
+    L.push(`## ${titles[split] || SECTION_TITLE[split] || split} — 쌍 ${e.pairs}개, 라벨 ${e.labels.total}건 (예상 ${e.labels.expected} · 확인 ${e.labels.check} · 오류 ${e.labels.suspect}), 표기만 다른 셀 ${e.cosmeticCells}개`, '');
     L.push('| 지표 | 본 엔진 | 기준선1 행 번호 대조 | 기준선2 신분증번호 키 대조 |', '|---|---|---|---|');
     L.push(`| 실질 변경 재현율 (놓친 수) | ${P(e.substantiveRecall.rate)} (${e.substantiveRecall.missed}) | ${P(b1.substantiveRecall.rate)} (${b1.substantiveRecall.missed}) | ${P(b2.substantiveRecall.rate)} (${b2.substantiveRecall.missed}) |`);
     L.push(`| 오류 의심 정밀도 | ${P(e.suspect.precision)} | 분류 없음 | 분류 없음 |`);
@@ -243,6 +251,30 @@ export function toMarkdown(res) {
   return L.join('\n');
 }
 
+// docs/eval-result.md: 맨 위 대표값(H3 1회차) → H1·H2 1회차(수정 전) → H1·H2 수정 후 → 개발 세트
+export function assembleReport(current, { h3 = null, first = null } = {}) {
+  const L = ['# 평가 결과 (합성 데이터)', ''];
+  L.push('- 대상: 대조·분류 엔진(lib/). 메일 해석은 규칙 기반(데모). 실제 서비스의 LLM 추출 성능은 포함되지 않음.');
+  L.push('- **합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있음.** 현장 업무시간 절감은 주장하지 않음(후속 PoC).');
+  L.push('- 검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 항상 "검수 대상에서 빠진 실제 오류 수"와 함께 본다.');
+  L.push('- 재현: `node eval/run.mjs --split all`(개발·H1·H2, 현재 코드). H3는 `node eval/run.mjs --split h3` 1회 실행 전용(결과 파일이 있으면 재실행 거부).');
+  L.push('');
+  if (h3) {
+    L.push('# 대표값: 홀드아웃 H3 1회차', '');
+    L.push(`엔진 고정 후 설계(eval/H3-spec.md)하고 1회만 실행한 결과. 원본: docs/eval-H3-first-run.json (시드 ${h3.h3Seed}, 실행 ${h3.generatedAt}). 결과를 보고 엔진·규칙·별칭 사전을 고치지 않음.`, '');
+    L.push(toMarkdown(h3, { header: false }));
+  }
+  L.push('# 참고값 (대표값 아님)', '');
+  if (first) {
+    L.push('H1·H2 1회차(수정 전) 원본: docs/eval-holdout-first-run.json. 이 결과를 본 뒤 엔진 버그 3건을 고쳤으므로 H1·H2는 더 이상 깨끗한 홀드아웃이 아님.', '');
+    L.push(toMarkdown({ ...first, splits: { holdout: first.splits.holdout }, parserWarnings: { holdout: first.parserWarnings.holdout } }, { header: false, titles: { holdout: SECTION_TITLE.holdoutFirst } }));
+  }
+  L.push(toMarkdown(current, { header: false }));
+  return L.join('\n');
+}
+
+const readJson = (f) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : null);
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
   const split = arg('--split', 'dev');
@@ -252,16 +284,26 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (existsSync(out) && !process.argv.includes('--force-rerun')) { console.error('H3 1회차 결과가 이미 있습니다: docs/eval-H3-first-run.json (재실행 금지)'); process.exit(2); }
     const res = runEval({ splits: ['holdout3'] });
     res.generatedAt = new Date().toISOString();
-    const md = toMarkdown(res);
+    const md = toMarkdown(res, { titles: { holdout3: SECTION_TITLE.holdout3 } });
     writeFileSync(out, JSON.stringify(res, null, 2) + '\n');
     writeFileSync(join(ROOT, 'docs/eval-H3-first-run.md'), md);
     console.log(md);
     process.exit(0);
   }
+  if (process.argv.includes('--render-first-runs')) {
+    const f1 = readJson(join(ROOT, 'docs/eval-holdout-first-run.json'));
+    if (f1) writeFileSync(join(ROOT, 'docs/eval-holdout-first-run.md'), `<!-- 저장된 JSON에서 제목만 바꿔 다시 그림(수치 재계산 없음) -->\n` + toMarkdown(f1, { titles: { holdout: SECTION_TITLE.holdoutFirst } }));
+    const f3 = readJson(join(ROOT, 'docs/eval-H3-first-run.json'));
+    if (f3) writeFileSync(join(ROOT, 'docs/eval-H3-first-run.md'), `<!-- 저장된 JSON에서 제목만 바꿔 다시 그림(수치 재계산 없음) -->\n` + toMarkdown(f3, { titles: { holdout3: SECTION_TITLE.holdout3 } }));
+    console.log('1회차 md 다시 그림');
+    process.exit(0);
+  }
   const splits = split === 'all' ? ['dev', 'holdout'] : [split];
   const res = runEval({ seed: Number(arg('--seed', DEFAULT_SEED)), splits });
   res.generatedAt = new Date().toISOString();
-  const md = toMarkdown(res);
+  const md = split === 'all'
+    ? assembleReport(res, { h3: readJson(join(ROOT, 'docs/eval-H3-first-run.json')), first: readJson(join(ROOT, 'docs/eval-holdout-first-run.json')) })
+    : toMarkdown(res);
   console.log(md);
   if (split === 'all') {
     mkdirSync(join(ROOT, 'docs'), { recursive: true });

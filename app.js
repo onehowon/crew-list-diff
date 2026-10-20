@@ -412,33 +412,38 @@ function renderEval() {
   const ev = state.eval;
   if (!ev) { el.innerHTML = '<p class="muted">평가 결과를 불러오는 중…</p>'; return; }
   if (ev.error) { el.innerHTML = `<div class="flash flash-error">평가 결과 파일을 읽지 못했습니다: ${h(ev.error)}. <code class="cmd">node eval/run.mjs --split all</code> 실행 후 다시 여세요.</div>`; return; }
-  const first = ev.first.splits.holdout, cur = ev.current.splits.holdout, dev = ev.current.splits.dev;
+  const h3 = ev.h3.splits.holdout3, first = ev.first.splits.holdout, cur = ev.current.splits.holdout, dev = ev.current.splits.dev;
   const ds = ev.current.dataset;
+  const missed = (r) => Object.entries(r.engine.review.missedErrorsByRule).map(([k, v]) => `${k} ${v}건`).join(', ') || '없음';
   el.innerHTML = `
   <h2 class="section-title">평가 결과 — 대조·분류 엔진, 합성 데이터</h2>
-  <p class="section-lead">합성 명부 120개에서 만든 수정본 쌍 200개(개발 140 · 홀드아웃 60), 라벨된 실질 변경 ${ds.dev.labels + ds.holdout.labels}건. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 이 평가로 주장하지 않으며 후속 PoC 과제입니다.</p>
-  <div class="panel"><div class="panel-head"><h3>대표값: 홀드아웃 1회차 (개발·튜닝에 쓰지 않은 레이아웃 H1·H2, 처음 실행한 결과)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
-    <div class="panel-body">${metricTable(first, '홀드아웃 1회차')}
-    <p class="small muted" style="margin:8px 0 0">검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 범위를 줄인 대가로 놓친 오류가 생기지 않았는지 <b>검수 대상에서 빠진 실제 오류 수</b>를 함께 봅니다.</p>
-    <p class="small" style="margin:6px 0 0">1회차에서 드러난 문제: 한쪽 버전에서만 인식된 열을 변경으로 잡는 버그(H1↔H2 쌍 오경보 ${first.engine.falseAlarms.total}건), 미국식 날짜(MM/DD/YYYY)의 입항일·메일 날짜 해석 오류, 머리글 <code>NAT'Y</code>·<code>TRAVEL DOC.</code> 미인식(국적 오류 놓침).</p></div></div>
+  <p class="section-lead">합성 명부에서 만든 수정본 쌍 260개(개발 140 · 홀드아웃 H1·H2 60 · 홀드아웃 H3 60), 라벨된 실질 변경 ${ds.dev.labels + ds.holdout.labels + ev.h3.dataset.holdout3.labels}건. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 이 평가로 주장하지 않으며 후속 PoC 과제입니다.</p>
+  <div class="panel"><div class="panel-head"><h3>대표값: 홀드아웃 H3 1회차 (엔진 고정 후 설계·1회만 실행)</h3><span class="muted small">쌍 ${h3.engine.pairs} · 라벨 ${h3.engine.labels.total} · 오류 ${h3.engine.labels.suspect} · 시드 ${ev.h3.h3Seed}</span></div>
+    <div class="panel-body">${metricTable(h3, 'H3 1회차')}
+    <p class="small muted" style="margin:8px 0 0">검수 범위 = 담당자가 개별 확인할 항목(엔진: 오류 의심+확인 필요 / 기준선: 모든 경보) ÷ 수정본 셀 수. 범위를 줄인 대가로 놓친 오류가 없는지 <b>검수 대상에서 빠진 실제 오류 수</b>를 함께 봅니다. 엔진이 검수 대상에서 뺀 실제 오류: ${missed(h3)}.</p>
+    <p class="small" style="margin:6px 0 0">H3에서 드러난 문제(고치지 않음): 두 자리 연도 만료일(<code>DD MMM YY</code>)을 판독 불가로 처리해 모든 만료일 칸에 R6 경보가 붙음(오경보 대부분, 승선 인원도 오류 의심으로 분류) · R4 만료는 오류 의심으로는 잡혔지만 근거 규칙이 R6로 붙음 · 머리글 <code>Nacionalidad</code>·<code>Lugar de nacimiento</code> 미인식(국적·출생지 변경을 보지 못함) · 메일 "should be 값" 문형의 정정 값을 해석하지 못해 확인 필요로 분류. 설계: <code>eval/H3-spec.md</code></p></div></div>
+  <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>오류 유형별 (H3 1회차)</h3></div><div class="panel-body">${ruleTable(h3)}
+    <p class="small muted" style="margin:8px 0 0">정상 정정인데 오류 모양(R1·R2)인 사례 ${h3.engine.hardNegatives.n}건 → 예상된 변경 ${h3.engine.hardNegatives.expected}건, 오류 의심 ${h3.engine.hardNegatives.suspect}건. 예상된 변경 정확도(지시 문장까지 일치) ${pc(h3.engine.expected.accuracy)}, 예상으로 분류했지만 실제 오류 ${h3.engine.expected.predictedButTruthSuspect}건. 인물 대응 정확도 ${pc(h3.engine.matching.accuracy)}.</p></div></div>
+  <h3 class="section-title" style="margin-top:24px">참고값 (대표값 아님)</h3>
+  <div class="panel" style="margin-top:8px"><div class="panel-head"><h3>H1·H2 1회차(수정 전)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
+    <div class="panel-body">${metricTable(first, 'H1·H2 1회차')}
+    <p class="small" style="margin:8px 0 0">이 결과를 본 뒤 엔진 버그 3건(한쪽 버전에만 있는 열을 변경으로 잡음, 미국식 날짜의 입항일·메일 날짜 해석)을 고쳤으므로 H1·H2는 더 이상 깨끗한 홀드아웃이 아닙니다. 그래서 H3를 새로 만들었습니다.</p></div></div>
   <div class="two-col" style="margin-top:16px">
-    <div class="panel"><div class="panel-head"><h3>참고: 1회차 이후 일반 버그 3건 수정 후 홀드아웃 재실행</h3></div><div class="panel-body">${metricTable(cur, '수정 후 홀드아웃', true)}<p class="small muted" style="margin:8px 0 0">기준선1 행 = 행 번호 대조, 기준선2 ID키 = 신분증번호 키 대조. 홀드아웃 결과를 본 뒤 고쳤으므로 이 수치는 홀드아웃으로서 오염되었습니다. 머리글 별칭 사전은 고치지 않았습니다.</p></div></div>
-    <div class="panel"><div class="panel-head"><h3>참고: 개발 세트(튜닝에 사용)</h3></div><div class="panel-body">${metricTable(dev, '개발 세트', true)}<p class="small muted" style="margin:8px 0 0">규칙과 생성기를 같은 사람이 만들었기 때문에 개발 세트 수치는 낙관적입니다.</p></div></div>
+    <div class="panel"><div class="panel-head"><h3>홀드아웃 H1·H2 — 버그 수정 후 재실행(규칙 수정에 사용됨, 참고값)</h3></div><div class="panel-body">${metricTable(cur, 'H1·H2 수정 후', true)}<p class="small muted" style="margin:8px 0 0">기준선1 행 = 행 번호 대조, 기준선2 ID키 = 신분증번호 키 대조. 머리글 별칭 사전은 고치지 않았습니다.</p></div></div>
+    <div class="panel"><div class="panel-head"><h3>개발 세트 (튜닝에 사용, 참고값)</h3></div><div class="panel-body">${metricTable(dev, '개발 세트', true)}<p class="small muted" style="margin:8px 0 0">규칙과 생성기를 같은 사람이 만들었기 때문에 개발 세트 수치는 낙관적입니다.</p></div></div>
   </div>
-  <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>오류 유형별 (홀드아웃 1회차)</h3></div><div class="panel-body">${ruleTable(first)}
-    <p class="small muted" style="margin:8px 0 0">정상 정정인데 오류 모양(R1·R2)인 사례 ${first.engine.hardNegatives.n}건 → 예상된 변경 ${first.engine.hardNegatives.expected}건, 오류 의심 ${first.engine.hardNegatives.suspect}건. 예상된 변경 정확도(지시 문장까지 일치) ${pc(first.engine.expected.accuracy)}, 예상으로 분류했지만 실제 오류 ${first.engine.expected.predictedButTruthSuspect}건. 인물 대응 정확도 ${pc(first.engine.matching.accuracy)}.</p></div></div>
   <div class="two-col" style="margin-top:16px">
     <div class="panel"><div class="panel-head"><h3>한계</h3></div><div class="panel-body"><ul class="facts small">
       <li>평가 대상은 대조·분류 엔진입니다. PDF·스캔 이미지에서 표를 뽑는 단계(실서비스의 LLM 추출)는 평가하지 않았습니다.</li>
-      <li>메일은 생성기 문형(영어 2종·한국어 1종)으로 만들었고, 메일 파서는 규칙 기반입니다. 실제 메일의 다양한 문체에서는 연결률이 낮아질 수 있습니다.</li>
+      <li>메일은 생성기 문형(영어 3종·한국어 1종)으로 만들었고, 메일 파서는 규칙 기반입니다. 실제 메일의 다양한 문체에서는 연결률이 낮아질 수 있습니다(H3의 "should be" 문형이 그 예).</li>
       <li>오류 유형·비율은 설계자가 정했습니다. 실제 현장 오류 분포가 아닙니다.</li>
       <li>기준선은 엔진의 머리글 인식을 빌려 쓴 유리한 조건입니다(사람이 열을 맞춘 엑셀 대조).</li>
-      <li>홀드아웃 H2의 머리글 12개 중 3개(LAST NAME·BIRTH PLACE·SEX)는 정규화하면 개발용 머리글과 같습니다.</li>
+      <li>머리글 겹침(정규화 기준): H2는 12개 중 3개(LAST NAME·BIRTH PLACE·SEX), H3는 1개(Doc. Type)가 개발용과 같습니다.</li>
     </ul></div></div>
     <div class="panel"><div class="panel-head"><h3>재현 방법</h3></div><div class="panel-body small">
-      <p><code class="cmd">node eval/run.mjs --split all</code> → <code>docs/eval-result.json</code>, <code>docs/eval-result.md</code> (시드 ${ev.current.seed}, 결정적)</p>
-      <p>홀드아웃 1회차 원본: <code>docs/eval-holdout-first-run.json</code> (커밋 기록으로 시점 확인 가능)</p>
-      <p>개발 중에는 <code class="cmd">node eval/run.mjs</code> (개발 세트만)으로 튜닝했습니다.</p>
+      <p><code class="cmd">node eval/run.mjs --split all</code> → <code>docs/eval-result.json</code>, <code>docs/eval-result.md</code> (개발·H1·H2, 현재 코드, 시드 ${ev.current.seed})</p>
+      <p>H3 1회차 원본: <code>docs/eval-H3-first-run.json</code> — <code>node eval/run.mjs --split h3</code>는 결과 파일이 있으면 재실행을 거부합니다.</p>
+      <p>H1·H2 1회차 원본: <code>docs/eval-holdout-first-run.json</code> (커밋 기록으로 시점 확인 가능)</p>
       <p class="muted">이 화면의 수치는 위 JSON 파일을 그대로 읽어 표시합니다.</p></div></div>
   </div>`;
 }
@@ -522,8 +527,8 @@ function download() {
 
 async function loadEval() {
   try {
-    const [cur, first] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
-    state.eval = { current: cur, first };
+    const [cur, first, h3] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
+    state.eval = { current: cur, first, h3 };
   } catch (err) {
     state.eval = { error: err.message };
   }
