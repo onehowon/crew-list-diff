@@ -2,10 +2,10 @@
 // 사용: node eval/run.mjs                 개발 세트만(개발·튜닝 중 기본값)
 //       node eval/run.mjs --split all     개발 + 홀드아웃(최종 평가). 결과를 docs/eval-result.{json,md}에 저장
 // 수치는 실행 결과를 그대로 저장한다(손으로 고치지 않음).
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generate, stats, DEFAULT_SEED } from './gen.mjs';
+import { generate, generateH3, stats, DEFAULT_SEED, H3_SEED } from './gen.mjs';
 import { compareCrewLists } from '../lib/engine.js';
 import { baselineRowNumber, baselineIdKey } from './baselines.mjs';
 
@@ -177,10 +177,11 @@ function finalize(agg, kind) {
 
 export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
   const ds = generate(seed);
-  const result = { seed, generatedAt: null, splits: {}, dataset: stats(ds) };
+  const h3 = splits.includes('holdout3') ? generateH3(H3_SEED) : null;
+  const result = { seed, h3Seed: h3 ? H3_SEED : undefined, generatedAt: null, splits: {}, dataset: { ...stats(ds), ...(h3 ? stats(h3) : {}) } };
   const warnSample = {};
   for (const split of splits) {
-    const pairs = ds.pairs.filter((p) => p.split === split);
+    const pairs = split === 'holdout3' ? h3.pairs : ds.pairs.filter((p) => p.split === split);
     const E = newAgg(), B1 = newAgg(), B2 = newAgg();
     const warns = new Map();
     for (const pair of pairs) {
@@ -245,6 +246,18 @@ export function toMarkdown(res) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
   const split = arg('--split', 'dev');
+  // h3: 깨끗한 홀드아웃 H3 1회 실행 전용. 이미 결과 파일이 있으면 다시 실행하지 않는다(재실행·덮어쓰기 방지).
+  if (split === 'h3') {
+    const out = join(ROOT, 'docs/eval-H3-first-run.json');
+    if (existsSync(out) && !process.argv.includes('--force-rerun')) { console.error('H3 1회차 결과가 이미 있습니다: docs/eval-H3-first-run.json (재실행 금지)'); process.exit(2); }
+    const res = runEval({ splits: ['holdout3'] });
+    res.generatedAt = new Date().toISOString();
+    const md = toMarkdown(res);
+    writeFileSync(out, JSON.stringify(res, null, 2) + '\n');
+    writeFileSync(join(ROOT, 'docs/eval-H3-first-run.md'), md);
+    console.log(md);
+    process.exit(0);
+  }
   const splits = split === 'all' ? ['dev', 'holdout'] : [split];
   const res = runEval({ seed: Number(arg('--seed', DEFAULT_SEED)), splits });
   res.generatedAt = new Date().toISOString();

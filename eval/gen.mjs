@@ -81,6 +81,8 @@ export function fmtDate(iso, fmt) {
     case 'DMON': return `${pad(d)}-${MON[m - 1]}-${y}`;
     case 'YMD.': return `${y}.${pad(m)}.${pad(d)}`;
     case 'MDY/': return `${pad(m)}/${pad(d)}/${y}`;
+    case 'YMD/': return `${y}/${pad(m)}/${pad(d)}`;
+    case 'DMONYY': return `${pad(d)} ${MON[m - 1]} ${String(y).slice(2)}`;
     default: throw new Error(fmt);
   }
 }
@@ -114,8 +116,14 @@ export const LAYOUTS = {
     pre: (h) => [[`VSL: ${h.ship}`], [`VOY: ${h.voy}`], [`ETA: ${fmtDate(h.date, 'MDY/')}`], [`PORT: ${h.port}`]],
     cols: [['no', 'SN'], ['familyName', 'LAST NAME'], ['givenNames', 'FIRST & MIDDLE NAME'], ['nationality', "NAT'Y"], ['rank', 'RANK/RATING'], ['dob', 'BIRTH DATE (MM/DD/YYYY)'], ['pob', 'BIRTH PLACE'], ['gender', 'SEX'], ['idType', 'TRAVEL DOC.'], ['idNumber', 'TRAVEL DOC. NO.'], ['idIssuer', 'ISSUING AUTHORITY'], ['idExpiry', 'DOC. EXPIRY (MM/DD/YYYY)']],
   },
+  // ---- 홀드아웃 H3: eval/H3-spec.md (엔진 고정 후 설계, 1회만 실행) ----
+  H3: {
+    id: 'H3', split: 'holdout3', delim: ',', date: 'YMD/', dateExp: 'DMONYY', rank: 'abbr', gender: 'M', idType: 'sirb', mail: 'en3',
+    pre: (h) => [[`Vessel Name: ${h.ship}`], [`Voyage: ${h.voy}`], [`ETA: ${fmtDate(h.date, 'YMD/')}`], [`Port of Arrival: ${h.port}`]],
+    cols: [['no', '#'], ['rank', 'Rank (Cargo)'], ['familyName', '7. Family name (Apellido)'], ['givenNames', '8. Given names (Nombres)'], ['nationality', 'Nacionalidad'], ['gender', 'Sexo'], ['dob', 'Date of Birth (Fecha de nac.)'], ['pob', 'Lugar de nacimiento'], ['idType', 'Doc. Type'], ['idNumber', 'Passport/SIRB No.'], ['idIssuer', 'Issuing State'], ['idExpiry', 'Expiry date']],
+  },
 };
-export const SPLIT_LAYOUTS = { dev: ['D1', 'D2', 'D3'], holdout: ['H1', 'H2'] };
+export const SPLIT_LAYOUTS = { dev: ['D1', 'D2', 'D3'], holdout: ['H1', 'H2'], holdout3: ['H3'] };
 
 function fmtRank(c, style) {
   if (style === 'full') return RANK_FULL[c];
@@ -130,12 +138,14 @@ function fmtGender(g, style) {
 function fmtIdType(t, style) {
   if (style === 'ko') return t === 'PASSPORT' ? '여권' : '선원수첩';
   if (style === 'short') return t === 'PASSPORT' ? 'PP' : 'SB';
+  if (style === 'sirb') return t === 'PASSPORT' ? 'PASSPORT' : 'SIRB';
   return t === 'PASSPORT' ? 'Passport' : "Seaman's book";
 }
 export function fmtCell(f, p, L) {
   const v = p[f];
   if (f === 'rank') return fmtRank(v, L.rank);
-  if (f === 'dob' || f === 'idExpiry') return fmtDate(v, L.date);
+  if (f === 'dob') return fmtDate(v, L.date);
+  if (f === 'idExpiry') return fmtDate(v, L.dateExp || L.date);
   if (f === 'gender') return fmtGender(v, L.gender);
   if (f === 'idType') return fmtIdType(v, L.idType);
   return v;
@@ -215,14 +225,16 @@ function makeRoster(seed, idx) {
 // ---------- 메일 문체 ----------
 function mailName(p, style) {
   if (style === 'en2') return `${title(p.givenNames)} ${title(p.familyName)}`;
+  if (style === 'en3') return `${p.givenNames} ${p.familyName}`;
   return `${p.familyName} ${p.givenNames}`;
 }
 const title = (s) => s.toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
 function mailRank(c, style) { return style === 'en2' ? RANK_FULL[c] : c; }
-function mailDate(iso, style) { return style === 'ko' ? fmtDate(iso, 'YMD.') : style === 'en2' ? fmtDate(iso, 'MDY/') : iso; }
+function mailDate(iso, style) { return style === 'ko' ? fmtDate(iso, 'YMD.') : style === 'en2' ? fmtDate(iso, 'MDY/') : style === 'en3' ? fmtDate(iso, 'YMD/') : iso; }
 const FIELD_WORD = {
   en1: { dob: 'date of birth', idNumber: 'passport number', givenNames: 'given name', pob: 'place of birth', idExpiry: 'passport expiry date' },
   en2: { dob: 'birth date', idNumber: 'travel document number', givenNames: 'first name', pob: 'birthplace', idExpiry: 'document expiry' },
+  en3: { dob: 'DOB', idNumber: 'passport no.', givenNames: 'first name', pob: 'place of birth', idExpiry: 'passport expiry' },
   ko: { dob: '생년월일', idNumber: '여권번호', givenNames: '이름', pob: '출생지', idExpiry: '여권 만료일' },
 };
 function mailValue(f, v, style, r) {
@@ -234,26 +246,31 @@ const T = {
     en1: (p, h, r) => r.pick([`${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')} will sign off at ${h.port} on ${mailDate(addDays(h.date, 1), 'en1')}.`, `Please note ${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')} to disembark at ${h.port} for repatriation.`]),
     en2: (p, h) => `OFF-SIGNER: ${mailRank(p.rank, 'en2')} ${mailName(p, 'en2')} - disembarking ${title(h.port)} ${mailDate(addDays(h.date, 1), 'en2')}.`,
     ko: (p, h) => `${p.rank} ${mailName(p, 'ko')} ${h.port}에서 하선 예정입니다.`,
+    en3: (p, h) => `Pls be advised that ${p.rank} ${mailName(p, 'en3')} will disembark at ${h.port}.`,
   },
   sign_on: {
     en1: (p, h, r) => r.pick([`${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')} (passport ${p.idNumber}) will join the vessel at ${h.port}.`, `New crew: ${mailRank(p.rank, 'en1')} ${mailName(p, 'en1')}, ${p.nationality}, to sign on at ${h.port}.`]),
     en2: (p, h) => `ON-SIGNER: ${mailRank(p.rank, 'en2')} ${mailName(p, 'en2')}, PP NO. ${p.idNumber}, embarking ${title(h.port)}.`,
     ko: (p, h) => `${p.rank} ${mailName(p, 'ko')}(여권 ${p.idNumber}) ${h.port}에서 승선합니다.`,
+    en3: (p) => `Joining: ${p.rank} ${mailName(p, 'en3')}, PPT ${p.idNumber}, ${p.nationality}.`,
   },
   rank_change: {
     en1: (p, o, n, r) => r.pick([`${mailName(p, 'en1')} promoted from ${o} to ${n} with effect from arrival.`, `Rank change: ${mailName(p, 'en1')} ${o} -> ${n}.`]),
     en2: (p, o, n) => `${mailName(p, 'en2')} upgraded from ${RANK_FULL[o]} to ${RANK_FULL[n]}.`,
     ko: (p, o, n) => `${mailName(p, 'ko')} 직급 변경: ${o} → ${n}`,
+    en3: (p, o, n) => `Promotion - ${mailName(p, 'en3')} from ${o} to ${n}.`,
   },
   correction: {
     en1: (p, f, v, r) => r.pick([`Please correct ${FIELD_WORD.en1[f]} of ${mailName(p, 'en1')} to ${v}.`, `${FIELD_WORD.en1[f][0].toUpperCase() + FIELD_WORD.en1[f].slice(1)} of ${mailName(p, 'en1')} should read ${f === 'givenNames' || f === 'pob' ? `"${v}"` : v}.`]),
     en2: (p, f, v) => `Kindly amend ${FIELD_WORD.en2[f]} for ${mailName(p, 'en2')} to read ${v}.`,
+    en3: (p, f, v) => `Kindly correct the ${FIELD_WORD.en3[f]} of ${mailName(p, 'en3')}, should be ${v}.`,
     ko: (p, f, v) => `${mailName(p, 'ko')} ${FIELD_WORD.ko[f]} ${f === 'givenNames' || f === 'pob' ? `"${v}"` : v}(으)로 정정 바랍니다.`.replace('(으)로', /[가-힣]$/.test(v) ? '으로' : '로'),
   },
 };
 const NOISE = {
   en1: { head: (h) => ['Dear Agent,', '', `Please find attached the revised crew list for ${h.ship} V.${h.voy}.`], extra: (h) => `Joining crew will arrive by air on ${addDays(h.date, -1)}.`, none: 'No crew change at this port.', tail: ['', 'Best regards,', 'Crewing Dept. (demo)'] },
   en2: { head: () => ['Good day,', '', 'Attached pls find updated crew list.'], extra: () => 'Crew change subject to immigration clearance.', none: 'No crew change.', tail: ['', 'Rgds,', 'Manning (demo)'] },
+  en3: { head: () => ['Hi Sir/Maam,', '', 'Pls see attached crew list.'], extra: () => 'Crew change via Manila, flight details to follow.', none: 'No crew change this port.', tail: ['', 'Thanks and regards,', 'Crewing (demo)'] },
   ko: { head: (h) => ['대리점 담당자님 안녕하세요.', '', `${h.ship} ${h.voy} 항차 수정 선원명부 송부드립니다.`], extra: () => '교대 인원은 항공편으로 전날 도착합니다.', none: '이번 기항에는 선원 교대가 없습니다.', tail: ['', '감사합니다.', '선원관리팀 (데모)'] },
 };
 
@@ -267,7 +284,7 @@ function makePair(seed, i, roster, split) {
   const r = new Rng(seed * 17 + i * 7919 + 3);
   const lays = SPLIT_LAYOUTS[split];
   const LA = LAYOUTS[lays[i % lays.length]];
-  const LB = r.chance(0.2) ? LAYOUTS[r.pick(lays.filter((x) => x !== LA.id))] : LA;
+  const LB = lays.length > 1 && r.chance(0.2) ? LAYOUTS[r.pick(lays.filter((x) => x !== LA.id))] : LA;
   const style = LA.mail;
   const h = roster.head;
   const taken = new Set(roster.taken);
@@ -477,7 +494,7 @@ function makePair(seed, i, roster, split) {
     }
   });
   return {
-    id: `pair-${String(i + 1).padStart(3, '0')}`, split, roster: roster.idx, layoutA: LA.id, layoutB: LB.id, mailStyle: style, shuffled,
+    id: `${split === 'holdout3' ? 'h3-' : ''}pair-${String(i + 1).padStart(3, '0')}`, split, roster: roster.idx, layoutA: LA.id, layoutB: LB.id, mailStyle: style, shuffled,
     a: ra.text, b: rb.text, mail: lines.join('\n') + '\n', rowPidsA, rowPidsB, labels, cosmetic, events, cellsB: rowPidsB.length * FIELDS.length,
   };
 }
@@ -490,6 +507,14 @@ export function generate(seed = DEFAULT_SEED) {
     const roster = split === 'dev' ? rosters[i % 84] : rosters[84 + ((i - 140) % 36)];
     pairs.push(makePair(seed, i, roster, split));
   }
+  return { seed, rosters: rosters.length, pairs };
+}
+
+// 홀드아웃 H3: 새 시드·새 명부 36개·쌍 60개 (eval/H3-spec.md)
+export const H3_SEED = 20261101;
+export function generateH3(seed = H3_SEED) {
+  const rosters = Array.from({ length: 36 }, (_, k) => makeRoster(seed, k));
+  const pairs = Array.from({ length: 60 }, (_, i) => makePair(seed, i, rosters[i % 36], 'holdout3'));
   return { seed, rosters: rosters.length, pairs };
 }
 

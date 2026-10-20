@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { generate, LAYOUTS, SPLIT_LAYOUTS } from '../eval/gen.mjs';
+import { generate, generateH3, LAYOUTS, SPLIT_LAYOUTS } from '../eval/gen.mjs';
 import { LAWS, IMMIGRATION_PENALTY } from '../lib/impact.js';
 import { normHeader } from '../lib/fields.js';
 
@@ -42,4 +42,13 @@ test('법령 인용이 law.go.kr 원문 XML에 글자 그대로 있음', { skip:
   const x = readFileSync(new URL('출입국관리법.xml', LAW_DIR), 'utf8');
   assert.ok(x.includes(IMMIGRATION_PENALTY.quote));
   assert.ok(x.includes(IMMIGRATION_PENALTY.head));
+});
+
+test('홀드아웃 H3: 결정적, 쌍 60, 머리글은 기존과 1개(Doc. Type)만 겹침', () => {
+  assert.equal(JSON.stringify(generateH3()), JSON.stringify(generateH3()));
+  const ds = generateH3();
+  assert.equal(ds.pairs.length, 60);
+  assert.ok(ds.pairs.every((p) => p.layoutA === 'H3' && p.layoutB === 'H3'));
+  const old = new Set(['D1', 'D2', 'D3', 'H1', 'H2'].flatMap((id) => LAYOUTS[id].cols.map(([, h]) => normHeader(h))));
+  assert.deepEqual(LAYOUTS.H3.cols.map(([, h]) => normHeader(h)).filter((x) => old.has(x)), ['doctype']);
 });
