@@ -1,0 +1,410 @@
+[
+  {
+    "id": "M001",
+    "text": "Subject: DEMO HANBIT 3 / V.2611E - crew list amendment\n\nDear Agent,\n\nPlease amend the crew list for Busan arrival as follows:\n\nAB Juan DELA CRUZ - date of birth should read 03 JUN 1992.\n\nBest regards,\nCrewing Dept."
+  },
+  {
+    "id": "M002",
+    "text": "From: crewing@demo-shipmgmt.example\nTo: busan.agency@example.com\nSubject: HANBIT 3 crew change at Busan\n\nGood day,\n\nKindly arrange crew change at Busan (ETA 2026-11-03):\n\nOFF-SIGNER : Oiler GARCIA, Ronaldo (PHL)\nON-SIGNER  : Oiler BAUTISTA, Ricardo (PHL), DOB 1989-10-02, PPT PB4471906\n\nPlease update the crew list and immigration documents accordingly.\n\nThanks & regards\nJoy / Crewing"
+  },
+  {
+    "id": "M003",
+    "text": "Dear Sir/Madam,\n\nPlease correct 2/O Andrii KOVALENKO's passport number to FT2950831 (last two digits were swapped).\n\nWe do NOT need to change 3/O Santos' date of birth to 11 MAR 1994 as mentioned in the draft we sent this morning - his DOB on the list is correct, leave it.\n\nRegards,\nCapt. Park Sanghoon\nMaster, DEMO HANBIT 3"
+  },
+  {
+    "id": "M004",
+    "text": "제목: [DEMO HANBIT 3] 선원명부 정정 요청\n\n안녕하세요, 대리점 담당자님.\n\n최동현 기관장 여권번호가 잘못 기재되어 있어 정정 부탁드립니다.\n- 현재: MJ5508219\n- 정정: MJ5508291\n\n확인 후 회신 부탁드립니다.\n감사합니다.\n선원팀 김 대리 드림"
+  },
+  {
+    "id": "M005",
+    "text": "Subject: RE: sign off AB Aung Ko Ko\n\nAgent,\n\nEarlier today I asked you to sign off AB AUNG KO KO at Busan. Please disregard that request - his relief could not get a visa in time, so he will remain on board until next port.\n\nHowever his seaman's book has been renewed, please update expiry date to 22 April 2031.\n\nRgds\nMaster"
+  },
+  {
+    "id": "M006",
+    "text": "Hi,\n\nTwo things for HANBIT 3 Busan call:\n\n1) Wiper Agus SAPUTRA signs off at Busan - end of contract.\n2) OS Tran Minh Tuan may be promoted to AB, but only once owners approve. That is still pending so please keep him as OS on the list for now.\n\nThx\nMina"
+  },
+  {
+    "id": "M007",
+    "text": "Subject: RE: RE: DEMO HANBIT 3 crew list\n\nThanks, noted the passport fix is done.\n\nOne more: 2/E MELNYK Serhii place of birth should be ODESA, not KYIV.\n\nBR\nOksana\n\n-----Original Message-----\nFrom: Oksana P. <crew@demo-shipmgmt.example>\nSent: Monday, October 19, 2026 09:12\nSubject: RE: DEMO HANBIT 3 crew list\n\n> Please correct Melnyk Serhii passport no. to FK6620458.\n> Thank you."
+  },
+  {
+    "id": "M008",
+    "text": "Dear agent\n\nMessman FLORES Angelica - DOB on list is 23 JUL 2000, should be 27 JUL 2000.\n\n...sorry, just checked her passport copy again. Correct DOB is 25 JUL 2000. Please use 2000-07-25.\n\nThanks\nC/O Lee"
+  },
+  {
+    "id": "M009",
+    "text": "Subject: Crew matters - Busan\n\nDear Mr. Kim,\n\nFor DEMO HANBIT 3 (V.2611E): please update 3/E NGUYEN VAN HUNG passport expiry to 14 SEP 2030 (new passport, same number).\n\nFor information, our sister vessel DEMO HANBIT 7 will also be in Busan next week and will sign off Oiler Ramon CASTILLO there - separate instruction will follow from her master, please don't mix with HANBIT 3 list.\n\nBest regards\nFleet Personnel"
+  },
+  {
+    "id": "M010",
+    "text": "agent,\n\noiler KYAW ZAW LIN - given name is spelt ZAW LYNN in his passport, pls correct.\n\nAlso, is C/O Lee Jaewon's date of birth 1983-09-12? Our HR file shows 12 Sep but your list shows 21 Sep. Can you confirm which one you have from the passport scan?\n\nrgds\ncrewing"
+  },
+  {
+    "id": "M011",
+    "text": "Dear Agent,\n\nCrew change Busan 03 NOV 2026:\n- Chief Cook MENDOZA ARNEL - sign off\n- Chief Cook DIAZ ROLANDO (PHL) - sign on\n\nFYI: C/E Choi's passport number was already corrected to MJ5508291 in the list you sent us yesterday, no further action needed there.\n\nThanks,\nAna"
+  },
+  {
+    "id": "M012",
+    "text": "부산 대리점 담당자님께,\n\n트란 민 투안(TRAN MINH TUAN, OS) 여권 만료일을 2029년 5월 17일로 수정해 주세요.\n\n그리고 본사에서 이재원 일항사 직급을 Master로 바꾸라는 말이 있었다고 들으셨을 텐데, 바꾸지 마십시오. 이번 항차는 박상훈 선장이 그대로 Master입니다.\n\nDEMO HANBIT 3 선장 드림"
+  },
+  {
+    "id": "M013",
+    "text": "Pls amend HANBIT 3 crew list:\n\nBOSUN REYES JOMAR -> nationality PHL ok, but gender shown as F on your list, should be M.\nWIPER SAPUTRA AGUS -> passport XC8205531 (not ...513)\n\ntks / ch.off"
+  },
+  {
+    "id": "M014",
+    "text": "Subject: Promotion onboard\n\nDear Agent,\n\nPlease note OS TRAN Minh Tuan has been promoted to Able Seaman with effect from today, approved by owners. Kindly reflect his new rank in the Busan crew list.\n\nRegards,\nCapt. S.H. Park"
+  },
+  {
+    "id": "M015",
+    "text": "Hello,\n\nPlease sign on the following at Busan, 3 Nov 2026:\n\n  Rank: Third Officer\n  Name: Joshua RAMIREZ\n  Nationality: Filipino\n  DOB: 14 FEB 1997\n\nAnd sign off 3/O Mark Santos.\n\nWait - correction from office just now: Santos is extending his contract by one month, so he will NOT sign off and Ramirez will NOT join this port. Please cancel both.\n\nSorry for the confusion.\nRegards\nMarine HR"
+  },
+  {
+    "id": "M016",
+    "text": "Dear Busan agency,\n\nKindly correct the following for DEMO HANBIT 3:\n\na. Chief Officer LEE JAEWON - passport expiry 2032.03.08\nb. Able Seaman AUNG KO KO - nationality should be MMR (shown as MYS)\n\nIf the Myanmar embassy confirms his new seaman's book number we will also ask you to change his ID to MDN215380, but not yet.\n\nBest regards\nPersonnel Team"
+  },
+  {
+    "id": "M017",
+    "text": "Subject: Re: Crew list V.2611E\n\nHi Jin,\n\nOk with the list except: Chief Engineer CHOI Donghyun DOB is 30 DEC 1969 - correct. But 2/E Serhii Melnyk DOB should be 1985-07-29, not 19th.\n\nThanks\nOksana\n\nOn Sat, Oct 17, 2026 at 3:41 PM Jin <jin@busan-agency.example> wrote:\n> Dear Oksana,\n> attached draft crew list for HANBIT 3. Also as you asked last week,\n> we changed Garcia Ronaldo's rank from Oiler to Fitter in the draft.\n> Please check."
+  },
+  {
+    "id": "M018",
+    "text": "Agent,\n\nOn-signer for Busan:\nMr. Rizal PRATAMA, Indonesian, joining as Wiper. Passport XB7720451, born 2001-08-19 in Surabaya.\n\nRgds"
+  },
+  {
+    "id": "M019",
+    "text": "Dear Agent,\n\nPlease change Bosun Reyes' passport number to PA3159082.\nCorrection - number is PA3159208. Our clerk misread the scan the first time.\n\nBest,\nCrewing"
+  },
+  {
+    "id": "M020",
+    "text": "안녕하세요.\n\nDEMO HANBIT 3 V.2611E 관련입니다.\n\n1. 갑판수 후안 델라크루즈(DELA CRUZ JUAN) 하선\n2. 신규 승선: 갑판수(AB) PASCUAL NOEL, 필리핀 국적, 1995.04.12생\n\n참고로 지난 항차(V.2609W) 때 사푸트라 와이퍼 출생지를 JAKARTA로 고쳤던 건은 이미 반영되어 있으니 신경 쓰지 않으셔도 됩니다.\n\n감사합니다."
+  },
+  {
+    "id": "M021",
+    "text": "Hi team\n\ncan you confirm whether Messman Flores' passport no. on your list is PG2507831? we think it might be a typo but not sure yet.\n\nMeanwhile pls update her passport expiry to 2030-01-15.\n\nthanks"
+  },
+  {
+    "id": "M022",
+    "text": "Subject: DEMO HANBIT 3 - correction of family name\n\nDear Sirs,\n\nThe family name of our Third Engineer is NGUYEN and given names VAN HUNG - this is correct. However the Chief Cook family name should be MENDOZA-RIVERA as per his renewed passport (issued Manila, 2026-08-02).\n\nPlease amend.\n\nKind regards,\nShip Management"
+  },
+  {
+    "id": "M023",
+    "text": "Dear Agent,\n\nFor Busan crew change please note:\n\n- 2/O KOVALENKO Andrii - sign off\n- 2/O BONDARENKO Taras (UKR) - sign on\n\nOn another note, for DEMO HANBIT 2 (Ulsan, V.2612W) the master asked to correct AB Lito NAVARRO's DOB to 1990-11-21. That vessel is handled by Ulsan office - please forward to them, do not touch HANBIT 3 list.\n\nRegards"
+  },
+  {
+    "id": "M024",
+    "text": "Subject: Updated passport - Kyaw Zaw Lin\n\nAgent,\nOiler KYAW ZAW LIN got new passport onboard via embassy:\nNo. MH3304712\nIssued by: MMR\nExpiry: 5 October 2036\n\npls update crew list.\nMaster HANBIT 3"
+  },
+  {
+    "id": "M025",
+    "text": "Dear Agent,\n\nPlease do not sign off Chief Cook Mendoza in Busan. He will stay until Kaohsiung.\nPlease DO sign off Messman FLORES ANGELICA in Busan (family emergency).\n\nRgds\nCapt. Park"
+  },
+  {
+    "id": "M026",
+    "text": "Hi,\n\nCorrect place of birth for following crew:\n\nPARK SANGHOON - BUSAN\nCHOI DONGHYUN - MOKPO\nLEE JAEWON - INCHEON\n\nthx"
+  },
+  {
+    "id": "M027",
+    "text": "Subject: FW: AB Juan Dela Cruz\n\nAgent, see below from the office and pls proceed.\n\n---------- Forwarded message ---------\nFrom: Crew Manager\nDate: Tue, Oct 20, 2026\nSubject: AB Juan Dela Cruz\n\nCaptain, please arrange sign-off of AB DELA CRUZ Juan at Busan; his reliever is AB Mario SORIANO (PHL)."
+  },
+  {
+    "id": "M028",
+    "text": "Dear Agent,\n\nIf the Chief Officer's medical comes back unfit, we will sign him off at Busan and promote 2/O Kovalenko to C/O. We'll know by Friday. Please don't change anything yet.\n\nMeanwhile, please correct 2/O KOVALENKO's date of birth to 8 Feb 1991 (year was wrong).\n\nRegards\nFleet HR"
+  },
+  {
+    "id": "M029",
+    "text": "Subject: crew list HANBIT 3 v.2611e\n\nDear Sir,\n\nWiper SAPUTRA AGUS - gender ok, nationality IDN ok. His passport is issued by IDN, but your list shows PHL as issuing state. pls fix.\n\nregards\n2/O"
+  },
+  {
+    "id": "M030",
+    "text": "Dear Agent,\n\nFor your records only: during last voyage V.2609W, 3/O Mark Santos was still Fourth Officer and was promoted to Third Officer at Manila. Your list already shows Third Officer - correct.\n\nToday's request: please change 3/E NGUYEN VAN HUNG's rank to Second Engineer? No - sorry, I mean only his passport no., new no. is CN1182950.\n\nBR"
+  },
+  {
+    "id": "M031",
+    "text": "Kepada Agen / Dear Agent,\n\nMohon perbaiki data crew berikut / please correct:\n\nWiper AGUS SAPUTRA - tanggal lahir (DOB) seharusnya 1 Desember 1996, bukan 1997.\n\nTerima kasih / Thank you\nMaster DEMO HANBIT 3"
+  },
+  {
+    "id": "M032",
+    "text": "Subject: Re: Busan crew change\n\nThanks for confirming the hotel.\n\n> From: crewing\n> Please sign on 2nd Cook EDWARD LIM (PHL) at Busan\n> and sign off Messman Flores.\n> (sent 15 Oct)\n\nThat change was already done in Gwangyang last week actually, so ignore the above.\n\nPlease only update today: Bosun Reyes - DOB 25 AUG 1981.\n\nRgds"
+  },
+  {
+    "id": "M033",
+    "text": "Agent,\n\n3/O santos mark - pls change nationality to PHL (your list shows PHI).\noiler garcia ronaldo - DOB 9 May 1986 is right, no change.\n\nmaster"
+  },
+  {
+    "id": "M034",
+    "text": "To: Busan Agency\nSubject: DEMO HANBIT 3 - Electrician joining\n\nPlease add to crew list:\nElectro-Technical Officer KIM MINSU, KOR, DOB 1988-03-27, passport M80451236.\nJoining Busan 03 NOV 2026.\n\nIs it also possible to sign on a Deck Cadet in Busan? If yes we will send the name tomorrow.\n\nRgds\nCrew Team"
+  },
+  {
+    "id": "M035",
+    "text": "Subject: HANBIT 3 - C/E passport\n\nAgent,\n\nC/E Choi Donghyun's passport expires on 2027-01-10 per your list. That's wrong - new expiry 2027-10-01. Hmm, let me double-check... confirmed from the passport data page: expiry is 01 OCT 2031. Please use that.\n\nBrgds\nC/E"
+  },
+  {
+    "id": "M036",
+    "text": "안녕하십니까, 해운대리점 담당자님.\n\n다음 항차 건이 아니라 이번 부산 입항(11월 3일) 건입니다.\n\n- 이재원 1항사: 생년월일 1983년 9월 21일 맞습니다. 변경 없음.\n- 박상훈 선장: 여권번호 MK4820175 로 정정 바랍니다.\n\n그리고 혹시 최동현 기관장 출생지가 목포로 되어 있나요? 저희 자료에는 광주로 되어 있어서 확인 부탁드립니다.\n\n감사합니다."
+  },
+  {
+    "id": "M037",
+    "text": "Dear Agent,\n\nFor DEMO HANBIT 3 only:\n\n* sign off AB Aung Ko Ko\n* sign on AB Htet AUNG (MMR), seaman's book MDN330918\n\nNote the Ulsan call next month (V.2612W) will see 2/E MELNYK relieved - not now. Please do not process that for this port.\n\nThank you"
+  },
+  {
+    "id": "M038",
+    "text": "Hi Busan,\n\npls note C/Cook arnel mendoza -> DOB 14 FEB 1978 confirmed OK.\npls note Messman angelica flores -> nationality shown as PHL, correct.\nnothing to change for them.\n\nBUT: oiler GARCIA ronaldo -> passport PD5021748\n\ncheers"
+  },
+  {
+    "id": "M039",
+    "text": "Subject: Fwd: crew list correction\n\nAgent - FYI only. This was sent to HANBIT 5's agent in Incheon last week, copied to you by mistake. Nothing for HANBIT 3.\n\n> Please amend Bosun Eduardo VILLANUEVA DOB to 1979-04-30.\n> Please sign off OS Paolo MERCADO.\n\nRegards"
+  },
+  {
+    "id": "M040",
+    "text": "Dear Agent,\n\nPlease change 3/O Mark SANTOS's rank to Second Officer, as 2/O Kovalenko signs off at Busan. Please also sign off 2/O Andrii KOVALENKO.\n\nNew 3/O joining: Kevin TORRES, PHL.\n\nRegards,\nCapt. Park"
+  },
+  {
+    "id": "M041",
+    "text": "Subject: 정정 요청 - 미얀마 선원\n\n담당자님,\n\nAB 아웅 코 코(AUNG KO KO)의 선원수첩 번호가 MDN215083 으로 되어 있는데, MDN251083 이 맞습니다.\n\n정정 부탁드립니다. 아, 그리고 선원수첩 만료일도 2030.06.30 으로 바꿔 주세요.\n아니다, 만료일은 일단 그대로 두세요. 새 수첩 받으면 다시 연락드리겠습니다.\n\n선원팀"
+  },
+  {
+    "id": "M042",
+    "text": "Dear Agent\n\nPls confirm: is Wiper Saputra's passport expiry 2027-12-01 on your list? If so it's less than 6 months after... no wait, that's fine. Just confirming.\n\nAnd pls change Ordinary Seaman TRAN MINH TUAN date of birth to 2 June 1998.\n\ntks"
+  },
+  {
+    "id": "M043",
+    "text": "Subject: RE: crew list DEMO HANBIT 3\n\nAgent,\n\nThe correction you made yesterday (Fitter rank for Garcia) - please revert, he is still Oiler. Owners didn't sign the promotion.\n\nThanks\n\n> -----Original Message-----\n> Please change Oiler Garcia Ronaldo to Fitter."
+  },
+  {
+    "id": "M044",
+    "text": "Dear Busan,\n\nThird Engineer NGUYEN VAN HUNG - his family name is NGUYEN, given names VAN HUNG. Your list has it reversed (family VAN HUNG). Please fix so family name = NGUYEN.\n\nAlso gender of Messman Flores should be F (shown M).\n\nBR / 2E"
+  },
+  {
+    "id": "M045",
+    "text": "Dear Agent,\n\nSubject to the Panama flag state endorsement being received before arrival, 3/E NGUYEN will be upgraded to Second Engineer. We will tell you when received.\n\nFor now just two corrections:\n- 2/E Melnyk passport issuing state: UKR\n- 2/E Melnyk passport expiry: 2029-11-18\n\nRegards"
+  },
+  {
+    "id": "M046",
+    "text": "agent\nsign off: bosun jomar reyes\nsign on: bosun Ernesto DELA PENA, filipino, 1977-09-09\nthanks master"
+  },
+  {
+    "id": "M047",
+    "text": "Hello,\n\nCan you please change the DOB of Oiler Kyaw Zaw Lin to 29 Jan 1987?\nSorry - ignore that, I was looking at the wrong crew member's file. His DOB is fine.\n\nWhat does need changing is Oiler KYAW's place of birth: YANGON.\n\nRegards"
+  },
+  {
+    "id": "M048",
+    "text": "Dear Sir,\n\nPlease note: the following crew member's data is already corrected in our system as per your list of 18 Oct - Chief Officer LEE JAEWON passport MR7031864. No action.\n\nNew request: Chief Officer LEE JAEWON's given name should be written JAE WON (two words) as in passport.\n\nThank you."
+  },
+  {
+    "id": "M049",
+    "text": "Agen yth.,\n\nUntuk kapal DEMO HANBIT 3, mohon sign on crew baru:\n- Nama: WIBOWO, Dimas\n- Jabatan: Wiper\n- Kebangsaan: Indonesia\n- Tgl lahir: 2000-03-15\n\nAnd please sign off Wiper SAPUTRA AGUS at Busan.\n\nTerima kasih,\nCrewing Jakarta"
+  },
+  {
+    "id": "M050",
+    "text": "Subject: Busan - Second Engineer DOB\n\nAgent,\n\n2/E MELNYK Serhii: DOB should be 1985-07-09.\nUpdate: please disregard, master confirmed 19 Jul 1985 is correct per passport.\n\nSo no change on Melnyk. Thanks for patience."
+  },
+  {
+    "id": "M051",
+    "text": "Dear Agent,\n\nChief Cook Arnel MENDOZA's passport no. should read PF1085672.\n\nOn second thoughts I re-checked and it is PF1085627 - exactly as you already have it. Nothing to change.\n\nRegards, C/O"
+  },
+  {
+    "id": "M052",
+    "text": "To: Agency\nCc: Fleet\n\nPls update for Busan list:\n1. 3/O SANTOS Mark — passport expiry 2028-07-07\n2. AB DELA CRUZ Juan — passport issuer PHL\n3. OS TRAN Minh Tuan — place of birth HAI PHONG\n\nThank you"
+  },
+  {
+    "id": "M053",
+    "text": "Good morning,\n\nOur agent in Kaohsiung asked about HANBIT 3's next port crew change: AB Dela Cruz will sign off there in December, not at Busan. Just FYI.\n\nFor Busan, please sign on Deck Cadet Jae-hyuk SEO (KOR) - no one signs off.\n\nRegards\nCrewing"
+  },
+  {
+    "id": "M054",
+    "text": "Agent,\n\nPlease make sure Master's nationality stays KOR. Someone in our office changed it to KOR→ROK in the draft - do not use ROK.\n\nAlso C/O Lee's gender: M.\n\nrgds"
+  },
+  {
+    "id": "M055",
+    "text": "부산 대리점 귀중\n\nDEMO HANBIT 3 승하선 관련 회신드립니다.\n\n지난번 메일에서 요청드렸던 조리장 멘도사 하선 건은 이번 부산항에서 그대로 진행해 주시고, 교대자는 조리장 ROXAS BENJIE (필리핀)입니다.\n\n다만 메스맨 플로레스 하선 건은 선주 승인이 나면 진행하겠습니다. 승인 전까지는 명부에 그대로 두세요.\n\n감사합니다."
+  },
+  {
+    "id": "M056",
+    "text": "Subject: re: hanbit 3 OS\n\nAgent, quick one - is OS Tran's passport CK2560918 or CK2569018? the copy is blurry. let me know what you have.\n\nno other changes today."
+  },
+  {
+    "id": "M057",
+    "text": "Dear Agent,\n\nPlease update Bosun REYES JOMAR's given names to \"JOMAR ANTHONY\" as per new passport, and passport no. PA9921457, expiry Nov 10 2035.\n\nRegards\nCapt."
+  },
+  {
+    "id": "M058",
+    "text": "Hi,\n\nNew joiner details (HANBIT 3 / Busan):\nSecond Cook – Michael AQUINO – PHL – b. 1993-05-21\n\nEarlier we said he would join as Messman; that's changed - he joins as Second Cook.\n\nBR"
+  },
+  {
+    "id": "M059",
+    "text": "Agent,\n\nDo NOT sign off C/E Choi at Busan - the earlier rumour is wrong.\nDo NOT change his DOB either.\n\nOnly change: Fitter? no. Only change is Wiper Saputra rank to Oiler (promoted onboard, owners approved 18 Oct).\n\nMaster"
+  },
+  {
+    "id": "M060",
+    "text": "Subject: HANBIT 3 - AB Aung nationality\n\nDear Agent,\n\nAB AUNG KO KO nationality - please change to THA.\n\nSorry, that was a mistake in our spreadsheet, he is Myanmar. Keep MMR.\n\nBut please change his place of birth to MAWLAMYINE.\n\nRgds"
+  },
+  {
+    "id": "M061",
+    "text": "Dear agency,\n\nFurther to our call: 3/E NGUYEN VAN HUNG DOB is 11 APR 1991 per old list. New passport says 1991-04-14. Please update to the passport date, 14 April 1991.\n\nThanks"
+  },
+  {
+    "id": "M062",
+    "text": "Dear Agent,\n\nPlease change Messman FLORES ANGELICA rank to Second Cook.\n\nHmm, scratch that - Captain says rank change only effective from Kaohsiung. Leave her as Messman for Busan.\n\nAlso, Messman FLORES - passport expiry 2031-07-22."
+  },
+  {
+    "id": "M063",
+    "text": "Subject: Re: Re: HANBIT 3 crew list\n\nAgent,\nAll good now. thank you.\n\nOn Oct 19, 2026, Busan Agency wrote:\n> We have amended Chief Engineer CHOI DONGHYUN gender to M and\n> Bosun REYES nationality to PHL. Pls confirm.\n\nOn Oct 18, 2026, Ship wrote:\n> pls amend C/E gender M, Bosun nationality PHL."
+  },
+  {
+    "id": "M064",
+    "text": "Dear Agent,\n\nOur Master informs that C/O LEE JAEWON's passport (MR7031846) expires 2026-12-15. He has renewed it in Busan consulate last trip; new passport MR9902713 valid to 2036-09-01. Please update ID number and expiry.\n\nRegards"
+  },
+  {
+    "id": "M065",
+    "text": "제목: DEMO HANBIT 3 부산 승선자 통보\n\n대리점 담당자님,\n\n부산항(2026.11.03)에서 아래 인원 승선 예정입니다.\n - 이기관사(2/E): 정 우 진 (JEONG WOOJIN), 한국, 1987년 2월 11일생\n - 하선: 2/E 멜닉 세르히 (MELNYK SERHII)\n\n명부 반영 부탁드립니다."
+  },
+  {
+    "id": "M066",
+    "text": "안녕하세요.\n\nAB 델라크루즈 생년월일 1992-06-03 으로 바꿔달라는 메일을 어제 보냈는데, 다시 확인해 보니 1992년 3월 6일이 맞습니다. 어제 요청은 취소합니다.\n\n대신 델라크루즈 여권 만료일은 2033.02.19 로 바꿔 주세요.\n\n선장"
+  },
+  {
+    "id": "M067",
+    "text": "부산 대리점 담당자님께\n\n이번 항차 V.2611E 선원명부 관련입니다.\n\n3항사 산토스 마크 생년월일이 1994-11-03 로 되어 있는데 1994-11-30 이 맞습니다. 정정 바랍니다.\n\n참고: 지난 V.2607E 때 메스맨 플로레스 여권번호를 PG2507813 으로 고친 적이 있는데 그건 이미 반영돼 있습니다.\n\n감사합니다."
+  },
+  {
+    "id": "M068",
+    "text": "제목: 승선 예정자 변경\n\n담당자님,\n\n조기장 후보로 김태호(KIM TAEHO)를 말씀드렸었는데, 비자 문제가 해결되면 승선시키겠습니다. 아직 확정 아니니 명부에 넣지 말아 주세요.\n\n확정 건: 와이퍼 사푸트라 아구스 하선.\n\n감사합니다."
+  },
+  {
+    "id": "M069",
+    "text": "안녕하세요, 선원팀입니다.\n\n1. 박상훈 선장 생년월일: 1971.05.14 → 1971.05.04 로 정정\n2. 박상훈 선장 출생지: 부산 → 통영(TONGYEONG)\n\n위와 같이 부탁드립니다."
+  },
+  {
+    "id": "M070",
+    "text": "대리점 담당자님,\n\n혹시 2항사 코발렌코 여권 만료일이 2027년 3월 2일로 되어 있습니까? 그렇다면 출입국에 문제 없는지 확인 부탁드립니다.\n\n그리고 1기사 멜닉의 성별이 F로 잘못 들어가 있다고 들었는데, M으로 고쳐 주세요.\n\n감사합니다."
+  },
+  {
+    "id": "M071",
+    "text": "제목: RE: 한빛3호 명부\n\n담당자님, 아래 건은 처리 완료 확인했습니다. 감사합니다.\n추가로 갑판장 레예스 여권 발급국을 PHL로 바꿔 주세요.\n\n-----원본 메일-----\n보낸 사람: 선원팀\n> 조리장 멘도사 생년월일 1978-02-24 로 정정 바랍니다."
+  },
+  {
+    "id": "M072",
+    "text": "담당자님\n\n한빛7호(DEMO HANBIT 7) 기관장 YOON SEOKJIN 여권번호 정정 건은 울산 대리점으로 보냈습니다. 한빛3호와는 무관합니다.\n\n한빛3호는 기관장 최동현 여권 만료일 2030-04-30 으로만 수정해 주세요."
+  },
+  {
+    "id": "M073",
+    "text": "안녕하세요.\n\nOS 트란 민 투안 승진 건은 아직 아닙니다. 이번 부산에서는 OS로 그대로 두시고 AB로 바꾸지 마세요.\n\n조기수(OILER) 가르시아 생년월일 1986년 5월 19일로 정정 부탁드립니다.\n\n감사합니다."
+  },
+  {
+    "id": "M074",
+    "text": "Halo Agen,\n\nCrew HANBIT 3:\nWiper Agus Saputra - tempat lahir (place of birth) MANADO.\nJenis kelamin (gender) laki-laki / M - already correct, tidak perlu diubah.\n\nAlso pls note: kalau owner setuju, Agus akan naik jabatan jadi Oiler. Belum sekarang.\n\nSalam,\nCrewing Jakarta"
+  },
+  {
+    "id": "M075",
+    "text": "Dear Agent / Agen yth,\n\nSign on di Busan / sign on at Busan:\n 1. HIDAYAT Fajar - Oiler - IDN - 1994-09-27\n 2. SETIAWAN Budi - Ordinary Seaman - IDN - 2002-01-08\n\nSign off: Oiler KYAW ZAW LIN.\n\nMohon update crew list. Thanks."
+  },
+  {
+    "id": "M076",
+    "text": "Agen,\n\nMohon ubah nomor paspor Wiper SAPUTRA menjadi XC8205513... eh salah, yang benar XC8250513. Please use XC8250513.\n\nTerima kasih"
+  },
+  {
+    "id": "M077",
+    "text": "Subject: HANBIT 3 Master DOB\n\nAgent,\n\nMaster's date of birth: May 14, 1971 is wrong. Correct is May 41... sorry typo. Correct date is May 24, 1971.\n\nThanks"
+  },
+  {
+    "id": "M078",
+    "text": "Dear agent,\n\nPlease sign off AB Dela Cruz and sign on AB Carlo MANALO.\nCorrection: sign on AB Carlo MANALANG (not Manalo, typo).\n\nRgds"
+  },
+  {
+    "id": "M079",
+    "text": "Subject: crew list check\n\nDear Agent,\n\nPlease verify: does your list show Chief Cook Mendoza nationality as PHL? We saw \"PHI\" in the customs copy. If it is PHI please correct to PHL.\n\nAlso is 2/O Kovalenko's place of birth LVIV? Please confirm before we send to PSC.\n\nThanks"
+  },
+  {
+    "id": "M080",
+    "text": "HANBIT 3 - V.2611E\n\nAgent, the 4 changes below please:\n\n- MASTER  PARK SANGHOON     gender M\n- C/O     LEE JAEWON        nationality KOR\n- 2/O     KOVALENKO ANDRII  passport issuer UKR\n- 3/O     SANTOS MARK       given names MARK ANTHONY\n\nbr master"
+  },
+  {
+    "id": "M081",
+    "text": "Dear Agent,\n\nRe: last month's Busan call on V.2609W - you corrected Bosun Reyes' DOB to 25 AUG 1980 then. Thank you for that.\n\nThis time: please sign off Bosun REYES (contract completed) and sign on Bosun Ariel GONZAGA (PHL, 1982-12-12).\n\nRgds"
+  },
+  {
+    "id": "M082",
+    "text": "Agent,\n\nThere's a request floating around to change 2/E Melnyk's nationality to POL. Please ignore it - he is Ukrainian, keep UKR. Do not change.\n\nAlso please do not touch Oiler Kyaw's seaman's book data.\n\nThanks, C/E"
+  },
+  {
+    "id": "M083",
+    "text": "Subject: Urgent - medical sign off\n\nDear Agent,\n\nOiler GARCIA Ronaldo is to be signed off at Busan for medical treatment (hand injury). Please arrange hospital and update crew list. No replacement this port.\n\nCapt. Park"
+  },
+  {
+    "id": "M084",
+    "text": "Dear Agent,\n\nPls amend AB AUNG KO KO DOB to 17 OCT 1995.\nPls amend AB AUNG KO KO DOB to 07 OCT 1996 - previous line was from his old record, ignore it.\n\nthanks"
+  },
+  {
+    "id": "M085",
+    "text": "Subject: FW: HANBIT 3 - crew\n\nAgent, forwarding below for your action.\n\n-------- Forwarded --------\nFrom: Fleet Personnel\nTo: Master HANBIT 3\n\nCaptain,\nOwners have approved the promotion of 3/E NGUYEN VAN HUNG to Second Engineer effective Busan. Please inform the agent."
+  },
+  {
+    "id": "M086",
+    "text": "Dear agent,\n\nKindly note for Busan:\n\nChief Officer LEE Jaewon - place of birth is SEOUL (your list shows INCHEON). Please correct.\n\nPrevious agent in Shanghai also had 2/O Kovalenko as \"KOVALENKO ANDRIY\" - we fixed that there, your list is already ANDRII, so nothing to do.\n\nRgds"
+  },
+  {
+    "id": "M087",
+    "text": "Hello,\n\nwe need to sign on a Fourth Engineer at Busan - candidate is OH Sungmin (KOR). If his COC endorsement arrives by 1 Nov he joins; otherwise not. Will advise.\n\nSeparately: Messman FLORES - place of birth CEBU CITY. pls update."
+  },
+  {
+    "id": "M088",
+    "text": "Subject: Re: amendments\n\n> Pls sign off Chief Cook Mendoza at Busan.\n> Pls sign on Chief Cook Rolando DIAZ.\n\nAgent - the above was for Gwangyang last month and is already done. Actually Mendoza is still on board because Diaz never joined, but that's another story.\n\nToday please only correct Chief Cook MENDOZA's passport expiry: 2029-02-14.\n\nBrgds"
+  },
+  {
+    "id": "M089",
+    "text": "DEAR AGENT\nPLS CHANGE 2/O KOVALENKO FAMILY NAME TO KOVALENKO-SHEVCHUK AS PER NEW PASSPORT.\nALSO NEW PPT NO. FT7710384, ISSUED UKR, VALID TILL 2036.03.20.\nMASTER"
+  },
+  {
+    "id": "M090",
+    "text": "Dear Agent,\n\nJust to clarify the email from the office: they asked you to sign off Messman Flores - that should NOT happen at Busan. She stays.\n\nPlease sign on additional Messman: Grace VILLAREAL (PHL), born 1999-11-11.\n\nThank you"
+  },
+  {
+    "id": "M091",
+    "text": "Hi,\n\nQuestion from Busan immigration via you: is AB DELA CRUZ's passport PC7024581 or PC7024518?\n\nOur answer: PC7024581 is correct as it stands. No change.\n\nAlso please change his rank to Bosun. Sorry no — we'll decide on bosun after Reyes' evaluation. Keep as AB."
+  },
+  {
+    "id": "M092",
+    "text": "Subject: DEMO HANBIT 3 / ETA Busan 3 NOV 2026 / crew\n\nGood afternoon,\n\nFor DEMO HANBIT 9, the C/O will be replaced in Singapore (Mr. Daniel KANG). Not relevant to your port.\n\nFor DEMO HANBIT 3: please correct OS TRAN MINH TUAN nationality to VNM - list shows VIE.\n\nRegards\nCrew Operations"
+  },
+  {
+    "id": "M093",
+    "text": "Dear Agent\n\nCorrection for 3rd Engineer Nguyen: passport expiry should be 2031-04-11.\nI mean 2031-11-04. Sorry, 4 November 2031.\n\nrgds"
+  },
+  {
+    "id": "M094",
+    "text": "Agent,\n\nFor info: during Busan call in July (V.2605E) we signed on Oiler KYAW ZAW LIN there.\n\nThis time please sign on Engine Cadet LEE HYUNWOO (KOR, 2004-08-30). No sign off.\n\nRegards"
+  },
+  {
+    "id": "M095",
+    "text": "Dear Agent,\n\nOwners have now approved: Bosun REYES to be signed off at Busan, replaced by AB DELA CRUZ who is promoted to Bosun. Please reflect both.\n\nRegards,\nFleet HR"
+  },
+  {
+    "id": "M096",
+    "text": "Hi agency,\n\nwe sent you yesterday: \"please change C/E Choi given name to DONG HYUN\". Please disregard - keep DONGHYUN as one word, that matches his passport.\n\nToday's change is only for Oiler Garcia: gender M.\n\nthanks"
+  },
+  {
+    "id": "M097",
+    "text": "Agent,\n\nCan you check whether the Chief Engineer's seaman's book should be used instead of passport for Busan immigration? If yes, his book no. is BS2018834. Let us know.\n\nPls sign off Ordinary Seaman TRAN MINH TUAN at Busan.\n\nrgds"
+  },
+  {
+    "id": "M098",
+    "text": "Subject: Busan crew change confirmation\n\nDear Agent,\n\nConfirmed sign-offs at Busan:\n- Third Officer SANTOS, Mark\n- Oiler KYAW, Zaw Lin\n\nConfirmed sign-ons at Busan:\n- Third Officer Paolo REYES (PHL)\n- Oiler Thant ZIN (MMR)\n\nPlease note new 3/O REYES is not related to our Bosun REYES.\n\nRegards"
+  },
+  {
+    "id": "M099",
+    "text": "Subject: HANBIT 3 - please read carefully\n\nAgent,\n\n1. Do not change Wiper Saputra's nationality to MYS - the spreadsheet is wrong, he is IDN.\n2. Never mind the earlier note on Bosun Reyes' place of birth (ILOILO) - we have no passport evidence, so leave it.\n3. For DEMO HANBIT 6 at Pyeongtaek, AB Rico SALAZAR signs off - not your vessel.\n\nActual change for HANBIT 3: Able Seaman AUNG KO KO gender M.\n\nMaster"
+  },
+  {
+    "id": "M100",
+    "text": "Dear Busan agent,\n\nThird Officer Mark Santos - passport number PE8105247.\nHold on, the 2/O read it again from the original: PE8150274. That one is final.\n\nPlease also sign on Deck Cadet Hyunjun BAEK (KOR).\n\nRegards"
+  },
+  {
+    "id": "M101",
+    "text": "Agent,\n\nPlease don't put the new Wiper (Dimas Wibowo) on the Busan list - his joining has been moved to Kaohsiung.\n\nChange for Busan: Chief Engineer CHOI DONGHYUN date of birth 1969-12-03.\n\nRgds / Crewing"
+  },
+  {
+    "id": "M102",
+    "text": "Dear Agent,\n\nFor DEMO HANBIT 3 V.2611E please sign off Messman Angelica FLORES and sign on Messman Liza MORALES (PHL, 2001-04-26).\n\nThe same crewing manager will send separate instructions for DEMO HANBIT 3's next voyage V.2612W, where 2/E Melnyk's passport will be renewed (new no. FK9031177). Please do not apply that one now.\n\nThanks"
+  }
+]

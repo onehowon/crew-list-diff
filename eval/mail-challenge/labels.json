@@ -1,0 +1,2013 @@
+[
+  {
+    "id": "M001",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "DELA CRUZ JUAN",
+        "field": "dob",
+        "value": "1992-06-03"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M002",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "GARCIA RONALDO"
+      },
+      {
+        "type": "sign_on",
+        "person": "BAUTISTA RICARDO",
+        "rank": "Oiler"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M003",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idNumber",
+        "value": "FT2950831"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "dob",
+        "value": "1994-03-11",
+        "note": "드래프트 값, 바꾸지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M004",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idNumber",
+        "value": "MJ5508291"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M005",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idExpiry",
+        "value": "2031-04-22"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "sign_off",
+        "person": "AUNG KO KO",
+        "note": "같은 메일 안에서 하선 요청 철회"
+      }
+    ]
+  },
+  {
+    "id": "M006",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "SAPUTRA AGUS"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "rank_change",
+        "person": "TRAN MINH TUAN",
+        "field": "rank",
+        "value": "Able Seaman",
+        "note": "선주 승인 대기"
+      }
+    ]
+  },
+  {
+    "id": "M007",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "pob",
+        "value": "ODESA"
+      }
+    ],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idNumber",
+        "value": "FK6620458",
+        "note": "인용된 이전 메일, 이미 처리됨"
+      }
+    ]
+  },
+  {
+    "id": "M008",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "dob",
+        "value": "2000-07-25"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "dob",
+        "value": "2000-07-27",
+        "note": "뒤 문장이 값 변경"
+      }
+    ]
+  },
+  {
+    "id": "M009",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "idExpiry",
+        "value": "2030-09-14"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "sign_off",
+        "person": "CASTILLO RAMON",
+        "note": "자매선 HANBIT 7 건"
+      }
+    ]
+  },
+  {
+    "id": "M010",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "givenNames",
+        "value": "ZAW LYNN"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "dob",
+        "value": "1983-09-12",
+        "note": "확인 질문일 뿐"
+      }
+    ]
+  },
+  {
+    "id": "M011",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "MENDOZA ARNEL"
+      },
+      {
+        "type": "sign_on",
+        "person": "DIAZ ROLANDO",
+        "rank": "Chief Cook"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idNumber",
+        "value": "MJ5508291",
+        "note": "이미 반영된 내용 언급"
+      }
+    ]
+  },
+  {
+    "id": "M012",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "idExpiry",
+        "value": "2029-05-17"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "rank_change",
+        "person": "LEE JAEWON",
+        "field": "rank",
+        "value": "Master",
+        "note": "바꾸지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M013",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "gender",
+        "value": "M"
+      },
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idNumber",
+        "value": "XC8205531"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M014",
+    "apply": [
+      {
+        "type": "rank_change",
+        "person": "TRAN MINH TUAN",
+        "field": "rank",
+        "value": "Able Seaman"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M015",
+    "apply": [],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "sign_on",
+        "person": "RAMIREZ JOSHUA",
+        "rank": "Third Officer",
+        "note": "같은 메일에서 취소"
+      },
+      {
+        "category": "cancel",
+        "type": "sign_off",
+        "person": "SANTOS MARK",
+        "note": "같은 메일에서 취소"
+      }
+    ]
+  },
+  {
+    "id": "M016",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "idExpiry",
+        "value": "2032-03-08"
+      },
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "nationality",
+        "value": "MMR"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idNumber",
+        "value": "MDN215380",
+        "note": "대사관 확인 후에만"
+      }
+    ]
+  },
+  {
+    "id": "M017",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "dob",
+        "value": "1985-07-29"
+      }
+    ],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "rank_change",
+        "person": "GARCIA RONALDO",
+        "field": "rank",
+        "value": "Fitter",
+        "note": "인용된 대리점 메일 속 내용, 이미 처리"
+      }
+    ]
+  },
+  {
+    "id": "M018",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "PRATAMA RIZAL",
+        "rank": "Wiper"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M019",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idNumber",
+        "value": "PA3159208"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idNumber",
+        "value": "PA3159082",
+        "note": "바로 뒤에서 정정"
+      }
+    ]
+  },
+  {
+    "id": "M020",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "DELA CRUZ JUAN"
+      },
+      {
+        "type": "sign_on",
+        "person": "PASCUAL NOEL",
+        "rank": "Able Seaman"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "pob",
+        "value": "JAKARTA",
+        "note": "지난 항차에 이미 반영된 내용"
+      }
+    ]
+  },
+  {
+    "id": "M021",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "idExpiry",
+        "value": "2030-01-15"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "idNumber",
+        "value": "PG2507831",
+        "note": "확인 요청"
+      }
+    ]
+  },
+  {
+    "id": "M022",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "familyName",
+        "value": "MENDOZA-RIVERA"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M023",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "KOVALENKO ANDRII"
+      },
+      {
+        "type": "sign_on",
+        "person": "BONDARENKO TARAS",
+        "rank": "Second Officer"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "correction",
+        "person": "NAVARRO LITO",
+        "field": "dob",
+        "value": "1990-11-21",
+        "note": "다른 배 HANBIT 2 건"
+      }
+    ]
+  },
+  {
+    "id": "M024",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "idNumber",
+        "value": "MH3304712"
+      },
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "idIssuer",
+        "value": "MMR"
+      },
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "idExpiry",
+        "value": "2036-10-05"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M025",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "FLORES ANGELICA"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "sign_off",
+        "person": "MENDOZA ARNEL",
+        "note": "하선하지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M026",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "pob",
+        "value": "BUSAN"
+      },
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "pob",
+        "value": "MOKPO"
+      },
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "pob",
+        "value": "INCHEON"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M027",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "DELA CRUZ JUAN"
+      },
+      {
+        "type": "sign_on",
+        "person": "SORIANO MARIO",
+        "rank": "Able Seaman"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M028",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "dob",
+        "value": "1991-02-08"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "sign_off",
+        "person": "LEE JAEWON",
+        "note": "건강진단 결과에 따라"
+      },
+      {
+        "category": "conditional",
+        "type": "rank_change",
+        "person": "KOVALENKO ANDRII",
+        "field": "rank",
+        "value": "Chief Officer",
+        "note": "건강진단 결과에 따라"
+      }
+    ]
+  },
+  {
+    "id": "M029",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idIssuer",
+        "value": "IDN"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M030",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "idNumber",
+        "value": "CN1182950"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "rank_change",
+        "person": "SANTOS MARK",
+        "field": "rank",
+        "value": "Third Officer",
+        "note": "과거 항차, 이미 반영"
+      },
+      {
+        "category": "cancel",
+        "type": "rank_change",
+        "person": "NGUYEN VAN HUNG",
+        "field": "rank",
+        "value": "Second Engineer",
+        "note": "바로 철회"
+      }
+    ]
+  },
+  {
+    "id": "M031",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "dob",
+        "value": "1996-12-01"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M032",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "dob",
+        "value": "1981-08-25"
+      }
+    ],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "sign_on",
+        "person": "LIM EDWARD",
+        "rank": "Second Cook",
+        "note": "인용, 이미 처리"
+      },
+      {
+        "category": "quote",
+        "type": "sign_off",
+        "person": "FLORES ANGELICA",
+        "note": "인용, 이미 처리"
+      }
+    ]
+  },
+  {
+    "id": "M033",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "nationality",
+        "value": "PHL"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M034",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "KIM MINSU",
+        "rank": "Electro-Technical Officer"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M035",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idExpiry",
+        "value": "2031-10-01"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idExpiry",
+        "value": "2027-10-01",
+        "note": "재확인 후 값 변경"
+      }
+    ]
+  },
+  {
+    "id": "M036",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "idNumber",
+        "value": "MK4820175"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "pob",
+        "value": "GWANGJU",
+        "note": "확인 요청일 뿐"
+      }
+    ]
+  },
+  {
+    "id": "M037",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "AUNG KO KO"
+      },
+      {
+        "type": "sign_on",
+        "person": "AUNG HTET",
+        "rank": "Able Seaman"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "sign_off",
+        "person": "MELNYK SERHII",
+        "note": "다른 항차 V.2612W"
+      }
+    ]
+  },
+  {
+    "id": "M038",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "GARCIA RONALDO",
+        "field": "idNumber",
+        "value": "PD5021748"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M039",
+    "apply": [],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "correction",
+        "person": "VILLANUEVA EDUARDO",
+        "field": "dob",
+        "value": "1979-04-30",
+        "note": "다른 배 HANBIT 5"
+      },
+      {
+        "category": "other_vessel",
+        "type": "sign_off",
+        "person": "MERCADO PAOLO",
+        "note": "다른 배 HANBIT 5"
+      }
+    ]
+  },
+  {
+    "id": "M040",
+    "apply": [
+      {
+        "type": "rank_change",
+        "person": "SANTOS MARK",
+        "field": "rank",
+        "value": "Second Officer"
+      },
+      {
+        "type": "sign_off",
+        "person": "KOVALENKO ANDRII"
+      },
+      {
+        "type": "sign_on",
+        "person": "TORRES KEVIN",
+        "rank": "Third Officer"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M041",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idNumber",
+        "value": "MDN251083"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idExpiry",
+        "value": "2030-06-30",
+        "note": "같은 메일에서 철회"
+      }
+    ]
+  },
+  {
+    "id": "M042",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "dob",
+        "value": "1998-06-02"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idExpiry",
+        "value": "2027-12-01",
+        "note": "확인 질문"
+      }
+    ]
+  },
+  {
+    "id": "M043",
+    "apply": [
+      {
+        "type": "rank_change",
+        "person": "GARCIA RONALDO",
+        "field": "rank",
+        "value": "Oiler"
+      }
+    ],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "rank_change",
+        "person": "GARCIA RONALDO",
+        "field": "rank",
+        "value": "Fitter",
+        "note": "인용된 이전 요청, 지금은 되돌리라고 함"
+      }
+    ]
+  },
+  {
+    "id": "M044",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "familyName",
+        "value": "NGUYEN"
+      },
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "gender",
+        "value": "F"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M045",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idIssuer",
+        "value": "UKR"
+      },
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idExpiry",
+        "value": "2029-11-18"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "rank_change",
+        "person": "NGUYEN VAN HUNG",
+        "field": "rank",
+        "value": "Second Engineer",
+        "note": "기국 승인 수령 조건"
+      }
+    ]
+  },
+  {
+    "id": "M046",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "REYES JOMAR"
+      },
+      {
+        "type": "sign_on",
+        "person": "DELA PENA ERNESTO",
+        "rank": "Bosun"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M047",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "pob",
+        "value": "YANGON"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "dob",
+        "value": "1987-01-29",
+        "note": "바로 철회"
+      }
+    ]
+  },
+  {
+    "id": "M048",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "givenNames",
+        "value": "JAE WON"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "idNumber",
+        "value": "MR7031864",
+        "note": "이미 반영됨"
+      }
+    ]
+  },
+  {
+    "id": "M049",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "WIBOWO DIMAS",
+        "rank": "Wiper"
+      },
+      {
+        "type": "sign_off",
+        "person": "SAPUTRA AGUS"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M050",
+    "apply": [],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "dob",
+        "value": "1985-07-09",
+        "note": "철회됨"
+      }
+    ]
+  },
+  {
+    "id": "M051",
+    "apply": [],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "idNumber",
+        "value": "PF1085672",
+        "note": "재확인 결과 기존 값이 맞음"
+      }
+    ]
+  },
+  {
+    "id": "M052",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "idExpiry",
+        "value": "2028-07-07"
+      },
+      {
+        "type": "correction",
+        "person": "DELA CRUZ JUAN",
+        "field": "idIssuer",
+        "value": "PHL"
+      },
+      {
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "pob",
+        "value": "HAI PHONG"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M053",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "SEO JAEHYUK",
+        "rank": "Deck Cadet"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "sign_off",
+        "person": "DELA CRUZ JUAN",
+        "note": "다음 항(카오슝) 건, 이번 항 아님"
+      }
+    ]
+  },
+  {
+    "id": "M054",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "gender",
+        "value": "M"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "nationality",
+        "value": "ROK",
+        "note": "ROK 쓰지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M055",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "MENDOZA ARNEL"
+      },
+      {
+        "type": "sign_on",
+        "person": "ROXAS BENJIE",
+        "rank": "Chief Cook"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "sign_off",
+        "person": "FLORES ANGELICA",
+        "note": "선주 승인 대기"
+      }
+    ]
+  },
+  {
+    "id": "M056",
+    "apply": [],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "idNumber",
+        "value": "CK2569018",
+        "note": "확인 질문"
+      }
+    ]
+  },
+  {
+    "id": "M057",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "givenNames",
+        "value": "JOMAR ANTHONY"
+      },
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idNumber",
+        "value": "PA9921457"
+      },
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idExpiry",
+        "value": "2035-11-10"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M058",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "AQUINO MICHAEL",
+        "rank": "Second Cook"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "sign_on",
+        "person": "AQUINO MICHAEL",
+        "rank": "Messman",
+        "note": "이전에 말한 직급, 이미 바뀜"
+      }
+    ]
+  },
+  {
+    "id": "M059",
+    "apply": [
+      {
+        "type": "rank_change",
+        "person": "SAPUTRA AGUS",
+        "field": "rank",
+        "value": "Oiler"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "sign_off",
+        "person": "CHOI DONGHYUN",
+        "note": "하선하지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M060",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "pob",
+        "value": "MAWLAMYINE"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "nationality",
+        "value": "THA",
+        "note": "실수라며 철회"
+      }
+    ]
+  },
+  {
+    "id": "M061",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "dob",
+        "value": "1991-04-14"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M062",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "idExpiry",
+        "value": "2031-07-22"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "rank_change",
+        "person": "FLORES ANGELICA",
+        "field": "rank",
+        "value": "Second Cook",
+        "note": "같은 메일에서 철회"
+      }
+    ]
+  },
+  {
+    "id": "M063",
+    "apply": [],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "gender",
+        "value": "M",
+        "note": "인용, 이미 처리"
+      },
+      {
+        "category": "quote",
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "nationality",
+        "value": "PHL",
+        "note": "인용, 이미 처리"
+      }
+    ]
+  },
+  {
+    "id": "M064",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "idNumber",
+        "value": "MR9902713"
+      },
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "idExpiry",
+        "value": "2036-09-01"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M065",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "JEONG WOOJIN",
+        "rank": "Second Engineer"
+      },
+      {
+        "type": "sign_off",
+        "person": "MELNYK SERHII"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M066",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "DELA CRUZ JUAN",
+        "field": "idExpiry",
+        "value": "2033-02-19"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "DELA CRUZ JUAN",
+        "field": "dob",
+        "value": "1992-06-03",
+        "note": "어제 요청 취소"
+      }
+    ]
+  },
+  {
+    "id": "M067",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "dob",
+        "value": "1994-11-30"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "idNumber",
+        "value": "PG2507813",
+        "note": "과거 항차, 이미 반영"
+      }
+    ]
+  },
+  {
+    "id": "M068",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "SAPUTRA AGUS"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "sign_on",
+        "person": "KIM TAEHO",
+        "rank": "Oiler",
+        "note": "비자 해결 조건"
+      }
+    ]
+  },
+  {
+    "id": "M069",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "dob",
+        "value": "1971-05-04"
+      },
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "pob",
+        "value": "TONGYEONG"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M070",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "gender",
+        "value": "M"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idExpiry",
+        "value": "2027-03-02",
+        "note": "확인 질문"
+      }
+    ]
+  },
+  {
+    "id": "M071",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idIssuer",
+        "value": "PHL"
+      }
+    ],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "dob",
+        "value": "1978-02-24",
+        "note": "인용, 이미 처리"
+      }
+    ]
+  },
+  {
+    "id": "M072",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idExpiry",
+        "value": "2030-04-30"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "correction",
+        "person": "YOON SEOKJIN",
+        "field": "idNumber",
+        "note": "다른 배 HANBIT 7 건(값 없음)"
+      }
+    ]
+  },
+  {
+    "id": "M073",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "GARCIA RONALDO",
+        "field": "dob",
+        "value": "1986-05-19"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "rank_change",
+        "person": "TRAN MINH TUAN",
+        "field": "rank",
+        "value": "Able Seaman",
+        "note": "바꾸지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M074",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "pob",
+        "value": "MANADO"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "rank_change",
+        "person": "SAPUTRA AGUS",
+        "field": "rank",
+        "value": "Oiler",
+        "note": "선주 동의 조건"
+      }
+    ]
+  },
+  {
+    "id": "M075",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "HIDAYAT FAJAR",
+        "rank": "Oiler"
+      },
+      {
+        "type": "sign_on",
+        "person": "SETIAWAN BUDI",
+        "rank": "Ordinary Seaman"
+      },
+      {
+        "type": "sign_off",
+        "person": "KYAW ZAW LIN"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M076",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idNumber",
+        "value": "XC8250513"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idNumber",
+        "value": "XC8205513",
+        "note": "바로 정정"
+      }
+    ]
+  },
+  {
+    "id": "M077",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "dob",
+        "value": "1971-05-24"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M078",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "DELA CRUZ JUAN"
+      },
+      {
+        "type": "sign_on",
+        "person": "MANALANG CARLO",
+        "rank": "Able Seaman"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "sign_on",
+        "person": "MANALO CARLO",
+        "rank": "Able Seaman",
+        "note": "이름 오타 정정"
+      }
+    ]
+  },
+  {
+    "id": "M079",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "nationality",
+        "value": "PHL"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "pob",
+        "value": "LVIV",
+        "note": "확인 요청"
+      }
+    ]
+  },
+  {
+    "id": "M080",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "gender",
+        "value": "M"
+      },
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "nationality",
+        "value": "KOR"
+      },
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idIssuer",
+        "value": "UKR"
+      },
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "givenNames",
+        "value": "MARK ANTHONY"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M081",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "REYES JOMAR"
+      },
+      {
+        "type": "sign_on",
+        "person": "GONZAGA ARIEL",
+        "rank": "Bosun"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "dob",
+        "value": "1980-08-25",
+        "note": "지난 항차 이야기"
+      }
+    ]
+  },
+  {
+    "id": "M082",
+    "apply": [],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "nationality",
+        "value": "POL",
+        "note": "무시하라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M083",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "GARCIA RONALDO"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M084",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "dob",
+        "value": "1996-10-07"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "dob",
+        "value": "1995-10-17",
+        "note": "뒤 줄이 앞 줄 대체"
+      }
+    ]
+  },
+  {
+    "id": "M085",
+    "apply": [
+      {
+        "type": "rank_change",
+        "person": "NGUYEN VAN HUNG",
+        "field": "rank",
+        "value": "Second Engineer"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M086",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "pob",
+        "value": "SEOUL"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "givenNames",
+        "value": "ANDRIY",
+        "note": "다른 대리점에서의 과거 건"
+      }
+    ]
+  },
+  {
+    "id": "M087",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "pob",
+        "value": "CEBU CITY"
+      }
+    ],
+    "traps": [
+      {
+        "category": "conditional",
+        "type": "sign_on",
+        "person": "OH SUNGMIN",
+        "rank": "Fourth Engineer",
+        "note": "자격증 배서 도착 조건"
+      }
+    ]
+  },
+  {
+    "id": "M088",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "idExpiry",
+        "value": "2029-02-14"
+      }
+    ],
+    "traps": [
+      {
+        "category": "quote",
+        "type": "sign_off",
+        "person": "MENDOZA ARNEL",
+        "note": "인용된 지난달 요청"
+      },
+      {
+        "category": "quote",
+        "type": "sign_on",
+        "person": "DIAZ ROLANDO",
+        "rank": "Chief Cook",
+        "note": "인용된 지난달 요청"
+      }
+    ]
+  },
+  {
+    "id": "M089",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "familyName",
+        "value": "KOVALENKO-SHEVCHUK"
+      },
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idNumber",
+        "value": "FT7710384"
+      },
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idIssuer",
+        "value": "UKR"
+      },
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idExpiry",
+        "value": "2036-03-20"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M090",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "VILLAREAL GRACE",
+        "rank": "Messman"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "sign_off",
+        "person": "FLORES ANGELICA",
+        "note": "하선하지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M091",
+    "apply": [],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "DELA CRUZ JUAN",
+        "field": "idNumber",
+        "value": "PC7024518",
+        "note": "질문 속 값"
+      },
+      {
+        "category": "cancel",
+        "type": "rank_change",
+        "person": "DELA CRUZ JUAN",
+        "field": "rank",
+        "value": "Bosun",
+        "note": "바로 철회"
+      }
+    ]
+  },
+  {
+    "id": "M092",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "nationality",
+        "value": "VNM"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "sign_on",
+        "person": "KANG DANIEL",
+        "rank": "Chief Officer",
+        "note": "다른 배 HANBIT 9 건"
+      }
+    ]
+  },
+  {
+    "id": "M093",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "idExpiry",
+        "value": "2031-11-04"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "idExpiry",
+        "value": "2031-04-11",
+        "note": "뒤에서 정정"
+      }
+    ]
+  },
+  {
+    "id": "M094",
+    "apply": [
+      {
+        "type": "sign_on",
+        "person": "LEE HYUNWOO",
+        "rank": "Engine Cadet"
+      }
+    ],
+    "traps": [
+      {
+        "category": "info",
+        "type": "sign_on",
+        "person": "KYAW ZAW LIN",
+        "rank": "Oiler",
+        "note": "과거 항차 이야기"
+      }
+    ]
+  },
+  {
+    "id": "M095",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "REYES JOMAR"
+      },
+      {
+        "type": "rank_change",
+        "person": "DELA CRUZ JUAN",
+        "field": "rank",
+        "value": "Bosun"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M096",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "GARCIA RONALDO",
+        "field": "gender",
+        "value": "M"
+      }
+    ],
+    "traps": [
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "givenNames",
+        "value": "DONG HYUN",
+        "note": "어제 요청 철회"
+      }
+    ]
+  },
+  {
+    "id": "M097",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "TRAN MINH TUAN"
+      }
+    ],
+    "traps": [
+      {
+        "category": "question",
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idNumber",
+        "value": "BS2018834",
+        "note": "확인 질문, 조건부"
+      }
+    ]
+  },
+  {
+    "id": "M098",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "SANTOS MARK"
+      },
+      {
+        "type": "sign_off",
+        "person": "KYAW ZAW LIN"
+      },
+      {
+        "type": "sign_on",
+        "person": "REYES PAOLO",
+        "rank": "Third Officer"
+      },
+      {
+        "type": "sign_on",
+        "person": "ZIN THANT",
+        "rank": "Oiler"
+      }
+    ],
+    "traps": []
+  },
+  {
+    "id": "M099",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "gender",
+        "value": "M"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "nationality",
+        "value": "MYS",
+        "note": "바꾸지 말라고 명시"
+      },
+      {
+        "category": "cancel",
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "pob",
+        "value": "ILOILO",
+        "note": "앞서 요청한 것 철회"
+      },
+      {
+        "category": "other_vessel",
+        "type": "sign_off",
+        "person": "SALAZAR RICO",
+        "note": "다른 배 HANBIT 6"
+      }
+    ]
+  },
+  {
+    "id": "M100",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "idNumber",
+        "value": "PE8150274"
+      },
+      {
+        "type": "sign_on",
+        "person": "BAEK HYUNJUN",
+        "rank": "Deck Cadet"
+      }
+    ],
+    "traps": [
+      {
+        "category": "superseded",
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "idNumber",
+        "value": "PE8105247",
+        "note": "원본 재확인 후 값 변경"
+      }
+    ]
+  },
+  {
+    "id": "M101",
+    "apply": [
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "dob",
+        "value": "1969-12-03"
+      }
+    ],
+    "traps": [
+      {
+        "category": "negation",
+        "type": "sign_on",
+        "person": "WIBOWO DIMAS",
+        "rank": "Wiper",
+        "note": "명부에 넣지 말라고 명시"
+      }
+    ]
+  },
+  {
+    "id": "M102",
+    "apply": [
+      {
+        "type": "sign_off",
+        "person": "FLORES ANGELICA"
+      },
+      {
+        "type": "sign_on",
+        "person": "MORALES LIZA",
+        "rank": "Messman"
+      }
+    ],
+    "traps": [
+      {
+        "category": "other_vessel",
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idNumber",
+        "value": "FK9031177",
+        "note": "다음 항차 V.2612W 건"
+      }
+    ]
+  }
+]

@@ -15,7 +15,9 @@
 | 변경마다 **예상된 변경 / 확인 필요 / 오류 의심** 3단계 분류 + 근거 | 화물목록(FAL 2) 등 다른 서식(확장 계획) |
 | 표기만 다른 것(대소문자·공백·날짜 형식·직급 약어·행 순서)은 경보하지 않고 접어서 개수만 | 과태료·벌칙 대상 여부 판단 |
 | 바뀐 명부가 첨부되는 신고 4종(출입국·세관·항만·검역)과 법령 원문 인용, 출입국관리법 제100조 대상 항목 변경 표시 | |
-| 담당자 승인·보류 → FAL 5 순서 CSV, ECDSA P-256 서명 "변경 반영 확인서" | |
+| 담당자 결정 3가지(수정본 채택 · 최초본 유지 확인 · 확인 대기). 확인 대기가 남으면 **미확정 검토본**과 선사 확인 요청만, 모두 정해지면 FAL 5 순서 확정 명부와 ECDSA P-256 서명 확정 기록(서명은 파일 무결성 확인일 뿐 내용 정확성 검증이 아님) | |
+| 선사 회신 후 재대조: 확정한 결정만 반영한 기준본 ↔ 회신 후 수정본(예시 5) | |
+| 메일의 부정·취소·조건·인용 문장은 지시로 쓰지 않음(관련 변경은 메일 근거 없는 변경으로 남음) | |
 
 ### 3단계 분류 기준
 - `expected` 예상된 변경: **메일 지시 문장과 연결될 때만**(지시 줄 번호·문자 위치를 근거로 첨부).
@@ -46,6 +48,10 @@ node --test test/*.test.mjs       # Node 22 이상
 node eval/run.mjs --split all     # → docs/eval-result.json, docs/eval-result.md
 # 처리 시간(명부 1쌍 대조·분류, 기획서 각주 11)
 node eval/bench.mjs
+# 제출 버전 재측정(세 홀드아웃, 같은 메일 지시를 받은 기준선3 포함, 참고값)
+node eval/run.mjs --final          # → docs/eval-final.{json,md}
+# 메일 지시 해석 시험(규칙 파서 vs LLM, eval/mail-challenge/SPEC.md)
+node eval/mail-challenge/score.mjs eval/mail-challenge/llm-*.json
 # 스크린샷 + 콘솔 오류·잘림 검사(Chrome 헤드리스, 외부 패키지 없음)
 node scripts/shoot.mjs http://localhost:8810/ docs/screens
 ```
