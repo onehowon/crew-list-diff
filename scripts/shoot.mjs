@@ -21,8 +21,10 @@ const SCENES = [
   { name: '2-unreflected', q: 'step=2&scenario=3&item=C007' },
   { name: '2-new-format', q: 'step=2&scenario=4&item=C001' },
   { name: '3-impact-approve', q: 'step=3&scenario=2&decide=auto' },
-  { name: '4-confirmation', q: 'step=4&scenario=3&decide=auto&sign=verify&at=2026-11-02T09:30:00%2B09:00' },
-  { name: '4-tamper', q: 'step=4&scenario=3&decide=auto&sign=tamper&at=2026-11-02T09:30:00%2B09:00' },
+  { name: '4-pending', q: 'step=4&scenario=2&decide=auto' },
+  { name: '2-reply', q: 'step=2&scenario=5&item=C001' },
+  { name: '4-confirmation', q: 'step=4&scenario=5&decide=auto&sign=verify&at=2026-11-02T09:30:00%2B09:00' },
+  { name: '4-tamper', q: 'step=4&scenario=5&decide=auto&sign=tamper&at=2026-11-02T09:30:00%2B09:00' },
   { name: 'eval', q: 'tab=eval', mobile: true },
   { name: 'scope', q: 'tab=scope' },
 ];

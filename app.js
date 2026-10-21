@@ -7,7 +7,7 @@ import { CLASS_LABEL } from './lib/classify.js';
 import { RULES } from './lib/rules.js';
 import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js';
 import { DIRECTIVE_LABEL } from './lib/notice.js';
-import { toFal5Csv } from './lib/export.js';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js';
 import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js';
 import { DEMO_KID } from './lib/demo-key.js';
 import { decodeJws, b64uJson } from './lib/jose.js';
@@ -19,8 +19,8 @@ const params = new URLSearchParams(location.search);
 const STEPS = [
   { title: '자료 받기', sub: '최초본·수정본·메일' },
   { title: '변경 대조', sub: '3단계 분류와 근거' },
-  { title: '영향·승인', sub: '신고별 영향, 항목별 결정' },
-  { title: '내보내기·확인서', sub: 'FAL 5 CSV, 서명 확인서' },
+  { title: '관련 신고·결정', sub: '채택·유지·확인 대기' },
+  { title: '내보내기', sub: '확정 명부 또는 미확정 검토본' },
 ];
 const KIND_LABEL = { modify: '값 변경', add: '추가(승선)', remove: '삭제(하선)', duplicate: '중복 행', directive: '메일 지시', standing: '기존 값' };
 const ORDER = { suspect: 0, check: 1, expected: 2 };
@@ -28,7 +28,7 @@ const ORDER = { suspect: 0, check: 1, expected: 2 };
 const state = {
   tab: params.get('tab') || 'demo',
   step: Math.min(4, Math.max(1, Number(params.get('step')) || 1)),
-  scenario: Math.min(4, Math.max(1, Number(params.get('scenario')) || 2)),
+  scenario: Math.min(5, Math.max(1, Number(params.get('scenario')) || 2)),
   inputs: null,
   report: null,
   view: 'B',
@@ -42,6 +42,7 @@ const state = {
 
 function loadScenario(n) {
   const s = SCENARIOS[n - 1];
+  state.rebased = false;
   state.scenario = n;
   state.inputs = { a: s.a, b: s.b, mail: s.mail };
   state.report = null;
@@ -135,7 +136,7 @@ function step1() {
   <p class="note"><b>데모 범위:</b> 표(CSV·TSV)는 브라우저에서 실제로 파싱합니다. <b>메일 해석은 규칙 기반</b>이며, 이 프로토타입에는 AI(LLM) 추출이 들어 있지 않습니다. 실제 서비스에서는 LLM 추출 + 스키마 검증으로 PDF·메일에서 항목을 뽑으며, 그 성능은 아직 측정하지 않았습니다. 성능 평가는 대조·분류 엔진에 대한 것입니다.</p>
   <div class="row-actions">
     <span class="spacer"></span>
-    ${state.report ? '' : '<span class="small muted">입력을 고쳤습니다 — 다음을 누르면 다시 대조합니다</span>'}
+    ${state.report ? '' : state.rebased ? '<span class="small muted">최초본 칸에 기준본(확정한 결정만 반영)이 들어갔습니다. 회신 후 수정본과 회신 메일을 붙여 넣고 다음을 누르세요</span>' : '<span class="small muted">입력을 고쳤습니다 — 다음을 누르면 다시 대조합니다</span>'}
     <button type="button" class="btn btn-primary" data-act="next">다음: 변경 대조 결과 보기</button>
   </div>
   ${state.report ? normalizedView() : ''}`;
@@ -304,11 +305,11 @@ function step3() {
   const impact = Object.values(LAWS).map((l) => `<div class="panel impact"><h3>${h(l.report)}</h3><div class="law">${h(l.law)} ${h(l.article)} · 제출처: ${h(l.agency)}</div><div class="count">이번 변경 <b>${n}건</b>이 첨부 승무원명부에 반영되어야 합니다.</div><details><summary>조문 원문 보기</summary><blockquote>${h(l.quote)}${l.quoteNote ? `<br><span class="muted">(${h(l.quoteNote)})</span>` : ''}</blockquote>${l.formTitle ? `<p class="small muted" style="margin:6px 0 0">${h(l.formLabel)}: ${h(l.formTitle)}</p>` : ''}<p class="small muted" style="margin:6px 0 0">${h(l.version)}</p></details></div>`).join('');
   const rows = sortedItems().map((it) => {
     const v = state.decisions[it.id];
-    return `<div class="arow"><div><b>${h(it.person)}</b></div><div><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></div><div class="small">${changeText(it)} <span class="muted">· ${h(basisText(it))}</span></div><div class="seg" role="group" aria-label="${h(it.person)} 결정"><button type="button" data-decide="${it.id}" data-v="approve" aria-pressed="${v === 'approve'}">승인</button><button type="button" data-decide="${it.id}" data-v="hold" aria-pressed="${v === 'hold'}">보류</button></div></div>`;
+    return `<div class="arow"><div><b>${h(it.person)}</b></div><div><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></div><div class="small">${changeText(it)} <span class="muted">· ${h(basisText(it))}</span></div><div class="seg" role="group" aria-label="${h(it.person)} 결정">${['approve', 'keep', 'pending'].map((k) => `<button type="button" data-decide="${it.id}" data-v="${k}" aria-pressed="${v === k}">${DECISION_LABEL[k]}</button>`).join('')}</div></div>`;
   }).join('');
   return `
-  <h2 class="section-title">3. 영향·승인</h2>
-  <p class="section-lead">바뀐 명부는 아래 네 신고에 모두 첨부되므로 네 곳 모두에 같은 변경이 반영되어야 합니다. 이 도구는 신고를 전송하지 않습니다. 항목마다 승인(수정본 값 반영) 또는 보류(반영하지 않고 선사 확인)를 정해야 다음 단계로 갑니다.</p>
+  <h2 class="section-title">3. 관련 신고·결정</h2>
+  <p class="section-lead">선원명부는 아래 네 신고에 첨부되는 자료이므로, 확정한 명부는 네 곳 모두에 같게 들어가야 합니다(신고별 요구 차이나 변경신고 필요 여부를 판정하지는 않습니다. 신고 전송도 하지 않습니다). 항목마다 <b>수정본 채택</b> · <b>최초본 유지 확인</b>(최초본이 맞다고 확인함) · <b>확인 대기</b>(아직 모름) 중 하나를 정합니다. 확인 대기가 남으면 최종 명부 대신 미확정 검토본과 선사 확인 요청만 만듭니다.</p>
   <div class="impact-grid">${impact}</div>
   <div class="panel penalty"><b>출입국관리법 제100조제1항제5호 관련 항목</b> <span class="muted small">— 이번 변경 중 국적·성명·성별·생년월일·여권번호에 해당: ${changedPenaltyFields.length ? h(changedPenaltyFields.join(', ')) : '없음'}</span>
     <blockquote>${h(IMMIGRATION_PENALTY.head)}<br>5. ${h(IMMIGRATION_PENALTY.quote)}</blockquote>
@@ -316,8 +317,8 @@ function step3() {
   <div class="panel" style="margin-top:16px">
     <div class="panel-head"><h3>항목별 결정</h3>
       <div class="progress-line"><span>처리 ${done}/${n}</span><span class="bar"><i style="width:${n ? (done / n) * 100 : 100}%"></i></span>
-      <button type="button" class="btn btn-sm" data-act="approve-expected">예상된 변경 모두 승인</button>
-      <button type="button" class="btn btn-sm" data-act="hold-rest">남은 항목 보류</button></div>
+      <button type="button" class="btn btn-sm" data-act="approve-expected">예상된 변경 모두 채택</button>
+      <button type="button" class="btn btn-sm" data-act="hold-rest">남은 항목 확인 대기</button></div>
     </div>
     <div class="approve-list">${rows || '<div class="arow muted">변경이 없습니다.</div>'}</div>
   </div>
@@ -325,8 +326,8 @@ function step3() {
     <button type="button" class="btn" data-act="prev">이전</button>
     <label class="small" for="approver">승인자 표시명</label><input id="approver" class="form-control input-sm" value="${h(state.approver)}" style="width:160px">
     <span class="spacer"></span>
-    ${allDecided() ? '' : `<span class="small muted">남은 결정 ${n - done}건 — 위의 '예상된 변경 모두 승인', '남은 항목 보류'로 한 번에 정할 수 있습니다</span>`}
-    <button type="button" class="btn btn-primary" data-act="next" ${allDecided() ? '' : 'disabled'}>다음: 내보내기·확인서</button>
+    ${allDecided() ? '' : `<span class="small muted">남은 결정 ${n - done}건 — 위의 '예상된 변경 모두 채택', '남은 항목 확인 대기'로 한 번에 정할 수 있습니다</span>`}
+    <button type="button" class="btn btn-primary" data-act="next" ${allDecided() ? '' : 'disabled'}>다음: 내보내기</button>
   </div>`;
 }
 
@@ -334,7 +335,7 @@ function step3() {
 function shipperSummary() {
   const r = state.report;
   const hd = r.B.header;
-  const held = sortedItems().filter((it) => state.decisions[it.id] === 'hold');
+  const held = sortedItems().filter((it) => pendingItems(r, state.decisions).includes(it));
   const ok = r.items.length - held.length;
   const line = (it) => {
     const what = it.kind === 'modify' ? `${FIELD[it.field].ko} ${valueText(it.before)} → ${valueText(it.after)}` : it.kind === 'directive' ? `메일 ${it.directive.line}번째 줄 지시("${it.directive.text.trim()}")` : KIND_LABEL[it.kind];
@@ -343,12 +344,12 @@ function shipperSummary() {
   return [
     `[${hd.shipName?.value || ''} ${hd.voyage?.value || ''} ${hd.port?.value || ''}] 수정 선원명부 확인 결과`,
     '',
-    `반영 확인 ${ok}건, 확인 요청 ${held.length}건 (표기만 다른 ${r.cosmetic.length}건은 변경으로 보지 않음)`,
+    `결정 완료 ${ok}건, 확인 요청 ${held.length}건 (표기만 다른 ${r.cosmetic.length}건은 변경으로 보지 않음)`,
     '',
     held.length ? '확인 요청드립니다:' : '확인 요청 사항 없음.',
     ...held.map(line),
     '',
-    '회신 주시면 수정본을 다시 대조하겠습니다.',
+    held.length ? '회신(또는 다시 고친 명부)을 주시면, 확정한 부분을 기준으로 다시 대조해 최종 명부를 만들겠습니다.' : '위 내용으로 명부를 확정했습니다.',
     `(${state.approver} · CrewDiff 데모로 작성, 신고 전송 아님)`,
   ].join('\n');
 }
@@ -356,26 +357,31 @@ function shipperSummary() {
 function step4() {
   const r = state.report;
   const csv = toFal5Csv(r, state.decisions);
+  const pend = pendingItems(r, state.decisions).length;
   const c = state.conf;
   let conf = `<p class="small">누가 어떤 변경을 승인·보류했는지와 최종 명부를 묶어, 나중에 한 글자라도 바뀌면 알 수 있는 확인서로 남깁니다.</p><p class="small muted">기술: 최종 명부 SHA-256 해시 + ECDSA P-256(ES256) 서명. <b>프로토타입은 공개된 데모 키</b>(${DEMO_KID})라 누구나 같은 서명을 만들 수 있으며, 운영 시에는 담당자별 키를 씁니다.</p>
     <button type="button" class="btn btn-primary" data-act="sign">확인서 생성·서명</button>`;
-  if (c) {
-    conf = `<div class="verify-result ok" style="margin:0 0 10px">✔ 확인서 서명됨 · 승인 ${c.payload.counts.approved}건 / 보류 ${c.payload.counts.held}건 · 아래 버튼으로 위변조 검사</div><dl class="kv" style="grid-template-columns:140px 1fr"><dt>승인자</dt><dd>${h(c.payload.approver)}</dd><dt>결정 시각</dt><dd>${h(c.payload.decidedAt)}</dd><dt>승인 / 보류</dt><dd>${c.payload.counts.approved} / ${c.payload.counts.held}</dd><dt>최종 명부 SHA-256</dt><dd class="mono" style="word-break:break-all">${h(c.payload.finalListSha256)}</dd><dt>서명 키</dt><dd class="mono">${h(DEMO_KID)} (데모)</dd></dl>
+  if (pend) {
+    conf = `<div class="flash flash-warn" style="margin:0 0 10px"><b>확인 대기 ${pend}건이 남아 최종 명부와 확인서를 만들지 않습니다.</b> 왼쪽은 미확정 검토본입니다(확인 대기 칸은 값 대신 "확인 대기"로 표시).</div>
+    <p class="small">선사 회신을 받으면, 지금 확정한 결정만 반영한 <b>기준본</b>과 회신 후 수정본을 다시 대조합니다. 회신으로 설명되는 변경은 메일 근거가 붙어 '예상된 변경'이 되고, 모든 항목이 정해지면 최종 명부를 만듭니다.</p>
+    <div class="row-actions" style="justify-content:flex-start">${state.scenario === 2 ? '<button type="button" class="btn btn-primary" data-act="scenario5">▶ 예시 5: 선장 회신 받아 다시 대조</button>' : ''}<button type="button" class="btn" data-act="rebase">기준본으로 다시 대조(회신 수정본 붙여 넣기)</button></div>`;
+  } else if (c) {
+    conf = `<div class="verify-result ok" style="margin:0 0 10px">✔ 확정 기록 서명됨 · 수정본 채택 ${c.payload.counts.approved}건 / 최초본 유지 확인 ${c.payload.counts.kept}건</div><dl class="kv" style="grid-template-columns:140px 1fr"><dt>승인자</dt><dd>${h(c.payload.approver)}</dd><dt>결정 시각</dt><dd>${h(c.payload.decidedAt)}</dd><dt>채택 / 유지</dt><dd>${c.payload.counts.approved} / ${c.payload.counts.kept}</dd><dt>최종 명부 SHA-256</dt><dd class="mono" style="word-break:break-all">${h(c.payload.finalListSha256)}</dd><dt>서명 키</dt><dd class="mono">${h(DEMO_KID)} (데모)</dd></dl>
       <details style="margin-top:10px"><summary class="small">기술 상세 — 서명된 확인서(JWS)와 내용(JSON)</summary>
       <pre class="box wrap mono" style="max-height:90px;margin-top:6px">${h(c.jws)}</pre>
       <pre class="box mono" style="max-height:180px">${h(JSON.stringify(c.payload, null, 2))}</pre></details>
-      <div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn" data-act="verify">서명·해시 검증</button><button type="button" class="btn" data-act="tamper">변조 시험(보류 1건을 승인으로 바꿔 검증)</button></div>
-      ${c.verify ? `<div class="verify-result ${c.verify.ok ? 'ok' : 'bad'}">${h(c.verify.label)}: 서명 ${c.verify.signature ? '유효' : '무효'} · 최종 명부 해시 ${c.verify.hash == null ? '대조 안 함' : c.verify.hash ? '일치' : '불일치'} → <b>${c.verify.ok ? '검증 통과' : '검증 실패'}</b></div>` : ''}`;
+      <div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn" data-act="verify">서명·해시 검증</button><button type="button" class="btn" data-act="tamper">변조 시험(결정 1건을 바꿔 검증)</button></div>
+      ${c.verify ? `<div class="verify-result ${c.verify.ok ? 'ok' : 'bad'}">${h(c.verify.label)}: 서명 ${c.verify.signature ? '유효' : '무효'} · 최종 명부 해시 ${c.verify.hash == null ? '대조 안 함' : c.verify.hash ? '일치' : '불일치'} → <b>${c.verify.ok ? '파일 무결성 확인' : '변조 감지'}</b> <span class="muted">(서명 이후 바뀌지 않았는지를 확인할 뿐, 명부 내용이 맞는지 검증한 것은 아님)</span></div>` : ''}`;
   }
   return `
-  <h2 class="section-title">4. 내보내기·확인서</h2>
-  <p class="section-lead">승인 결과를 반영한 FAL 5 순서 명부와, 누가 무엇을 승인·보류했는지 남기는 변경 반영 확인서를 만듭니다. 기관 시스템 제출 파일이 아니라 담당자 확인용 준비 자료입니다.</p>
+  <h2 class="section-title">4. 내보내기${pend ? ` — 미확정 (확인 대기 ${pend}건)` : ' — 확정'}</h2>
+  <p class="section-lead">${pend ? '확인 대기가 남아 있어 미확정 검토본과 선사 확인 요청만 만듭니다.' : '모든 항목이 정해져 FAL 5 순서 확정 명부와, 누가 무엇을 채택·유지했는지 남기는 확정 기록을 만듭니다.'} 기관 시스템 제출 파일이 아니라 담당자 확인용 준비 자료입니다.</p>
   <div class="export-grid">
     <div class="stack">
-      <div class="panel"><div class="panel-head"><h3>최종 명부 (FAL 5 순서 CSV)</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono">${h(csv)}</pre><p class="small muted" style="margin:8px 0 0">보류한 값 변경은 최초본 값, 보류한 승선은 제외, 보류한 하선은 최초본 행 유지. 승인한 중복 행은 제거합니다.</p></div></div>
+      <div class="panel"><div class="panel-head"><h3>${pend ? '미확정 검토본 (최종 명부 아님)' : '확정 명부 (FAL 5 순서 CSV)'}</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono">${h(csv)}</pre><p class="small muted" style="margin:8px 0 0">수정본 채택은 수정본 값, 최초본 유지 확인은 최초본 값(승선 제외·하선 유지), 확인 대기는 값 대신 "확인 대기"와 검토 상태 열로 표시합니다.</p></div></div>
       <div class="panel"><div class="panel-head"><h3>선사에 보낼 확인 요청</h3><button type="button" class="btn btn-sm" data-act="copy-summary">복사</button></div><div class="panel-body"><textarea class="form-control summary mono" id="summary" aria-label="선사에 보낼 확인 요청">${h(shipperSummary())}</textarea></div></div>
     </div>
-    <div class="panel"><div class="panel-head"><h3>변경 반영 확인서</h3><span class="muted small">위변조 확인 가능</span></div><div class="panel-body">${conf}</div></div>
+    <div class="panel"><div class="panel-head"><h3>확정 기록</h3><span class="muted small">${pend ? '확인 대기 해소 후 생성' : '위변조 확인 가능'}</span></div><div class="panel-body">${conf}</div></div>
   </div>
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
@@ -398,8 +404,8 @@ async function doVerify(tamper = false) {
   if (tamper) {
     const d = decodeJws(jws);
     const p = structuredClone(d.payload);
-    const k = p.changes.findIndex((x) => x.decision === 'hold');
-    if (k >= 0) p.changes[k].decision = 'approve'; else p.approver += ' (변조)';
+    const k = p.changes.findIndex((x) => x.decision === 'keep');
+    if (k >= 0) p.changes[k].decision = 'approve'; else if (p.changes.length) p.changes[0].decision = 'keep'; else p.approver += ' (변조)';
     const parts = jws.split('.');
     jws = `${parts[0]}.${b64uJson(p)}.${parts[2]}`;
   }
@@ -539,10 +545,12 @@ document.addEventListener('click', async (e) => {
   if (act === 'prev') goStep(state.step - 1);
   if (act === 'restart') { loadScenario(state.scenario); goStep(1); }
   if (act === 'approve-expected') { for (const it of state.report.items) if (it.class === 'expected') state.decisions[it.id] = 'approve'; state.conf = null; render(); }
-  if (act === 'hold-rest') { for (const it of state.report.items) if (!state.decisions[it.id]) state.decisions[it.id] = 'hold'; state.conf = null; render(); }
+  if (act === 'hold-rest') { for (const it of state.report.items) if (!state.decisions[it.id]) state.decisions[it.id] = 'pending'; state.conf = null; render(); }
+  if (act === 'scenario5') { loadScenario(5); run(); goStep(2); return; }
+  if (act === 'rebase') { const a = toBaseCsv(state.report, state.decisions); state.inputs = { a, b: '', mail: '' }; state.rebased = true; state.report = null; state.decisions = {}; state.conf = null; state.step = 1; render(); window.scrollTo({ top: 0 }); return; }
   if (act === 'download') download();
   if (act === 'copy-summary') { try { await navigator.clipboard.writeText($('#summary').value); t.textContent = '복사됨'; } catch { $('#summary').select(); } }
-  if (act === 'sign') { await doSign(); render(); }
+  if (act === 'sign') { if (!pendingItems(state.report, state.decisions).length) await doSign(); render(); }
   if (act === 'verify') { await doVerify(false); render(); }
   if (act === 'tamper') { await doVerify(true); render(); }
 });
@@ -586,9 +594,9 @@ async function start() {
   run();
   if (params.get('item')) state.selected = params.get('item');
   // 스크린샷용: decide=auto → 예상된 변경 승인, 나머지 보류
-  if (params.get('decide') === 'auto' && state.report) for (const it of state.report.items) state.decisions[it.id] = it.class === 'expected' ? 'approve' : 'hold';
+  if (params.get('decide') === 'auto' && state.report) for (const it of state.report.items) state.decisions[it.id] = it.class === 'expected' ? 'approve' : 'pending';
   if (state.step === 4 && !allDecided()) state.step = 3;
-  if (params.has('sign') && state.step === 4) { await doSign(); if (params.get('sign') === 'verify') await doVerify(false); if (params.get('sign') === 'tamper') await doVerify(true); }
+  if (params.has('sign') && state.step === 4 && !pendingItems(state.report, state.decisions).length) { await doSign(); if (params.get('sign') === 'verify') await doVerify(false); if (params.get('sign') === 'tamper') await doVerify(true); }
   render();
   setTab(state.tab);
   scrollMailHit();

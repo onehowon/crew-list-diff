@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generate, generateH3, generateH4, stats, DEFAULT_SEED, H3_SEED, H4_SEED } from './gen.mjs';
 import { compareCrewLists } from '../lib/engine.js';
-import { baselineRowNumber, baselineIdKey } from './baselines.mjs';
+import { baselineRowNumber, baselineIdKey, baselineIdKeyWithMail } from './baselines.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RULE_IDS = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'];
@@ -50,19 +50,19 @@ export function evaluateEngine(pair) {
   const rep = compareCrewLists({ a: pair.a, b: pair.b, mail: pair.mail });
   const preds = rep.items.map((it) => ({ key: engineItemKey(pair, it), cls: it.class, rules: (it.rules || []).map((r) => r.id), line: it.directive?.line ?? null, ev: evidenceOk(pair, rep, it), kind: it.kind }));
   const matchOk = rep.pairs.filter((p) => pair.rowPidsA[p.a.index] === pair.rowPidsB[p.b.index]).length;
-  return { preds, columnAlerts: rep.columnAlerts.length, matching: { pairs: rep.pairs.length, correct: matchOk }, cells: rep.totalCells, warnings: [...rep.A.warnings, ...rep.B.warnings, ...rep.noticeWarnings] };
+  return { preds, blocked: rep.blocked, columnAlerts: rep.columnAlerts.length, matching: { pairs: rep.pairs.length, correct: matchOk }, cells: rep.totalCells, warnings: [...rep.A.warnings, ...rep.B.warnings, ...rep.noticeWarnings] };
 }
 
 // 기준선 경보 → 라벨 검출 여부
 function evaluateBaseline(pair, fn) {
-  const { alarms, B } = fn(pair.a, pair.b);
-  const al = alarms.map((x) => ({ pa: x.rowA ? pair.rowPidsA[x.rowA.index] : null, pb: x.rowB ? pair.rowPidsB[x.rowB.index] : null, field: x.field }));
+  const { alarms, B } = fn(pair.a, pair.b, pair.mail);
+  const al = alarms.map((x) => ({ pa: x.rowA ? pair.rowPidsA[x.rowA.index] : null, pb: x.rowB ? pair.rowPidsB[x.rowB.index] : null, field: x.field, explained: x.explained ?? null, dl: x.directiveLine ?? null }));
   return { alarms: al, cells: B.rows.length * 11 };
 }
 
 function labelDetectedByAlarm(label, alarms) {
   const [pid, what] = label.key.split('|');
-  if (pid === 'R8') return false; // 메일을 읽지 않으므로 지시 미반영은 볼 수 없음
+  if (pid === 'R8') return alarms.some((a) => a.dl != null && `L${a.dl}` === what); // 기준선1·2는 메일을 읽지 않으므로 볼 수 없음
   if (what === '+' || what === 'dup') return alarms.some((a) => a.pb === pid);
   if (what === '-') return alarms.some((a) => a.pa === pid);
   return alarms.some((a) => (a.pa === pid || a.pb === pid) && (a.field === what || a.field === null));
@@ -76,6 +76,7 @@ function newAgg() {
     suspect: { tp: 0, fp: 0, fn: 0 }, expected: { n: 0, correct: 0, predicted: 0, predictedWrong: 0, predictedButTruthSuspect: 0 },
     confusion: {}, evidence: { items: 0, ok: 0 }, matching: { pairs: 0, correct: 0 }, items: 0,
     hardNegatives: { n: 0, expected: 0, suspect: 0 }, missedChanges: [], columnAlerts: 0,
+    batch: 0, blockedPairs: 0, blockedLabels: 0, blockedErrors: 0,
   };
 }
 
@@ -87,6 +88,8 @@ function addLabels(agg, pair) {
 
 function scoreEngine(agg, pair, res) {
   addLabels(agg, pair);
+  // 문서 차단: 명부를 읽지 못해 진행을 막은 쌍은 문서 전체가 사람 수동 검토로 돌아간다(절감 아님, 놓침도 아님)
+  if (res.blocked && process.env.SCORE_BLOCKED !== 'legacy' && agg.scoreBlocked) { agg.blockedPairs++; agg.blockedLabels += pair.labels.length; agg.blockedErrors += pair.labels.filter((l) => l.truth === 'suspect').length; return; }
   agg.cells += res.cells;
   agg.matching.pairs += res.matching.pairs; agg.matching.correct += res.matching.correct;
   agg.columnAlerts += res.columnAlerts || 0;
@@ -122,6 +125,7 @@ function scoreEngine(agg, pair, res) {
       if (p.cls === 'suspect') agg.suspect.fp++;
     }
     if (p.cls === 'expected') {
+      agg.batch++;
       agg.expected.predicted++;
       const l = pair.labels.find((x) => x.key === p.key);
       if (!l || l.truth !== 'expected') agg.expected.predictedWrong++;
@@ -135,13 +139,15 @@ function scoreBaseline(agg, pair, res) {
   addLabels(agg, pair);
   agg.cells += res.cells;
   const cos = new Set(pair.cosmetic);
+  const review = res.alarms.filter((a) => a.explained == null);
   for (const l of pair.labels) {
     const hit = labelDetectedByAlarm(l, res.alarms);
     if (hit) agg.detected++;
     if (l.rule) { if (hit) agg.perRule[l.rule].detected++; }
-    if (l.truth === 'suspect' && !hit) { agg.missedErrorsOutside++; agg.missedErrorsByRule[l.rule] = (agg.missedErrorsByRule[l.rule] || 0) + 1; }
+    if (l.truth === 'suspect' && !labelDetectedByAlarm(l, review)) { agg.missedErrorsOutside++; agg.missedErrorsByRule[l.rule] = (agg.missedErrorsByRule[l.rule] || 0) + 1; }
   }
   for (const a of res.alarms) {
+    if (a.explained != null) { agg.batch++; continue; }
     agg.reviewUnits++;
     const real = pair.labels.some((l) => labelDetectedByAlarm(l, [a]));
     if (!real) {
@@ -157,10 +163,12 @@ function finalize(agg, kind) {
     cellsInRevised: agg.cells,
     labels: agg.labels,
     cosmeticCells: agg.cosmeticCells,
-    substantiveRecall: { detected: agg.detected, total: agg.labels.total, missed: agg.labels.total - agg.detected, rate: pct(agg.detected, agg.labels.total) },
+    // 문서 차단 쌍의 라벨은 재현율 분모에서 뺀다(수동 검토로 넘어간 것이지 탐지·놓침이 아님)
+    substantiveRecall: { detected: agg.detected, total: agg.labels.total - agg.blockedLabels, missed: agg.labels.total - agg.blockedLabels - agg.detected, rate: pct(agg.detected, agg.labels.total - agg.blockedLabels) },
     falseAlarms: { total: agg.falseAlarms, perPair: agg.falseAlarms / agg.pairs, cosmeticAlarms: agg.cosmeticAlarms },
     review: { units: agg.reviewUnits, perPair: agg.reviewUnits / agg.pairs, ratio: pct(agg.reviewUnits, agg.cells), missedErrorsOutside: agg.missedErrorsOutside, missedErrorsByRule: agg.missedErrorsByRule, errorsTotal: agg.labels.suspect },
     perRule: Object.fromEntries(Object.entries(agg.perRule).map(([k, v]) => [k, kind === 'engine' ? v : { n: v.n, detected: v.detected }])),
+    workload: { review: agg.reviewUnits, batch: agg.batch, blockedPairs: agg.blockedPairs, blockedLabels: agg.blockedLabels, blockedErrors: agg.blockedErrors, missedErrorsOutside: agg.missedErrorsOutside },
   };
   if (kind === 'engine') {
     const s = agg.suspect;
@@ -177,7 +185,7 @@ function finalize(agg, kind) {
   return o;
 }
 
-export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
+export function runEval({ seed = DEFAULT_SEED, splits = ['dev'], withMailBaseline = false, scoreBlocked = false } = {}) {
   const ds = generate(seed);
   const h3 = splits.includes('holdout3') ? generateH3(H3_SEED) : null;
   const h4 = splits.includes('holdout4') ? generateH4(H4_SEED) : null;
@@ -185,7 +193,8 @@ export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
   const warnSample = {};
   for (const split of splits) {
     const pairs = split === 'holdout3' ? h3.pairs : split === 'holdout4' ? h4.pairs : ds.pairs.filter((p) => p.split === split);
-    const E = newAgg(), B1 = newAgg(), B2 = newAgg();
+    const E = newAgg(), B1 = newAgg(), B2 = newAgg(), B3 = newAgg();
+    E.scoreBlocked = scoreBlocked;
     const warns = new Map();
     for (const pair of pairs) {
       const er = evaluateEngine(pair);
@@ -193,8 +202,10 @@ export function runEval({ seed = DEFAULT_SEED, splits = ['dev'] } = {}) {
       scoreEngine(E, pair, er);
       scoreBaseline(B1, pair, evaluateBaseline(pair, baselineRowNumber));
       scoreBaseline(B2, pair, evaluateBaseline(pair, baselineIdKey));
+      if (withMailBaseline) scoreBaseline(B3, pair, evaluateBaseline(pair, baselineIdKeyWithMail));
     }
     result.splits[split] = { engine: finalize(E, 'engine'), baselineRow: finalize(B1, 'baseline'), baselineId: finalize(B2, 'baseline') };
+    if (withMailBaseline) result.splits[split].baselineIdMail = finalize(B3, 'baseline');
     warnSample[split] = [...warns.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([w, n]) => `${w} ×${n}`);
   }
   result.parserWarnings = warnSample;
@@ -308,6 +319,36 @@ export function assembleReport(current, { h4 = null, h3 = null, first = null } =
   return L.join('\n');
 }
 
+// 제출 버전 재측정: 지금 코드로 세 홀드아웃을 다시 잰다. 모두 이미 결과를 본 데이터이므로 첫 측정(1회차)을 대신하지 않는다.
+export const FINAL_TITLE = { holdout: 'H1·H2 (한국어 머리글 · 약어 머리글·미국식 날짜)', holdout3: 'H3 (두 자리 연도·스페인어 혼합 머리글)', holdout4: 'H4 (독일어·인도네시아어 머리글)' };
+export function finalMarkdown(res) {
+  const L = ['# 제출 버전 재측정 (합성 데이터, 참고값)', ''];
+  L.push('- 지금 코드로 세 홀드아웃을 다시 잰 값이다. **모두 이미 결과를 본 데이터라 깨끗한 측정이 아니다.** 첫 측정은 docs/eval-holdout-first-run.*, eval-H3-first-run.*, eval-H4-first-run.*에 그대로 있다.');
+  L.push('- 기준선3은 기준선2(신분증번호 키 대조)에 엔진과 **같은 메일 지시**를 준 것이다. 엔진과의 차이가 "메일을 읽는가"에서만 나오지 않게 비교한다.');
+  L.push('- 개별 검토 = 담당자가 하나씩 볼 항목(엔진: 오류 의심+확인 필요 / 기준선: 지시로 설명되지 않은 경보). 일괄 승인 후보 = 메일 근거와 값이 일치한 항목(근거를 보고 승인). 문서 차단 = 명부를 읽지 못해 문서 전체를 사람이 다시 보는 쌍(절감이 아님).');
+  L.push(`- 생성 ${res.generatedAt}`, '');
+  const cols = [['engine', '본 엔진'], ['baselineRow', '기준선1 행 번호'], ['baselineId', '기준선2 신분증번호 키'], ['baselineIdMail', '기준선3 신분증번호 키 + 같은 메일 지시']];
+  const rows = [
+    ['실질 변경 재현율 (놓친 수)', (x) => (x.substantiveRecall.total ? `${P(x.substantiveRecall.rate)} (${x.substantiveRecall.missed})` : '— (전부 차단)')],
+    ['쌍당 개별 검토 항목', (x) => N(x.review.perPair, 1)],
+    ['개별 검토 비율 (÷ 수정본 칸 수)', (x) => P(x.review.ratio)],
+    ['일괄 승인 후보 (합계)', (x) => String(x.workload.batch)],
+    ['문서 차단 → 수동 검토 (쌍)', (x) => String(x.workload.blockedPairs)],
+    ['**검토 대상 밖으로 빠진 실제 오류**', (x) => `**${x.review.missedErrorsOutside}**`],
+    ['쌍당 오경보', (x) => N(x.falseAlarms.perPair)],
+  ];
+  for (const sp of Object.keys(res.splits)) {
+    const r = res.splits[sp];
+    L.push(`## ${FINAL_TITLE[sp] || sp} — 쌍 ${r.engine.pairs}, 실제 오류 ${r.engine.labels.suspect}`, '');
+    L.push('| 지표 | ' + cols.map((c) => c[1]).join(' | ') + ' |', '|---' + '|---'.repeat(cols.length) + '|');
+    for (const [k, f] of rows) L.push(`| ${k} | ${cols.map(([c]) => (r[c] ? f(r[c]) : '—')).join(' | ')} |`);
+    const e = r.engine;
+    L.push('', `- 엔진: 오류 의심 정밀도 ${P(e.suspect.precision)} / 재현율 ${P(e.suspect.recall)}, 오류를 '예상된 변경'으로 분류 ${e.expected.predictedButTruthSuspect}건, 문서 차단 쌍의 실제 오류 ${e.workload.blockedErrors}건(수동 검토로 넘어감)`);
+    L.push(`- 빠진 오류 유형 — 엔진 ${JSON.stringify(e.review.missedErrorsByRule)} / 기준선3 ${JSON.stringify(r.baselineIdMail.review.missedErrorsByRule)}`, '');
+  }
+  return L.join('\n');
+}
+
 const readJson = (f) => (existsSync(f) ? JSON.parse(readFileSync(f, 'utf8')) : null);
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
@@ -335,6 +376,16 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const f4 = readJson(join(ROOT, 'docs/eval-H4-first-run.json'));
     if (f4) writeFileSync(join(ROOT, 'docs/eval-H4-first-run.md'), `<!-- 저장된 JSON에서 다시 그림(수치 재계산 없음) -->\n` + toMarkdown(f4, { titles: { holdout4: SECTION_TITLE.holdout4 } }));
     console.log('1회차 md 다시 그림');
+    process.exit(0);
+  }
+  if (process.argv.includes('--final')) {
+    const res = runEval({ splits: ['holdout', 'holdout3', 'holdout4'], withMailBaseline: true, scoreBlocked: true });
+    res.generatedAt = new Date().toISOString();
+    const md = finalMarkdown(res);
+    writeFileSync(join(ROOT, 'docs/eval-final.json'), JSON.stringify(res, null, 2) + '\n');
+    writeFileSync(join(ROOT, 'docs/eval-final.md'), md);
+    console.log(md);
+    console.log('저장: docs/eval-final.json, docs/eval-final.md');
     process.exit(0);
   }
   const splits = split === 'all' ? ['dev', 'holdout'] : [split];

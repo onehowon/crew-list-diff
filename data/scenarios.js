@@ -1,4 +1,4 @@
-// 데모 시나리오 3개. 모든 인물·선박·번호는 가상(흔한 성·이름 조합, 형식만 흉내 낸 번호, 검증 숫자가 틀린 IMO 번호).
+// 데모 시나리오 5개. 모든 인물·선박·번호는 가상(흔한 성·이름 조합, 형식만 흉내 낸 번호, 검증 숫자가 틀린 IMO 번호).
 const HEAD = { ship: 'DEMO HANBIT 3', imo: '9412573', call: 'DHK57', voy: '2611E', port: 'BUSAN', date: '2026-11-03', flag: 'PAN', last: 'SHANGHAI' };
 
 // 최초본 기준 인원 16명
@@ -158,4 +158,36 @@ function scenario4() {
   return { id: 4, title: '처음 보는 서식', desc: '선주가 바꾼 양식: 일부 독일어 머리글, 알 수 없는 비고 열, 두 자리 연도 만료일. 추정 매핑과 열 단위 서식 경보를 보여 줍니다.', a: falCsv(a), b: csv, mail };
 }
 
-export const SCENARIOS = [scenario1(), scenario2(), scenario3(), scenario4()];
+// 예시 5: 예시 2를 이어서. 담당자가 생년월일 정정만 채택하고 나머지 6건을 '확인 대기'로 둔 뒤,
+// 선장 회신과 다시 고친 수정본(V3)을 받아 기준본(확정한 결정만 반영)과 다시 대조한다.
+function scenario5() {
+  const a = base();
+  find(a, 'DELA CRUZ').dob = '1992-06-03'; // 예시 2에서 채택한 정정만 반영한 기준본
+  const b = base().map((r) => ({ ...r }));
+  find(b, 'DELA CRUZ').dob = '1992-06-03';
+  find(b, 'CHOI').idNumber = 'MJ9930462'; // 여권 갱신 — 회신으로 확인
+  find(b, 'CHOI').idExpiry = '2036-10-01';
+  find(b, 'MENDOZA').idNumber = 'PF7731042'; // 만료 여권 → 새 여권으로 교체
+  find(b, 'MENDOZA').idExpiry = '2032-11-20';
+  // KOVALENKO·SANTOS·AUNG: V2의 오기를 되돌림(기준본과 같음 → 변경 없음)
+  const mail = [
+    'From: Master, DEMO HANBIT 3 (demo) <master@example.invalid>',
+    'Subject: RE: DEMO HANBIT 3 V.2611E revised crew list',
+    '',
+    'Dear Agent,',
+    '',
+    'Thank you for checking. Corrected list (V3) attached. The O/0, date and nationality code errors in V2 were typing mistakes and are reverted.',
+    'Chief Engineer CHOI DONGHYUN has a renewed passport.',
+    'Please correct passport number of CHOI DONGHYUN to MJ9930462.',
+    'Please correct passport expiry date of CHOI DONGHYUN to 2036-10-01.',
+    'Chief Cook MENDOZA ARNEL has a new passport (the old one is no longer valid).',
+    'Please correct passport number of MENDOZA ARNEL to PF7731042.',
+    'Please correct passport expiry date of MENDOZA ARNEL to 2032-11-20.',
+    '',
+    'Best regards,',
+    'Master (demo)',
+  ].join('\n') + '\n';
+  return { id: 5, title: '선장 회신 후 재대조', desc: '예시 2를 이어서: 확정한 정정만 반영한 기준본과, 선장 회신·다시 고친 수정본(V3)을 대조해 확인 대기를 모두 풀고 최종 명부를 만듭니다.', a: falCsv(a), b: falCsv(b), mail };
+}
+
+export const SCENARIOS = [scenario1(), scenario2(), scenario3(), scenario4(), scenario5()];

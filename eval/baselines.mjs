@@ -5,6 +5,9 @@
 // 반환: alarms = [{ rowA, rowB, field|null(행 전체) }]
 import { parseCrewList } from '../lib/parse.js';
 import { FIELD_KEYS } from '../lib/fields.js';
+import { parseNotice } from '../lib/notice.js';
+import { normValue } from '../lib/normalize.js';
+import { personKey } from '../lib/match.js';
 
 const raw = (row, f) => String(row.cells[f].raw ?? '').trim();
 
@@ -41,5 +44,36 @@ export function baselineIdKey(aText, bText) {
     else alarms.push({ rowA: null, rowB: b, field: null });
   }
   for (const a of A.rows) if (!usedA.has(a)) alarms.push({ rowA: a, rowB: null, field: null });
+  return { A, B, alarms };
+}
+
+// 기준선3 "같은 입력 단순 대조": 기준선2(신분증번호 키 대조)에 본 엔진과 같은 메일 지시(같은 파서 결과)를 준다.
+//  - 지시 대상 인물·항목의 값이 지시 값과 같으면 그 경보는 '지시로 설명됨'(개별 검토에서 제외, 일괄 승인 후보)
+//  - 지시 대상 인물·항목의 값이 지시 값과 다르면 '지시 미반영' 경보 1건 추가
+//  - 그 밖의 차이는 기준선2와 같이 모두 경보. 오류 규칙·표기 정규화·인물 대응 보정은 없음(지시 대상 찾기에만 엔진의 성명 정규화를 빌림).
+// 엔진과 차이가 메일을 읽는지에서만 나오지 않도록, 메일 정보는 똑같이 주고 비교한다.
+export function baselineIdKeyWithMail(aText, bText, mail) {
+  const base = baselineIdKey(aText, bText);
+  const { A, B } = base;
+  const notice = parseNotice(mail, [...A.rows, ...B.rows], { dateOrder: B.dateOrder?.dob || B.dateOrder?.idExpiry || 'DMY' });
+  const alarms = base.alarms.map((a) => ({ ...a }));
+  for (const d of notice.directives) {
+    // 승선 지시인데 그 사람을 어느 명부에서도 찾지 못함 → 승선이 반영되지 않음
+    if (!d.personKeys.length) { if (d.type === 'sign_on') alarms.push({ rowA: null, rowB: null, field: null, directiveLine: d.line }); continue; }
+    const rowB = B.rows.find((r) => d.personKeys.includes(personKey(r)));
+    if (d.field && d.value != null) {
+      const v = rowB ? normValue(d.field, rowB.cells[d.field].raw).value : null;
+      const al = alarms.find((a) => a.rowB === rowB && a.field === d.field);
+      if (rowB && v === d.value) { if (al) al.explained = d.line; }
+      else alarms.push({ rowA: null, rowB: rowB || null, field: d.field, directiveLine: d.line });
+    } else if (d.type === 'sign_on') {
+      const al = alarms.find((a) => a.rowB === rowB && a.rowA === null && a.field === null);
+      if (al) al.explained = d.line; else alarms.push({ rowA: null, rowB: null, field: null, directiveLine: d.line });
+    } else if (d.type === 'sign_off') {
+      const inB = !!rowB;
+      const al = alarms.find((a) => a.rowB === null && a.rowA && d.personKeys.includes(personKey(a.rowA)));
+      if (!inB && al) al.explained = d.line; else if (inB) alarms.push({ rowA: null, rowB, field: null, directiveLine: d.line });
+    }
+  }
   return { A, B, alarms };
 }

@@ -132,11 +132,11 @@ details.cosmetic-fold .table-wrap { max-height: 240px; overflow: auto; }
 .impact details { margin-top: 6px; font-size: 12px; }
 .impact blockquote, .penalty blockquote { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--borderColor-default); background: var(--bgColor-muted); font-size: 12px; color: var(--fgColor-default); }
 .penalty { margin-top: 12px; padding: 12px 14px; }
-.approve-list .arow { display: grid; grid-template-columns: 170px 92px minmax(0, 1fr) 150px; gap: 10px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--borderColor-muted); font-size: 13px; }
+.approve-list .arow { display: grid; grid-template-columns: 170px 92px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--borderColor-muted); font-size: 13px; }
 .approve-list .arow:last-child { border-bottom: 0; }
 .approve-list .seg { justify-self: end; }
 .seg { display: inline-flex; border: 1px solid var(--borderColor-default); border-radius: 6px; overflow: hidden; }
-.seg button { border: 0; background: #fff; font: inherit; font-size: 12px; padding: 4px 12px; cursor: pointer; }
+.seg button { border: 0; background: #fff; font: inherit; font-size: 12px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
 .seg button + button { border-left: 1px solid var(--borderColor-default); }
 .seg button[aria-pressed="true"][data-v="approve"] { background: var(--bgColor-success-emphasis, #1f883d); color: #fff; }
 .seg button[aria-pressed="true"][data-v="hold"] { background: var(--bgColor-neutral-emphasis, #59636e); color: #fff; }
@@ -191,3 +191,5 @@ code.cmd { background: var(--bgColor-muted); border: 1px solid var(--borderColor
 .intro .cls { margin: 0 2px; }
 .eval-summary { padding: 14px 18px; margin: 0 0 20px; }
 .eval-summary li { margin: 4px 0; }
+.seg button[aria-pressed="true"][data-v="keep"] { background: var(--bgColor-accent-emphasis, #0969da); color: #fff; }
+.seg button[aria-pressed="true"][data-v="pending"] { background: var(--bgColor-attention-emphasis, #9a6700); color: #fff; }
