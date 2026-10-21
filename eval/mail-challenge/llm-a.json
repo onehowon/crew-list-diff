@@ -1,0 +1,1194 @@
+[
+  {
+    "meta": {
+      "runner": "Claude Code 서브에이전트(사람 개입 없음)",
+      "model": "claude-opus-5-5",
+      "at": "2026-10-21T00:00:00+09:00",
+      "batch": "M001-M051",
+      "note": "메일을 직접 읽고 판단, 코드 자동 처리 없음",
+      "at_note": "에이전트가 적은 at 값은 자리표시(00:00)였음. 실제 파일 저장 시각은 2026-10-21 23:11 KST(git 커밋 이력 참고)"
+    }
+  },
+  {
+    "id": "M001",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "DELA CRUZ JUAN",
+        "field": "dob",
+        "value": "1992-06-03",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "AB Juan DELA CRUZ - date of birth should read 03 JUN 1992."
+      }
+    ]
+  },
+  {
+    "id": "M002",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "GARCIA RONALDO",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "OFF-SIGNER : Oiler GARCIA, Ronaldo (PHL)"
+      },
+      {
+        "type": "sign_on",
+        "person": "BAUTISTA RICARDO",
+        "field": null,
+        "value": "Oiler",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "ON-SIGNER  : Oiler BAUTISTA, Ricardo (PHL), DOB 1989-10-02, PPT PB4471906"
+      }
+    ]
+  },
+  {
+    "id": "M003",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "idNumber",
+        "value": "FT2950831",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please correct 2/O Andrii KOVALENKO's passport number to FT2950831 (last two digits were swapped)."
+      },
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "dob",
+        "value": "1994-03-11",
+        "apply": false,
+        "not_applied_reason": "negation",
+        "evidence": "We do NOT need to change 3/O Santos' date of birth to 11 MAR 1994 as mentioned in the draft we sent this morning - his DOB on the list is correct, leave it."
+      }
+    ]
+  },
+  {
+    "id": "M004",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idNumber",
+        "value": "MJ5508291",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "최동현 기관장 여권번호가 잘못 기재되어 있어 정정 부탁드립니다."
+      }
+    ]
+  },
+  {
+    "id": "M005",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "AUNG KO KO",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "Please disregard that request - his relief could not get a visa in time, so he will remain on board until next port."
+      },
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idExpiry",
+        "value": "2031-04-22",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "However his seaman's book has been renewed, please update expiry date to 22 April 2031."
+      }
+    ]
+  },
+  {
+    "id": "M006",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "SAPUTRA AGUS",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "1) Wiper Agus SAPUTRA signs off at Busan - end of contract."
+      },
+      {
+        "type": "rank_change",
+        "person": "TRAN MINH TUAN",
+        "field": "rank",
+        "value": "Able Seaman",
+        "apply": false,
+        "not_applied_reason": "conditional",
+        "evidence": "2) OS Tran Minh Tuan may be promoted to AB, but only once owners approve."
+      }
+    ]
+  },
+  {
+    "id": "M007",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "pob",
+        "value": "ODESA",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "One more: 2/E MELNYK Serhii place of birth should be ODESA, not KYIV."
+      },
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idNumber",
+        "value": "FK6620458",
+        "apply": false,
+        "not_applied_reason": "quote",
+        "evidence": "Please correct Melnyk Serhii passport no. to FK6620458."
+      }
+    ]
+  },
+  {
+    "id": "M008",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "dob",
+        "value": "2000-07-27",
+        "apply": false,
+        "not_applied_reason": "superseded",
+        "evidence": "Messman FLORES Angelica - DOB on list is 23 JUL 2000, should be 27 JUL 2000."
+      },
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "dob",
+        "value": "2000-07-25",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Correct DOB is 25 JUL 2000."
+      }
+    ]
+  },
+  {
+    "id": "M009",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "idExpiry",
+        "value": "2030-09-14",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "For DEMO HANBIT 3 (V.2611E): please update 3/E NGUYEN VAN HUNG passport expiry to 14 SEP 2030 (new passport, same number)."
+      },
+      {
+        "type": "sign_off",
+        "person": "CASTILLO RAMON",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "other_vessel",
+        "evidence": "For information, our sister vessel DEMO HANBIT 7 will also be in Busan next week and will sign off Oiler Ramon CASTILLO there - separate instruction will follow from her master, please don't mix with HANBIT 3 list."
+      }
+    ]
+  },
+  {
+    "id": "M010",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "givenNames",
+        "value": "ZAW LYNN",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "oiler KYAW ZAW LIN - given name is spelt ZAW LYNN in his passport, pls correct."
+      },
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "dob",
+        "value": "1983-09-12",
+        "apply": false,
+        "not_applied_reason": "question",
+        "evidence": "Also, is C/O Lee Jaewon's date of birth 1983-09-12?"
+      }
+    ]
+  },
+  {
+    "id": "M011",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "MENDOZA ARNEL",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- Chief Cook MENDOZA ARNEL - sign off"
+      },
+      {
+        "type": "sign_on",
+        "person": "DIAZ ROLANDO",
+        "field": null,
+        "value": "Chief Cook",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- Chief Cook DIAZ ROLANDO (PHL) - sign on"
+      },
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idNumber",
+        "value": "MJ5508291",
+        "apply": false,
+        "not_applied_reason": "info",
+        "evidence": "FYI: C/E Choi's passport number was already corrected to MJ5508291 in the list you sent us yesterday, no further action needed there."
+      }
+    ]
+  },
+  {
+    "id": "M012",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "idExpiry",
+        "value": "2029-05-17",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "트란 민 투안(TRAN MINH TUAN, OS) 여권 만료일을 2029년 5월 17일로 수정해 주세요."
+      },
+      {
+        "type": "rank_change",
+        "person": "LEE JAEWON",
+        "field": "rank",
+        "value": "Master",
+        "apply": false,
+        "not_applied_reason": "negation",
+        "evidence": "그리고 본사에서 이재원 일항사 직급을 Master로 바꾸라는 말이 있었다고 들으셨을 텐데, 바꾸지 마십시오."
+      }
+    ]
+  },
+  {
+    "id": "M013",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "gender",
+        "value": "M",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "BOSUN REYES JOMAR -> nationality PHL ok, but gender shown as F on your list, should be M."
+      },
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idNumber",
+        "value": "XC8205531",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "WIPER SAPUTRA AGUS -> passport XC8205531 (not ...513)"
+      }
+    ]
+  },
+  {
+    "id": "M014",
+    "instructions": [
+      {
+        "type": "rank_change",
+        "person": "TRAN MINH TUAN",
+        "field": "rank",
+        "value": "Able Seaman",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please note OS TRAN Minh Tuan has been promoted to Able Seaman with effect from today, approved by owners."
+      }
+    ]
+  },
+  {
+    "id": "M015",
+    "instructions": [
+      {
+        "type": "sign_on",
+        "person": "RAMIREZ JOSHUA",
+        "field": null,
+        "value": "Third Officer",
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "Wait - correction from office just now: Santos is extending his contract by one month, so he will NOT sign off and Ramirez will NOT join this port."
+      },
+      {
+        "type": "sign_off",
+        "person": "SANTOS MARK",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "Wait - correction from office just now: Santos is extending his contract by one month, so he will NOT sign off and Ramirez will NOT join this port."
+      }
+    ]
+  },
+  {
+    "id": "M016",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "idExpiry",
+        "value": "2032-03-08",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "a. Chief Officer LEE JAEWON - passport expiry 2032.03.08"
+      },
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "nationality",
+        "value": "MMR",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "b. Able Seaman AUNG KO KO - nationality should be MMR (shown as MYS)"
+      },
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idNumber",
+        "value": "MDN215380",
+        "apply": false,
+        "not_applied_reason": "conditional",
+        "evidence": "If the Myanmar embassy confirms his new seaman's book number we will also ask you to change his ID to MDN215380, but not yet."
+      }
+    ]
+  },
+  {
+    "id": "M017",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "dob",
+        "value": "1985-07-29",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "But 2/E Serhii Melnyk DOB should be 1985-07-29, not 19th."
+      },
+      {
+        "type": "rank_change",
+        "person": "GARCIA RONALDO",
+        "field": "rank",
+        "value": "Fitter",
+        "apply": false,
+        "not_applied_reason": "quote",
+        "evidence": "we changed Garcia Ronaldo's rank from Oiler to Fitter in the draft."
+      }
+    ]
+  },
+  {
+    "id": "M018",
+    "instructions": [
+      {
+        "type": "sign_on",
+        "person": "PRATAMA RIZAL",
+        "field": null,
+        "value": "Wiper",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Mr. Rizal PRATAMA, Indonesian, joining as Wiper."
+      }
+    ]
+  },
+  {
+    "id": "M019",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idNumber",
+        "value": "PA3159082",
+        "apply": false,
+        "not_applied_reason": "superseded",
+        "evidence": "Please change Bosun Reyes' passport number to PA3159082."
+      },
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "idNumber",
+        "value": "PA3159208",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Correction - number is PA3159208."
+      }
+    ]
+  },
+  {
+    "id": "M020",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "DELA CRUZ JUAN",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "1. 갑판수 후안 델라크루즈(DELA CRUZ JUAN) 하선"
+      },
+      {
+        "type": "sign_on",
+        "person": "PASCUAL NOEL",
+        "field": null,
+        "value": "Able Seaman",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "2. 신규 승선: 갑판수(AB) PASCUAL NOEL, 필리핀 국적, 1995.04.12생"
+      },
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "pob",
+        "value": "JAKARTA",
+        "apply": false,
+        "not_applied_reason": "info",
+        "evidence": "참고로 지난 항차(V.2609W) 때 사푸트라 와이퍼 출생지를 JAKARTA로 고쳤던 건은 이미 반영되어 있으니 신경 쓰지 않으셔도 됩니다."
+      }
+    ]
+  },
+  {
+    "id": "M021",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "idNumber",
+        "value": "PG2507831",
+        "apply": false,
+        "not_applied_reason": "question",
+        "evidence": "can you confirm whether Messman Flores' passport no. on your list is PG2507831?"
+      },
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "idExpiry",
+        "value": "2030-01-15",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Meanwhile pls update her passport expiry to 2030-01-15."
+      }
+    ]
+  },
+  {
+    "id": "M022",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "familyName",
+        "value": "MENDOZA-RIVERA",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "However the Chief Cook family name should be MENDOZA-RIVERA as per his renewed passport (issued Manila, 2026-08-02)."
+      }
+    ]
+  },
+  {
+    "id": "M023",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "KOVALENKO ANDRII",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- 2/O KOVALENKO Andrii - sign off"
+      },
+      {
+        "type": "sign_on",
+        "person": "BONDARENKO TARAS",
+        "field": null,
+        "value": "Second Officer",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- 2/O BONDARENKO Taras (UKR) - sign on"
+      },
+      {
+        "type": "correction",
+        "person": "NAVARRO LITO",
+        "field": "dob",
+        "value": "1990-11-21",
+        "apply": false,
+        "not_applied_reason": "other_vessel",
+        "evidence": "On another note, for DEMO HANBIT 2 (Ulsan, V.2612W) the master asked to correct AB Lito NAVARRO's DOB to 1990-11-21."
+      }
+    ]
+  },
+  {
+    "id": "M024",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "idNumber",
+        "value": "MH3304712",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "No. MH3304712"
+      },
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "idIssuer",
+        "value": "MMR",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Issued by: MMR"
+      },
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "idExpiry",
+        "value": "2036-10-05",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Expiry: 5 October 2036"
+      }
+    ]
+  },
+  {
+    "id": "M025",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "MENDOZA ARNEL",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "negation",
+        "evidence": "Please do not sign off Chief Cook Mendoza in Busan."
+      },
+      {
+        "type": "sign_off",
+        "person": "FLORES ANGELICA",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please DO sign off Messman FLORES ANGELICA in Busan (family emergency)."
+      }
+    ]
+  },
+  {
+    "id": "M026",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "pob",
+        "value": "BUSAN",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "PARK SANGHOON - BUSAN"
+      },
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "pob",
+        "value": "MOKPO",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "CHOI DONGHYUN - MOKPO"
+      },
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "pob",
+        "value": "INCHEON",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "LEE JAEWON - INCHEON"
+      }
+    ]
+  },
+  {
+    "id": "M027",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "DELA CRUZ JUAN",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Captain, please arrange sign-off of AB DELA CRUZ Juan at Busan; his reliever is AB Mario SORIANO (PHL)."
+      },
+      {
+        "type": "sign_on",
+        "person": "SORIANO MARIO",
+        "field": null,
+        "value": "Able Seaman",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Captain, please arrange sign-off of AB DELA CRUZ Juan at Busan; his reliever is AB Mario SORIANO (PHL)."
+      }
+    ]
+  },
+  {
+    "id": "M028",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "LEE JAEWON",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "conditional",
+        "evidence": "If the Chief Officer's medical comes back unfit, we will sign him off at Busan and promote 2/O Kovalenko to C/O."
+      },
+      {
+        "type": "rank_change",
+        "person": "KOVALENKO ANDRII",
+        "field": "rank",
+        "value": "Chief Officer",
+        "apply": false,
+        "not_applied_reason": "conditional",
+        "evidence": "If the Chief Officer's medical comes back unfit, we will sign him off at Busan and promote 2/O Kovalenko to C/O."
+      },
+      {
+        "type": "correction",
+        "person": "KOVALENKO ANDRII",
+        "field": "dob",
+        "value": "1991-02-08",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Meanwhile, please correct 2/O KOVALENKO's date of birth to 8 Feb 1991 (year was wrong)."
+      }
+    ]
+  },
+  {
+    "id": "M029",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idIssuer",
+        "value": "IDN",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "His passport is issued by IDN, but your list shows PHL as issuing state."
+      }
+    ]
+  },
+  {
+    "id": "M030",
+    "instructions": [
+      {
+        "type": "rank_change",
+        "person": "SANTOS MARK",
+        "field": "rank",
+        "value": "Third Officer",
+        "apply": false,
+        "not_applied_reason": "info",
+        "evidence": "For your records only: during last voyage V.2609W, 3/O Mark Santos was still Fourth Officer and was promoted to Third Officer at Manila."
+      },
+      {
+        "type": "rank_change",
+        "person": "NGUYEN VAN HUNG",
+        "field": "rank",
+        "value": "Second Engineer",
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "Today's request: please change 3/E NGUYEN VAN HUNG's rank to Second Engineer?"
+      },
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "idNumber",
+        "value": "CN1182950",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "No - sorry, I mean only his passport no., new no. is CN1182950."
+      }
+    ]
+  },
+  {
+    "id": "M031",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "dob",
+        "value": "1996-12-01",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Wiper AGUS SAPUTRA - tanggal lahir (DOB) seharusnya 1 Desember 1996, bukan 1997."
+      }
+    ]
+  },
+  {
+    "id": "M032",
+    "instructions": [
+      {
+        "type": "sign_on",
+        "person": "EDWARD LIM",
+        "field": null,
+        "value": "Second Cook",
+        "apply": false,
+        "not_applied_reason": "quote",
+        "evidence": "Please sign on 2nd Cook EDWARD LIM (PHL) at Busan"
+      },
+      {
+        "type": "sign_off",
+        "person": "FLORES ANGELICA",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "quote",
+        "evidence": "and sign off Messman Flores."
+      },
+      {
+        "type": "correction",
+        "person": "REYES JOMAR",
+        "field": "dob",
+        "value": "1981-08-25",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please only update today: Bosun Reyes - DOB 25 AUG 1981."
+      }
+    ]
+  },
+  {
+    "id": "M033",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "SANTOS MARK",
+        "field": "nationality",
+        "value": "PHL",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "3/O santos mark - pls change nationality to PHL (your list shows PHI)."
+      }
+    ]
+  },
+  {
+    "id": "M034",
+    "instructions": [
+      {
+        "type": "sign_on",
+        "person": "KIM MINSU",
+        "field": null,
+        "value": "Electro-Technical Officer",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Electro-Technical Officer KIM MINSU, KOR, DOB 1988-03-27, passport M80451236."
+      },
+      {
+        "type": "sign_on",
+        "person": null,
+        "field": null,
+        "value": "Deck Cadet",
+        "apply": false,
+        "not_applied_reason": "question",
+        "evidence": "Is it also possible to sign on a Deck Cadet in Busan?"
+      }
+    ]
+  },
+  {
+    "id": "M035",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idExpiry",
+        "value": "2027-10-01",
+        "apply": false,
+        "not_applied_reason": "superseded",
+        "evidence": "That's wrong - new expiry 2027-10-01."
+      },
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "idExpiry",
+        "value": "2031-10-01",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "confirmed from the passport data page: expiry is 01 OCT 2031."
+      }
+    ]
+  },
+  {
+    "id": "M036",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "PARK SANGHOON",
+        "field": "idNumber",
+        "value": "MK4820175",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "박상훈 선장: 여권번호 MK4820175 로 정정 바랍니다."
+      },
+      {
+        "type": "correction",
+        "person": "CHOI DONGHYUN",
+        "field": "pob",
+        "value": "GWANGJU",
+        "apply": false,
+        "not_applied_reason": "question",
+        "evidence": "그리고 혹시 최동현 기관장 출생지가 목포로 되어 있나요?"
+      }
+    ]
+  },
+  {
+    "id": "M037",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "AUNG KO KO",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "* sign off AB Aung Ko Ko"
+      },
+      {
+        "type": "sign_on",
+        "person": "AUNG HTET",
+        "field": null,
+        "value": "Able Seaman",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "* sign on AB Htet AUNG (MMR), seaman's book MDN330918"
+      },
+      {
+        "type": "sign_off",
+        "person": "MELNYK SERHII",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "other_vessel",
+        "evidence": "Note the Ulsan call next month (V.2612W) will see 2/E MELNYK relieved - not now."
+      }
+    ]
+  },
+  {
+    "id": "M038",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "GARCIA RONALDO",
+        "field": "idNumber",
+        "value": "PD5021748",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "BUT: oiler GARCIA ronaldo -> passport PD5021748"
+      }
+    ]
+  },
+  {
+    "id": "M039",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "VILLANUEVA EDUARDO",
+        "field": "dob",
+        "value": "1979-04-30",
+        "apply": false,
+        "not_applied_reason": "other_vessel",
+        "evidence": "Please amend Bosun Eduardo VILLANUEVA DOB to 1979-04-30."
+      },
+      {
+        "type": "sign_off",
+        "person": "MERCADO PAOLO",
+        "field": null,
+        "value": null,
+        "apply": false,
+        "not_applied_reason": "other_vessel",
+        "evidence": "Please sign off OS Paolo MERCADO."
+      }
+    ]
+  },
+  {
+    "id": "M040",
+    "instructions": [
+      {
+        "type": "rank_change",
+        "person": "SANTOS MARK",
+        "field": "rank",
+        "value": "Second Officer",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please change 3/O Mark SANTOS's rank to Second Officer, as 2/O Kovalenko signs off at Busan."
+      },
+      {
+        "type": "sign_off",
+        "person": "KOVALENKO ANDRII",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please also sign off 2/O Andrii KOVALENKO."
+      },
+      {
+        "type": "sign_on",
+        "person": "TORRES KEVIN",
+        "field": null,
+        "value": "Third Officer",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "New 3/O joining: Kevin TORRES, PHL."
+      }
+    ]
+  },
+  {
+    "id": "M041",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idNumber",
+        "value": "MDN251083",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "AB 아웅 코 코(AUNG KO KO)의 선원수첩 번호가 MDN215083 으로 되어 있는데, MDN251083 이 맞습니다."
+      },
+      {
+        "type": "correction",
+        "person": "AUNG KO KO",
+        "field": "idExpiry",
+        "value": "2030-06-30",
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "아니다, 만료일은 일단 그대로 두세요."
+      }
+    ]
+  },
+  {
+    "id": "M042",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "SAPUTRA AGUS",
+        "field": "idExpiry",
+        "value": "2027-12-01",
+        "apply": false,
+        "not_applied_reason": "question",
+        "evidence": "Pls confirm: is Wiper Saputra's passport expiry 2027-12-01 on your list?"
+      },
+      {
+        "type": "correction",
+        "person": "TRAN MINH TUAN",
+        "field": "dob",
+        "value": "1998-06-02",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "And pls change Ordinary Seaman TRAN MINH TUAN date of birth to 2 June 1998."
+      }
+    ]
+  },
+  {
+    "id": "M043",
+    "instructions": [
+      {
+        "type": "rank_change",
+        "person": "GARCIA RONALDO",
+        "field": "rank",
+        "value": "Oiler",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "The correction you made yesterday (Fitter rank for Garcia) - please revert, he is still Oiler."
+      },
+      {
+        "type": "rank_change",
+        "person": "GARCIA RONALDO",
+        "field": "rank",
+        "value": "Fitter",
+        "apply": false,
+        "not_applied_reason": "quote",
+        "evidence": "Please change Oiler Garcia Ronaldo to Fitter."
+      }
+    ]
+  },
+  {
+    "id": "M044",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "NGUYEN VAN HUNG",
+        "field": "familyName",
+        "value": "NGUYEN",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Please fix so family name = NGUYEN."
+      },
+      {
+        "type": "correction",
+        "person": "FLORES ANGELICA",
+        "field": "gender",
+        "value": "F",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "Also gender of Messman Flores should be F (shown M)."
+      }
+    ]
+  },
+  {
+    "id": "M045",
+    "instructions": [
+      {
+        "type": "rank_change",
+        "person": "NGUYEN VAN HUNG",
+        "field": "rank",
+        "value": "Second Engineer",
+        "apply": false,
+        "not_applied_reason": "conditional",
+        "evidence": "Subject to the Panama flag state endorsement being received before arrival, 3/E NGUYEN will be upgraded to Second Engineer."
+      },
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idIssuer",
+        "value": "UKR",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- 2/E Melnyk passport issuing state: UKR"
+      },
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "idExpiry",
+        "value": "2029-11-18",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- 2/E Melnyk passport expiry: 2029-11-18"
+      }
+    ]
+  },
+  {
+    "id": "M046",
+    "instructions": [
+      {
+        "type": "sign_off",
+        "person": "REYES JOMAR",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "sign off: bosun jomar reyes"
+      },
+      {
+        "type": "sign_on",
+        "person": "DELA PENA ERNESTO",
+        "field": null,
+        "value": "Bosun",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "sign on: bosun Ernesto DELA PENA, filipino, 1977-09-09"
+      }
+    ]
+  },
+  {
+    "id": "M047",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "dob",
+        "value": "1987-01-29",
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "Sorry - ignore that, I was looking at the wrong crew member's file."
+      },
+      {
+        "type": "correction",
+        "person": "KYAW ZAW LIN",
+        "field": "pob",
+        "value": "YANGON",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "What does need changing is Oiler KYAW's place of birth: YANGON."
+      }
+    ]
+  },
+  {
+    "id": "M048",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "idNumber",
+        "value": "MR7031864",
+        "apply": false,
+        "not_applied_reason": "info",
+        "evidence": "Please note: the following crew member's data is already corrected in our system as per your list of 18 Oct - Chief Officer LEE JAEWON passport MR7031864."
+      },
+      {
+        "type": "correction",
+        "person": "LEE JAEWON",
+        "field": "givenNames",
+        "value": "JAE WON",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "New request: Chief Officer LEE JAEWON's given name should be written JAE WON (two words) as in passport."
+      }
+    ]
+  },
+  {
+    "id": "M049",
+    "instructions": [
+      {
+        "type": "sign_on",
+        "person": "WIBOWO DIMAS",
+        "field": null,
+        "value": "Wiper",
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "- Nama: WIBOWO, Dimas"
+      },
+      {
+        "type": "sign_off",
+        "person": "SAPUTRA AGUS",
+        "field": null,
+        "value": null,
+        "apply": true,
+        "not_applied_reason": null,
+        "evidence": "And please sign off Wiper SAPUTRA AGUS at Busan."
+      }
+    ]
+  },
+  {
+    "id": "M050",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "MELNYK SERHII",
+        "field": "dob",
+        "value": "1985-07-09",
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "Update: please disregard, master confirmed 19 Jul 1985 is correct per passport."
+      }
+    ]
+  },
+  {
+    "id": "M051",
+    "instructions": [
+      {
+        "type": "correction",
+        "person": "MENDOZA ARNEL",
+        "field": "idNumber",
+        "value": "PF1085672",
+        "apply": false,
+        "not_applied_reason": "cancel",
+        "evidence": "On second thoughts I re-checked and it is PF1085627 - exactly as you already have it."
+      }
+    ]
+  }
+]

@@ -1,0 +1,233 @@
+{
+  "runs": [
+    {
+      "name": "규칙 파서",
+      "mails": 102,
+      "gold": 136,
+      "pred": 82,
+      "tp": 22,
+      "fp": 60,
+      "fn": 114,
+      "trapApplied": 10,
+      "trapTotal": 79,
+      "byTrap": {
+        "negation": {
+          "total": 10,
+          "applied": 0
+        },
+        "cancel": {
+          "total": 13,
+          "applied": 5
+        },
+        "conditional": {
+          "total": 9,
+          "applied": 0
+        },
+        "quote": {
+          "total": 10,
+          "applied": 0
+        },
+        "superseded": {
+          "total": 9,
+          "applied": 2
+        },
+        "other_vessel": {
+          "total": 10,
+          "applied": 0
+        },
+        "question": {
+          "total": 9,
+          "applied": 0
+        },
+        "info": {
+          "total": 9,
+          "applied": 3
+        }
+      },
+      "evidenceDropped": 0,
+      "failures": [
+        "M002 놓친 지시: sign_off|GARCIA RONALDO",
+        "M002 놓친 지시: sign_on|BAUTISTA RICARDO",
+        "M004 정답에 없는 지시: correction||idNumber|",
+        "M004 놓친 지시: correction|CHOI DONGHYUN|idNumber|MJ5508291",
+        "M005 놓친 지시: correction|AUNG KO KO|idExpiry|2031-04-22",
+        "M008 함정(superseded)을 반영으로 읽음: correction|ANGELICA FLORES|dob|2000-07-27",
+        "M008 놓친 지시: correction|ANGELICA FLORES|dob|2000-07-25",
+        "M009 놓친 지시: correction|HUNG NGUYEN VAN|idExpiry|2030-09-14",
+        "M010 정답에 없는 지시: correction|KYAW LIN ZAW|idNumber|",
+        "M010 놓친 지시: correction|KYAW LIN ZAW|givenNames|ZAW LYNN",
+        "M011 정답에 없는 지시: correction||idNumber|MJ5508291",
+        "M012 놓친 지시: correction|MINH TRAN TUAN|idExpiry|2029-05-17",
+        "M013 정답에 없는 지시: correction|JOMAR REYES|nationality|",
+        "M013 놓친 지시: correction|JOMAR REYES|gender|M",
+        "M015 함정(cancel)을 반영으로 읽음: sign_off|MARK SANTOS",
+        "M016 정답에 없는 지시: correction|DEMO HANBIT|null|",
+        "M016 정답에 없는 지시: correction|AUNG KO KO|nationality|MYS",
+        "M016 놓친 지시: correction|JAEWON LEE|idExpiry|2032-03-08",
+        "M016 놓친 지시: correction|AUNG KO KO|nationality|MMR",
+        "M017 정답에 없는 지시: correction||dob|1985-07-29",
+        "M017 놓친 지시: correction|MELNYK SERHII|dob|1985-07-29",
+        "M018 정답에 없는 지시: sign_on|",
+        "M018 놓친 지시: sign_on|PRATAMA RIZAL",
+        "M019 정답에 없는 지시: correction||idNumber|PA3159082",
+        "M019 놓친 지시: correction|JOMAR REYES|idNumber|PA3159208",
+        "M021 정답에 없는 지시: correction||idNumber|PG2507831",
+        "M021 놓친 지시: correction|ANGELICA FLORES|idExpiry|2030-01-15",
+        "M022 정답에 없는 지시: correction|HUNG NGUYEN VAN|idNumber|",
+        "M022 놓친 지시: correction|ARNEL MENDOZA|familyName|MENDOZA-RIVERA",
+        "M023 정답에 없는 지시: sign_on|",
+        "M023 놓친 지시: sign_on|BONDARENKO TARAS",
+        "M024 놓친 지시: correction|KYAW LIN ZAW|idNumber|MH3304712",
+        "M024 놓친 지시: correction|KYAW LIN ZAW|idIssuer|MMR",
+        "M024 놓친 지시: correction|KYAW LIN ZAW|idExpiry|2036-10-05",
+        "M026 놓친 지시: correction|PARK SANGHOON|pob|BUSAN",
+        "M026 놓친 지시: correction|CHOI DONGHYUN|pob|MOKPO",
+        "M026 놓친 지시: correction|JAEWON LEE|pob|INCHEON",
+        "M027 놓친 지시: sign_off|CRUZ DELA JUAN",
+        "M027 놓친 지시: sign_on|MARIO SORIANO",
+        "M028 정답에 없는 지시: correction||dob|1991-02-08",
+        "M028 놓친 지시: correction|ANDRII KOVALENKO|dob|1991-02-08",
+        "M029 놓친 지시: correction|AGUS SAPUTRA|idIssuer|IDN",
+        "M030 정답에 없는 지시: correction|MARK SANTOS|null|",
+        "M031 놓친 지시: correction|AGUS SAPUTRA|dob|1996-12-01",
+        "M032 놓친 지시: correction|JOMAR REYES|dob|1981-08-25",
+        "M033 정답에 없는 지시: correction|MARK SANTOS|nationality|PHI",
+        "M033 놓친 지시: correction|MARK SANTOS|nationality|PHL",
+        "M034 놓친 지시: sign_on|KIM MINSU",
+        "M035 놓친 지시: correction|CHOI DONGHYUN|idExpiry|2031-10-01",
+        "M036 놓친 지시: correction|PARK SANGHOON|idNumber|MK4820175",
+        "M037 정답에 없는 지시: sign_on|",
+        "M037 놓친 지시: sign_on|AUNG HTET",
+        "M038 정답에 없는 지시: correction|ARNEL MENDOZA|dob|1978-02-14",
+        "M038 정답에 없는 지시: correction|ANGELICA FLORES|nationality|PHL",
+        "M040 정답에 없는 지시: correction||rank|2/O",
+        "M040 정답에 없는 지시: sign_on|",
+        "M040 놓친 지시: correction|MARK SANTOS|rank|2/O",
+        "M040 놓친 지시: sign_off|ANDRII KOVALENKO",
+        "M040 놓친 지시: sign_on|KEVIN TORRES",
+        "M041 놓친 지시: correction|AUNG KO KO|idNumber|MDN251083"
+      ],
+      "precision": 0.2682926829268293,
+      "recall": 0.16176470588235295,
+      "failureCount": 174
+    },
+    {
+      "name": "LLM",
+      "mails": 102,
+      "gold": 136,
+      "pred": 135,
+      "tp": 134,
+      "fp": 1,
+      "fn": 2,
+      "trapApplied": 0,
+      "trapTotal": 79,
+      "byTrap": {
+        "negation": {
+          "total": 10,
+          "applied": 0
+        },
+        "cancel": {
+          "total": 13,
+          "applied": 0
+        },
+        "conditional": {
+          "total": 9,
+          "applied": 0
+        },
+        "quote": {
+          "total": 10,
+          "applied": 0
+        },
+        "superseded": {
+          "total": 9,
+          "applied": 0
+        },
+        "other_vessel": {
+          "total": 10,
+          "applied": 0
+        },
+        "question": {
+          "total": 9,
+          "applied": 0
+        },
+        "info": {
+          "total": 9,
+          "applied": 0
+        }
+      },
+      "evidenceDropped": 0,
+      "failures": [
+        "M053 정답에 없는 지시: sign_on|HYUK JAE SEO",
+        "M053 놓친 지시: sign_on|JAEHYUK SEO",
+        "M079 놓친 지시: correction|ARNEL MENDOZA|nationality|PHL"
+      ],
+      "precision": 0.9925925925925926,
+      "recall": 0.9852941176470589,
+      "failureCount": 3
+    },
+    {
+      "name": "LLM + 근거 검사",
+      "mails": 102,
+      "gold": 136,
+      "pred": 134,
+      "tp": 133,
+      "fp": 1,
+      "fn": 3,
+      "trapApplied": 0,
+      "trapTotal": 79,
+      "byTrap": {
+        "negation": {
+          "total": 10,
+          "applied": 0
+        },
+        "cancel": {
+          "total": 13,
+          "applied": 0
+        },
+        "conditional": {
+          "total": 9,
+          "applied": 0
+        },
+        "quote": {
+          "total": 10,
+          "applied": 0
+        },
+        "superseded": {
+          "total": 9,
+          "applied": 0
+        },
+        "other_vessel": {
+          "total": 10,
+          "applied": 0
+        },
+        "question": {
+          "total": 9,
+          "applied": 0
+        },
+        "info": {
+          "total": 9,
+          "applied": 0
+        }
+      },
+      "evidenceDropped": 1,
+      "failures": [
+        "M004 놓친 지시: correction|CHOI DONGHYUN|idNumber|MJ5508291",
+        "M053 정답에 없는 지시: sign_on|HYUK JAE SEO",
+        "M053 놓친 지시: sign_on|JAEHYUK SEO",
+        "M079 놓친 지시: correction|ARNEL MENDOZA|nationality|PHL"
+      ],
+      "precision": 0.9925373134328358,
+      "recall": 0.9779411764705882,
+      "failureCount": 4
+    }
+  ],
+  "llmMeta": {
+    "runner": "Claude Code 서브에이전트(사람 개입 없음)",
+    "model": "claude-opus-5-5",
+    "at": "2026-10-21T00:00:00+09:00",
+    "batch": "M001-M051",
+    "note": "메일을 직접 읽고 판단, 코드 자동 처리 없음",
+    "at_note": "에이전트가 적은 at 값은 자리표시(00:00)였음. 실제 파일 저장 시각은 2026-10-21 23:11 KST(git 커밋 이력 참고)"
+  },
+  "generatedAt": "2026-10-21T14:12:27.749Z"
+}

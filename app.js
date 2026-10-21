@@ -245,7 +245,7 @@ function step2() {
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
     <span class="spacer"></span>
-    <button type="button" class="btn btn-primary" data-act="next" ${r.blocked ? 'disabled title="명부 판독 실패로 승인 단계로 갈 수 없습니다"' : ''}>다음: 영향·승인</button>
+    <button type="button" class="btn btn-primary" data-act="next" ${r.blocked ? 'disabled title="명부 판독 실패로 결정 단계로 갈 수 없습니다"' : ''}>다음: 관련 신고·결정</button>
   </div>`;
 }
 
@@ -359,15 +359,15 @@ function step4() {
   const csv = toFal5Csv(r, state.decisions);
   const pend = pendingItems(r, state.decisions).length;
   const c = state.conf;
-  let conf = `<p class="small">누가 어떤 변경을 승인·보류했는지와 최종 명부를 묶어, 나중에 한 글자라도 바뀌면 알 수 있는 확인서로 남깁니다.</p><p class="small muted">기술: 최종 명부 SHA-256 해시 + ECDSA P-256(ES256) 서명. <b>프로토타입은 공개된 데모 키</b>(${DEMO_KID})라 누구나 같은 서명을 만들 수 있으며, 운영 시에는 담당자별 키를 씁니다.</p>
-    <button type="button" class="btn btn-primary" data-act="sign">확인서 생성·서명</button>`;
+  let conf = `<p class="small">누가 어떤 변경을 채택·유지했는지와 확정 명부를 묶어, 나중에 한 글자라도 바뀌면 알 수 있는 확정 기록으로 남깁니다(내용이 맞는지를 보증하지는 않음).</p><p class="small muted">기술: 최종 명부 SHA-256 해시 + ECDSA P-256(ES256) 서명. <b>프로토타입은 공개된 데모 키</b>(${DEMO_KID})라 누구나 같은 서명을 만들 수 있으며, 운영 시에는 담당자별 키를 씁니다.</p>
+    <button type="button" class="btn btn-primary" data-act="sign">확정 기록 생성·서명</button>`;
   if (pend) {
-    conf = `<div class="flash flash-warn" style="margin:0 0 10px"><b>확인 대기 ${pend}건이 남아 최종 명부와 확인서를 만들지 않습니다.</b> 왼쪽은 미확정 검토본입니다(확인 대기 칸은 값 대신 "확인 대기"로 표시).</div>
+    conf = `<div class="flash flash-warn" style="margin:0 0 10px"><b>확인 대기 ${pend}건이 남아 최종 명부와 확정 기록을 만들지 않습니다.</b> 왼쪽은 미확정 검토본입니다(확인 대기 칸은 값 대신 "확인 대기"로 표시).</div>
     <p class="small">선사 회신을 받으면, 지금 확정한 결정만 반영한 <b>기준본</b>과 회신 후 수정본을 다시 대조합니다. 회신으로 설명되는 변경은 메일 근거가 붙어 '예상된 변경'이 되고, 모든 항목이 정해지면 최종 명부를 만듭니다.</p>
     <div class="row-actions" style="justify-content:flex-start">${state.scenario === 2 ? '<button type="button" class="btn btn-primary" data-act="scenario5">▶ 예시 5: 선장 회신 받아 다시 대조</button>' : ''}<button type="button" class="btn" data-act="rebase">기준본으로 다시 대조(회신 수정본 붙여 넣기)</button></div>`;
   } else if (c) {
     conf = `<div class="verify-result ok" style="margin:0 0 10px">✔ 확정 기록 서명됨 · 수정본 채택 ${c.payload.counts.approved}건 / 최초본 유지 확인 ${c.payload.counts.kept}건</div><dl class="kv" style="grid-template-columns:140px 1fr"><dt>승인자</dt><dd>${h(c.payload.approver)}</dd><dt>결정 시각</dt><dd>${h(c.payload.decidedAt)}</dd><dt>채택 / 유지</dt><dd>${c.payload.counts.approved} / ${c.payload.counts.kept}</dd><dt>최종 명부 SHA-256</dt><dd class="mono" style="word-break:break-all">${h(c.payload.finalListSha256)}</dd><dt>서명 키</dt><dd class="mono">${h(DEMO_KID)} (데모)</dd></dl>
-      <details style="margin-top:10px"><summary class="small">기술 상세 — 서명된 확인서(JWS)와 내용(JSON)</summary>
+      <details style="margin-top:10px"><summary class="small">기술 상세 — 서명된 확정 기록(JWS)와 내용(JSON)</summary>
       <pre class="box wrap mono" style="max-height:90px;margin-top:6px">${h(c.jws)}</pre>
       <pre class="box mono" style="max-height:180px">${h(JSON.stringify(c.payload, null, 2))}</pre></details>
       <div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn" data-act="verify">서명·해시 검증</button><button type="button" class="btn" data-act="tamper">변조 시험(결정 1건을 바꿔 검증)</button></div>
@@ -410,7 +410,7 @@ async function doVerify(tamper = false) {
     jws = `${parts[0]}.${b64uJson(p)}.${parts[2]}`;
   }
   const v = await verifyConfirmation(jws, { finalCsv: c.finalCsv });
-  c.verify = { ...v, label: tamper ? '변조한 확인서' : '원본 확인서' };
+  c.verify = { ...v, label: tamper ? '변조한 기록' : '원본 기록' };
 }
 
 // ---------------- 평가 결과 탭 ----------------
@@ -509,7 +509,7 @@ function renderScope() {
       <li>행 순서와 무관한 인물 대응(신분증번호 → 성명+생년월일 → 성명)</li>
       <li>변경마다 예상된 변경 / 확인 필요 / 오류 의심 3단계 분류와 근거 표시</li>
       <li>표기만 다른 것(대소문자·공백·날짜 형식·직급 약어·행 순서)은 경보하지 않음</li>
-      <li>담당자 승인·보류 결과로 FAL 5 순서 CSV와 서명된 확인서 작성</li>
+      <li>담당자 결정(수정본 채택·최초본 유지 확인·확인 대기). 확인 대기가 남으면 미확정 검토본, 모두 정해지면 FAL 5 순서 확정 명부와 서명된 확정 기록</li>
     </ul></div></div>
     <div class="panel"><div class="panel-head"><h3>하지 않는 일</h3></div><div class="panel-body"><ul class="facts">
       <li>신고 전송(출입국·세관·항만·검역 시스템 연동 없음). KL-Net·정부 창구 연계는 향후 연계 후보이며 연동을 확인하지 않았습니다.</li>
