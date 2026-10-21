@@ -826,7 +826,8 @@ function renderChrome() {
   $('#sysBellN').hidden = !fresh;
   $('#sysBell').setAttribute('aria-label', `새 메일 ${fresh}건`);
   $('#sysBell').title = `새 메일 ${fresh}건`;
-  const db = $('[data-act="demo-start"]');
+  // 상단 시연 버튼(data-act는 시연 중 'demo-end'로 바뀌므로 클래스로 찾는다)
+  const db = $('.sys-demo-btn');
   db.innerHTML = DEMO.on ? '<i class="ti ti-player-stop" aria-hidden="true"></i><span class="lbl"> 시연 끝내기</span>' : '<i class="ti ti-player-play" aria-hidden="true"></i><span class="lbl"> 시연 시작</span>';
   db.dataset.act = DEMO.on ? 'demo-end' : 'demo-start';
   db.classList.toggle('on', DEMO.on);

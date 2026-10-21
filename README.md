@@ -46,6 +46,8 @@ python3 -m http.server 8810      # → http://localhost:8810/
 node --test test/*.test.mjs       # Node 22 이상
 # 평가 재현
 node eval/run.mjs --split all     # → docs/eval-result.json, docs/eval-result.md
+# 클릭 점검(메뉴·배 목록·시연을 실제로 눌러 오류·빈 화면 확인)
+node scripts/walk.mjs http://localhost:8810/ docs/walk
 # 처리 시간(명부 1쌍 대조·분류, 기획서 각주 11)
 node eval/bench.mjs
 # 제출 버전 재측정(세 홀드아웃, 같은 메일 지시를 받은 기준선3 포함, 참고값)
