@@ -15,6 +15,10 @@ const PORT = 9334;
 const SCENES = [
   { name: '0-ships', q: '', mobile: true },
   { name: '0-ship', q: 'view=ship', mobile: true },
+  { name: '0-voyage-overview', q: 'voyage=hanbit&tab=overview&mail=in-hanbit', mobile: true },
+  { name: '0-voyage-crew', q: 'voyage=hanbit&tab=crew', mobile: true },
+  { name: '0-voyage-other', q: 'voyage=gaon&tab=crew&step=3' },
+  { name: '0-mail-tab', q: 'voyage=hanbit&tab=mail&mail=in-hanbit', mobile: true, desktop: false },
   { name: '0-compare', q: 'view=compare' },
   { name: '0-inquiry', q: 'view=inquiry', mobile: true },
   { name: '0-report', q: 'view=report' },
@@ -46,7 +50,7 @@ const VIEWPORTS = [
 ];
 const MOBILE = { tag: 'mobile', width: 390, height: 844, deviceScaleFactor: 2, mobile: true };
 const SHOTS = [
-  ...SCENES.flatMap((s) => VIEWPORTS.map((v) => ({ ...s, file: `${s.name}-${v.tag}.png`, vp: v }))),
+  ...SCENES.filter((s) => s.desktop !== false).flatMap((s) => VIEWPORTS.map((v) => ({ ...s, file: `${s.name}-${v.tag}.png`, vp: v }))),
   ...SCENES.filter((s) => s.mobile).map((s) => ({ ...s, file: `${s.name}-mobile.png`, vp: MOBILE })),
 ].filter((s) => !ONLY || s.file.includes(ONLY));
 
@@ -60,7 +64,7 @@ const LAYOUT_CHECK = `(() => {
   if (document.documentElement.scrollWidth > W + 1) out.push('페이지 가로 넘침 ' + (document.documentElement.scrollWidth - W) + 'px');
   const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
   let off = 0;
-  for (const el of document.querySelectorAll('main *, header *')) {
+  for (const el of document.querySelectorAll('main *, header *, aside *, nav *, .vtabs *')) {
     if (!visible(el) || el.closest('.table-wrap, pre, textarea, .mail-view, details:not([open])')) continue;
     const r = el.getBoundingClientRect();
     if (r.right > W + 1 && off++ < 5) out.push('화면 밖: ' + el.tagName.toLowerCase() + '.' + [...el.classList].join('.') + ' 「' + (el.textContent || '').trim().slice(0, 20) + '」 ' + Math.round(r.right - W) + 'px');
@@ -71,7 +75,7 @@ const LAYOUT_CHECK = `(() => {
       if (t.scrollWidth > t.clientWidth + 1) out.push('표 가로 잘림(스크롤 필요) ' + (t.scrollWidth - t.clientWidth) + 'px: ' + (t.querySelector('th')?.textContent || '').slice(0, 15));
     }
   }
-  for (const el of document.querySelectorAll('.btn, .cls, .chip, .Label, .top-tab, .stepper .st-title, .st-badge, .nav-l')) {
+  for (const el of document.querySelectorAll('.btn, .cls, .chip, .Label, .top-tab, .stepper .st-title, .st-badge, .nav-l, .vh-tab, .rail-l, .tag, .ai-chip')) {
     if (!visible(el)) continue;
     if (el.scrollWidth > el.clientWidth + 1) out.push('글자 잘림 「' + el.textContent.trim().slice(0, 20) + '」');
   }

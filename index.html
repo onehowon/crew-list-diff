@@ -10,14 +10,13 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <!-- Pretendard 1.3.9 (OFL) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="app.css?v=202610211550">
+<link rel="stylesheet" href="app.css?v=202610211608">
 <link rel="icon" href="data:,">
-<script type="module" src="app.js?v=202610211550"></script>
+<script type="module" src="app.js?v=202610211608"></script>
 </head>
 <body>
 <a class="skip-link" href="#main">본문 바로가기</a>
 <header class="sys-bar">
-  <button type="button" class="sys-burger" data-act="nav-toggle" aria-label="메뉴 열기" aria-expanded="false" aria-controls="sysNav"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
   <div class="brand">
     <span class="brand-mark" aria-hidden="true"><i class="ti ti-file-diff"></i></span>
     <span class="brand-name">CrewDiff</span>
@@ -31,21 +30,27 @@
   <div class="sys-user"><span class="sys-avatar" aria-hidden="true">데</span><span class="sys-user-t"><b>데모 담당자</b><span>○○해운대리점 부산지점</span></span></div>
 </header>
 <div class="sys-layout">
-  <nav class="sys-nav" id="sysNav" aria-label="업무 메뉴"></nav>
-  <main id="main" class="sys-main" tabindex="-1">
-    <div id="demoBar"></div>
-    <section id="pg-ships" class="tab-panel" hidden></section>
-    <section id="pg-ship" class="tab-panel" hidden></section>
-    <section id="pg-work" class="tab-panel" hidden>
-      <div id="pgHead"></div>
-      <ol class="stepper" id="stepper" aria-label="처리 단계"></ol>
-      <div id="stepBody"></div>
-    </section>
-    <section id="pg-inquiry" class="tab-panel" hidden></section>
-    <section id="tab-eval" class="tab-panel" hidden></section>
-    <section id="tab-scope" class="tab-panel" hidden></section>
-    <footer class="app-footer">CrewDiff PoC · 모든 인물·선박·메일은 가상 · 신고 전송 없음</footer>
-  </main>
+  <nav class="sys-rail" id="sysRail" aria-label="업무 메뉴"></nav>
+  <div class="sys-center">
+    <div class="vtabs" id="vtabs"></div>
+    <main id="main" class="sys-main" tabindex="-1">
+      <div id="demoBar"></div>
+      <div id="vHead"></div>
+      <section id="pg-ships" class="tab-panel" hidden></section>
+      <section id="pg-ship" class="tab-panel" hidden></section>
+      <section id="pg-work" class="tab-panel" hidden>
+        <ol class="stepper" id="stepper" aria-label="처리 단계"></ol>
+        <div id="pgHead"></div>
+        <div id="stepBody"></div>
+      </section>
+      <section id="pg-inquiry" class="tab-panel" hidden></section>
+      <section id="pg-mail" class="tab-panel" hidden></section>
+      <section id="tab-eval" class="tab-panel" hidden></section>
+      <section id="tab-scope" class="tab-panel" hidden></section>
+      <footer class="app-footer">CrewDiff PoC · 모든 인물·선박·메일은 가상 · 신고 전송 없음</footer>
+    </main>
+  </div>
+  <aside class="mailbox" id="mailbox" aria-label="메일함"></aside>
 </div>
 <div id="toast" class="arrive-toast" role="status" aria-live="polite" hidden></div>
 </body>

@@ -1,17 +1,18 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js?v=202610211550';
-import { compareCrewLists } from './lib/engine.js?v=202610211550';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211550';
-import { colLetter, splitRows } from './lib/parse.js?v=202610211550';
-import { CLASS_LABEL } from './lib/classify.js?v=202610211550';
-import { RULES } from './lib/rules.js?v=202610211550';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211550';
-import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211550';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211550';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211550';
-import { DEMO_KID } from './lib/demo-key.js?v=202610211550';
-import { decodeJws, b64uJson } from './lib/jose.js?v=202610211550';
-import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js?v=202610211550';
+import { SCENARIOS } from './data/scenarios.js?v=202610211608';
+import { compareCrewLists } from './lib/engine.js?v=202610211608';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211608';
+import { colLetter, splitRows } from './lib/parse.js?v=202610211608';
+import { CLASS_LABEL } from './lib/classify.js?v=202610211608';
+import { RULES } from './lib/rules.js?v=202610211608';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211608';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211608';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211608';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211608';
+import { DEMO_KID } from './lib/demo-key.js?v=202610211608';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610211608';
+import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js?v=202610211608';
+import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610211608';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -42,6 +43,11 @@ const state = {
   approver: '데모 담당자',
   conf: null,
   eval: null,
+  open: [],        // 열린 항차 탭(배 key)
+  mail: null,      // 메일함에서 펼친 메일
+  mailScope: 'voyage',
+  mailQ: '',
+  read: new Set(),
 };
 
 function loadScenario(n) {
@@ -81,18 +87,20 @@ function sortedItems(rep = state.report) {
 }
 
 // 화면(메뉴) 전환. compare·report는 기존 단계 화면(#pg-work)을 쓴다.
-const PAGE_SECTION = { ships: 'pg-ships', ship: 'pg-ship', compare: 'pg-work', report: 'pg-work', inquiry: 'pg-inquiry', eval: 'tab-eval', scope: 'tab-scope' };
+const PAGE_SECTION = { ships: 'pg-ships', ship: 'pg-ship', compare: 'pg-work', report: 'pg-work', inquiry: 'pg-inquiry', mail: 'pg-mail', eval: 'tab-eval', scope: 'tab-scope' };
+const VOYAGE_PAGES = ['ship', 'compare', 'inquiry', 'report', 'mail'];
 function setPage(page, { scroll = true } = {}) {
   state.page = page;
   if (page === 'report') state.step = 4;
   else if (page === 'compare' && state.step === 4) state.step = allDecided() ? 3 : 2;
   for (const sec of new Set(Object.values(PAGE_SECTION))) $(`#${sec}`).hidden = sec !== PAGE_SECTION[page];
-  closeNav();
+  if (VOYAGE_PAGES.includes(page)) { if (!state.open.includes(state.ship)) state.open.push(state.ship); curShip().last = page; }
   renderChrome();
   if (page === 'ships') renderShips();
   if (page === 'ship') renderShip();
   if (page === 'compare' || page === 'report') render();
   if (page === 'inquiry') renderInquiry();
+  if (page === 'mail') $('#pg-mail').innerHTML = mailboxHtml(true);
   if (page === 'eval') renderEval();
   if (page === 'scope') renderScope();
   if (scroll) window.scrollTo({ top: 0 });
@@ -128,11 +136,11 @@ function renderStepper() {
 
 function render() {
   const isReport = state.page === 'report';
-  $('#pgHead').innerHTML = pageHead(isReport ? 'report' : 'compare') + (isReport ? agencyPanel() : '');
+  $('#pgHead').innerHTML = isReport ? agencyPanel() : '';
   renderStepper();
   const body = $('#stepBody');
   if (isReport && (!state.report || state.report.blocked || !allDecided())) {
-    body.innerHTML = `<div class="panel"><div class="panel-body"><p style="margin:0 0 10px">${!state.report ? '대조 결과가 없습니다.' : state.report.blocked ? '명부 판독 실패로 신고 자료를 만들 수 없습니다.' : `아직 결정하지 않은 항목이 ${state.report.items.filter((it) => !state.decisions[it.id]).length}건 있습니다. 수정본 대조에서 결정을 마치면 확정 명부(또는 미확정 검토본)를 만듭니다.`}</p><button type="button" class="btn btn-primary" data-page="compare">수정본 대조로</button></div></div>`;
+    body.innerHTML = `<div class="panel"><div class="panel-body"><p style="margin:0 0 10px">${!state.report ? '대조 결과가 없습니다.' : state.report.blocked ? '명부 판독 실패로 신고 자료를 만들 수 없습니다.' : `아직 결정하지 않은 항목이 ${state.report.items.filter((it) => !state.decisions[it.id]).length}건 있습니다. 선원명부 탭에서 결정을 마치면 확정 명부(또는 미확정 검토본)를 만듭니다.`}</p><button type="button" class="btn btn-primary" data-page="compare">선원명부 탭으로</button></div></div>`;
     return;
   }
   if (state.step === 1) body.innerHTML = step1();
@@ -166,7 +174,7 @@ function mailBodyHtml(body, ai) {
   let out = h(body);
   for (const it of ai?.instructions || []) {
     const ev = h(String(it.evidence || '').trim());
-    if (ev && out.includes(ev)) out = out.replace(ev, `<mark class="ev ${it.apply ? 'on' : 'off'}">${ev}</mark>`);
+    if (ev && out.includes(ev)) out = out.replace(ev, `<mark class="ev ${it.apply ? 'on' : 'off'}" title="AI: ${it.apply ? `${h(AI_TYPE[it.type] || it.type)} 반영` : `반영 안 함 · ${h(AI_REASON[it.not_applied_reason] || '')}`}">${ev}</mark>`);
   }
   return out;
 }
@@ -186,21 +194,16 @@ function aiReadHtml(n, mail, rep) {
 function step1() {
   const sc = SCENARIOS[state.scenario - 1];
   const ctx = sc?.ctx || {};
-  const m = splitMail(state.inputs.mail);
   const rowsN = (k) => (state.report ? (k === 'a' ? state.report.A.rows.length : state.report.B.rows.length) : null);
   const file = (k, label, sub) => `<div class="attach"><span class="attach-ic" aria-hidden="true">${k === 'a' ? 'V1' : 'V2'}</span><span><b>${label}</b><span class="muted small">${sub}${rowsN(k) != null ? ` · ${rowsN(k)}명` : ''}</span></span></div>`;
   const box = (key, title, sub) => `<div class="panel"><div class="panel-head"><h3>${title}</h3><span class="muted small">${sub}</span></div><textarea class="mono" data-input="${key}" spellcheck="false" aria-label="${title}">${h(state.inputs[key])}</textarea></div>`;
   const others = SCENARIOS.map((x) => `<button type="button" class="case" data-scenario="${x.id}" aria-pressed="${x.id === state.scenario}"><b>${x.id}</b> ${h(x.title)} <span class="muted small">${h(shipOfScenario(x.id).name)}</span></button>`).join('');
+  const mid = mailIdOfScenario(state.scenario);
   return `
   <div class="inbox">
     <div class="mail">
-      <div class="mail-head">
-        <div class="mail-from"><span class="avatar" aria-hidden="true">${h((m.head.from || ctx.from || '선사').trim().charAt(0))}</span><div><b>${h(m.head.from || ctx.from || '보낸 사람 없음')}</b><span class="muted small">${h(ctx.at || '')}</span></div></div>
-        <div class="mail-subject">${shipify(h(m.head.subject || '(제목 없음)'))}</div>
-      </div>
-      <pre class="mail-body">${m.body ? shipify(mailBodyHtml(m.body, aiFor(state.scenario, state.inputs.mail))) : '(메일 본문 없음)'}</pre>
-      <div class="mail-ai">${aiReadHtml(state.scenario, state.inputs.mail, state.report)}</div>
       <div class="attachments">${file('a', state.scenario === 5 ? '기준본 (확정한 결정만 반영)' : '최초본 선원명부', (ctx.v1 || '').replace(/\s*(최초본|기준본).*$/, '') || fmtInfo(state.inputs.a))}${file('b', state.scenario === 5 ? '수정본 V3' : '수정본 선원명부', (ctx.v2 || '').replace(/\s*수정본.*$/, '') || fmtInfo(state.inputs.b))}</div>
+      <div class="mail-ai">${aiReadHtml(state.scenario, state.inputs.mail, state.report)}${mid ? `<button type="button" class="btn btn-sm" data-open-mail="${mid}"><i class="ti ti-mail" aria-hidden="true"></i> 메일 원문</button>` : ''}</div>
     </div>
     <aside class="inbox-side">
       <div class="side-card">
@@ -309,7 +312,8 @@ function step2() {
     const p = it.person;
     const show = p !== lastPerson;
     lastPerson = p;
-    return `<tr class="item" data-item="${it.id}" aria-selected="${it.id === state.selected}" tabindex="0"><td class="person">${show ? h(p) : ''}</td><td><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></td><td>${changeText(it)}</td><td class="basis small">${h(basisText(it))}</td></tr>`;
+    const open = it.id === state.selected;
+    return `<tr class="item" data-item="${it.id}" aria-selected="${open}" aria-expanded="${open}" tabindex="0"><td class="person">${show ? h(p) : ''}</td><td><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></td><td>${changeText(it)}</td><td class="basis small">${h(basisText(it))}<i class="ti ti-chevron-${open ? 'up' : 'down'} row-chev" aria-hidden="true"></i></td></tr>${open ? `<tr class="detail-row"><td colspan="4"><div class="detail" aria-label="선택한 변경의 근거">${detailPanel()}</div></td></tr>` : ''}`;
   }).join('');
   const cos = r.cosmetic.map((c) => `<tr><td>${h(c.person)}</td><td>${h(FIELD[c.field].ko)}</td><td class="mono">${h(c.before.raw)}</td><td class="mono">${h(c.after.raw)}</td><td class="muted">${h(c.before.ref)} · ${h(c.after.ref)}</td></tr>`).join('');
   return `
@@ -321,7 +325,7 @@ function step2() {
   </div>
   ${documentAlertBox(r)}${columnAlertBox(r)}
   ${state.scenario === 6 && r.mailReader === 'ai' ? readerCompare() : ''}
-  <div class="compare">
+  <div class="compare one">
     <div>
       <div class="panel">
         <div class="panel-head"><h3>${state.filter === 'all' ? '바뀐 항목' : CLASS_LABEL[state.filter]} ${items.length}건</h3>${state.filter === 'all' ? '' : chip('all', '전체 보기', r.items.length)}</div>
@@ -331,7 +335,6 @@ function step2() {
         <div class="table-wrap"><table class="grid"><thead><tr><th>인물</th><th>항목</th><th>최초본 원문</th><th>수정본 원문</th><th>위치</th></tr></thead><tbody>${cos || '<tr><td colspan="5" class="muted">없음</td></tr>'}</tbody></table></div>
       </details>
     </div>
-    <aside class="detail panel" aria-label="선택한 변경의 근거">${detailPanel()}</aside>
   </div>
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
@@ -483,14 +486,13 @@ function step4() {
   <div class="export-grid">
     <div class="stack">
       <div class="panel"><div class="panel-head"><h3>${pend ? '미확정 검토본' : '확정 명부'}</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono csv">${shipify(h(csv)).replaceAll('선사 문의', '<mark class="pend">선사 문의</mark>')}</pre></div></div>
-      <div class="panel"><div class="panel-head"><h3>선사에 보낼 확인 요청</h3><button type="button" class="btn btn-sm" data-act="copy-summary">복사</button></div><div class="panel-body"><textarea class="form-control summary mono" id="summary" aria-label="선사에 보낼 확인 요청">${shipify(h(shipperSummary()))}</textarea></div></div>
     </div>
     <div class="panel"><div class="panel-head"><h3>결정 기록${info('누가 무엇을 반영·유지했는지와 확정 명부를 묶어, 나중에 바뀌면 알 수 있게 남깁니다. 내용이 맞는지 보증하지는 않습니다.')}</h3></div><div class="panel-body">${conf}</div></div>
   </div>
   <div class="row-actions">
-    <button type="button" class="btn" data-act="prev">수정본 대조로</button>
+    <button type="button" class="btn" data-act="prev">선원명부 탭으로</button>
     <span class="spacer"></span>
-    ${pend ? '<button type="button" class="btn btn-primary" data-page="inquiry"><i class="ti ti-mail-question" aria-hidden="true"></i> 선사 문의 화면으로</button>' : ''}
+    ${pend ? '<button type="button" class="btn btn-primary" data-page="inquiry"><i class="ti ti-mail-question" aria-hidden="true"></i> 선사 문의 탭으로</button>' : ''}
     <button type="button" class="btn" data-act="restart">처음부터</button>
   </div>`;
 }
@@ -667,7 +669,7 @@ function renderScope() {
 }
 
 // ---------------- 업무 시스템 화면(메뉴) ----------------
-// 입항 예정 선박 → 선박·항차 상세 → 수정본 대조 → 선사 문의 → 신고 준비.
+// 입항 예정 선박 → 항차 탭(개요 · 선원명부 · 선사 문의 · 신고 준비) + 오른쪽 메일함.
 // 대표 흐름(DEMO HANBIT 3)은 사례 2 → 사례 5. 다른 배는 사례 1·3·4·6을 화면용 가상 이름으로 보여 준다. 건수는 모두 엔진을 실제로 돌린 값.
 const KDATE = (s) => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\D+(\d{1,2}):(\d{2})/); return m ? new Date(2026, m[1] - 1, +m[2], +m[3], +m[4]) : null; };
 const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -711,6 +713,8 @@ const shipReport = (sh) => (sh.hero ? (['reply', 'final'].includes(sh.stage) ? R
 // 대표 배를 특정 진행 상태로 맞춘다(시연 장면·바로가기 주소용).
 function heroAt(stage) {
   const H = SHIPST.hanbit;
+  if (state.ship !== 'hanbit') saveWs();
+  H.ws = null;
   H.stage = stage;
   H.sent = ['asked', 'reply', 'final'].includes(stage) ? { at: D.t3, decisions: { ...D.d2 }, report: D.r2, text: shipperSummary(D.r2, D.d2) } : null;
   state.ship = 'hanbit';
@@ -719,13 +723,21 @@ function heroAt(stage) {
   if (stage === 'asked') state.decisions = { ...D.d2 };
   if (stage === 'final') { state.decisions = { ...D.d5 }; state.conf = D.conf ? { ...D.conf, verify: null } : null; }
 }
+// 배마다 작업 상태(대조 결과·결정)를 보관해, 항차 탭을 오가도 결정이 남게 한다.
+function saveWs() {
+  const sh = SHIPST[state.ship];
+  if (sh && state.report) sh.ws = { scenario: state.scenario, inputs: state.inputs, report: state.report, decisions: { ...state.decisions }, conf: state.conf, step: state.step, selected: state.selected, rebased: state.rebased, filter: state.filter };
+}
 function selectShip(key) {
   const sh = SHIPST[key];
   if (!sh) return;
   if (state.ship === key && state.report && (state.scenario === sh.scenario || state.scenario === sh.reply)) return;
+  saveWs();
   state.ship = key;
+  if (sh.ws) { Object.assign(state, sh.ws, { decisions: { ...sh.ws.decisions } }); return; }
   loadScenario(sh.hero && ['reply', 'final'].includes(sh.stage) ? sh.reply : sh.scenario);
   run();
+  state.step = 2;
   if (sh.sent && state.scenario === sh.scenario) state.decisions = { ...sh.sent.decisions };
 }
 
@@ -742,55 +754,105 @@ function remain(now, due) {
 }
 const stageBadge = (stage) => `<span class="st-badge ${STAGE[stage].tone}">${STAGE[stage].label}</span>`;
 
-// 배마다 메일함(받은·보낸)
+// ---- 오른쪽 메일함: 배 5척의 받은·보낸 메일(시간순) ----
+const fmtAt = (d) => `${mdw(d)} ${hhmm(d)}`;
 function mailsOf(sh) {
   const sc = SCENARIOS[sh.scenario - 1];
   const m = splitMail(sc.mail);
   const rep = sh.hero ? REP.hanbit2 : REP[sh.key];
   const list = [
-    { id: `in0-${sh.key}`, box: 'in', from: sc.ctx.from, at: KDATE(sc.ctx.v1), subject: `[${sh.name} V.${sh.voy}] 선원명부 송부(최초본)`, body: `${sh.name} V.${sh.voy} ${sh.port} 입항 선원명부(최초본)를 송부드립니다.\n\n(화면용 가상 메일)`, sc: 0, files: ['최초본 선원명부', `${rep.A.rows.length}명`] },
-    { id: `in-${sh.key}`, box: 'in', from: m.head.from || sc.ctx.from, at: KDATE(sc.ctx.at), subject: m.head.subject || '수정 선원명부', body: m.body, sc: sh.scenario, files: [sh.hero ? '수정본 선원명부 V2' : '수정본 선원명부', `${rep.B.rows.length}명`] },
+    { id: `in0-${sh.key}`, ship: sh.key, box: 'in', from: SENDER[sh.key], at: KDATE(sc.ctx.v1), subject: `[${sh.name} V.${sh.voy}] 선원명부 송부(최초본)`, body: `${sh.name} V.${sh.voy} ${sh.port} 입항 선원명부(최초본)를 송부드립니다.`, sc: 0, tags: [TAG.v1], files: ['최초본 선원명부', `${rep.A.rows.length}명`] },
+    { id: `in-${sh.key}`, ship: sh.key, box: 'in', from: SENDER[sh.key], at: KDATE(sc.ctx.at), subject: m.head.subject || '수정 선원명부', body: m.body, sc: sh.scenario, tags: [KIND_BY_SCENARIO[sh.scenario]], files: [sh.hero ? '수정본 선원명부 V2' : '수정본 선원명부', `${rep.B.rows.length}명`] },
   ];
-  if (sh.sent) list.push({ id: `out-${sh.key}`, box: 'out', from: `나 → ${sh.hero ? '선장' : '선사'}(${sh.name})`, at: sh.sent.at, subject: `[${sh.name} ${sh.voy}] 수정 선원명부 확인 요청`, body: sh.sent.text, sc: 0 });
-  if (sh.hero && ['reply', 'final'].includes(sh.stage)) list.push(D.reply);
-  return list.sort((a, b) => b.at - a.at);
+  if (sh.sent) list.push({ id: `out-${sh.key}`, ship: sh.key, box: 'out', from: ME, to: sh.hero ? '선장' : '선사', at: sh.sent.at, subject: `[${sh.name} ${sh.voy}] 수정 선원명부 확인 요청`, body: sh.sent.text, sc: 0, tags: [TAG.sent] });
+  if (sh.hero && ['reply', 'final'].includes(sh.stage)) list.push({ ...D.reply, ship: sh.key, from: MASTER, tags: [KIND_BY_SCENARIO[5]] });
+  return list;
 }
-function mailView(m, sh, { fresh = false, actions = '' } = {}) {
+const allMails = () => { const now = sysNow(); return Object.values(SHIPST).flatMap(mailsOf).filter((m) => m.at <= now).sort((a, b) => b.at - a.at); };
+const mailIdOfScenario = (n) => (n === 5 ? 'in5-hanbit' : `in-${shipOfScenario(n).key}`);
+function isFresh(m) {
+  if (state.read.has(m.id)) return false;
+  const sh = SHIPST[m.ship];
+  return (m.id === `in-${sh.key}` && sh.stage === 'new') || (m.id === 'in5-hanbit' && sh.stage === 'reply');
+}
+function firstLine(body) {
+  return String(body || '').split('\n').map((l) => l.trim()).find((l) => l && !/^(dear|hello|hi|captain|안녕|수고)/i.test(l)) || '';
+}
+// AI가 미리 읽어 둔 결과를 한 줄로
+function aiChip(sc) {
+  const ai = AI.byId[`S${sc}`];
+  if (!ai) return '';
+  const on = ai.instructions.filter((x) => x.apply), off = ai.instructions.filter((x) => !x.apply);
+  const one = (arr, map, key, fb) => { const k = [...new Set(arr.map((x) => x[key]))]; return k.length === 1 ? map[k[0]] || fb : fb; };
+  const parts = [];
+  if (on.length) parts.push(`${one(on, AI_TYPE_SHORT, 'type', '요청')} ${on.length}건 반영`);
+  if (off.length) parts.push(`${one(off, AI_SKIP_SHORT, 'not_applied_reason', '요청')} ${off.length}건 제외`);
+  return `<span class="ai-chip" title="AI가 미리 읽어 둔 결과${AI.meta?.model ? ` · ${h(AI.meta.model)}` : ''}"><i class="ti ti-sparkles" aria-hidden="true"></i>AI · ${h(parts.join(' / ') || '반영할 요청 없음')}</span>`;
+}
+function mailOpen(m, sh) {
   const ai = m.sc ? aiFor(m.sc, SCENARIOS[m.sc - 1].mail) : null;
-  const rep = m.sc === 5 ? REP.hanbit5 : m.sc ? shipReport({ ...sh, stage: 'v2' }) : null;
-  return `<article class="rp-mail${fresh ? ' fresh' : ''}">
-    <header class="rp-mail-head"><div class="rp-mail-subj">${m.box === 'out' ? '<span class="st-badge wait">보낸 메일</span> ' : ''}${shipify(h(m.subject), sh)}</div><div class="small muted">${shipify(h(m.from), sh)} · ${mdw(m.at)} ${hhmm(m.at)}</div></header>
+  return `<div class="mb-open">
     <pre class="mail-body">${shipify(m.sc ? mailBodyHtml(m.body, ai) : h(m.body), sh)}</pre>
-    ${m.files ? `<div class="attachments"><div class="attach"><span class="attach-ic" aria-hidden="true"><i class="ti ti-file-spreadsheet"></i></span><span><b>${h(m.files[0])}</b><span class="muted small">${h(m.files[1])}</span></span></div></div>` : ''}
-    ${m.sc ? `<div class="mail-ai">${aiReadHtml(m.sc, SCENARIOS[m.sc - 1].mail, rep)}</div>` : ''}
-    ${actions ? `<div class="rp-actions">${actions}</div>` : ''}
-  </article>`;
+    ${m.files ? `<div class="mb-file"><i class="ti ti-paperclip" aria-hidden="true"></i> ${h(m.files[0])} <span class="muted">${h(m.files[1])}</span></div>` : ''}
+    ${m.sc ? `<button type="button" class="btn btn-primary btn-sm" data-cmp="${m.id}"><i class="ti ti-arrows-diff" aria-hidden="true"></i> 이 메일로 명부 대조</button>` : ''}
+  </div>`;
+}
+function mailItem(m, scope) {
+  const sh = SHIPST[m.ship];
+  const open = state.mail === m.id;
+  const fresh = isFresh(m);
+  return `<li class="mb-item${open ? ' open' : ''}${fresh ? ' fresh' : ''}" data-mail-li="${m.id}">
+    <button type="button" class="mb-row" data-mailid="${m.id}" aria-expanded="${open}">
+      <span class="mb-from">${fresh ? '<span class="mb-dot" title="새 메일"></span>' : ''}${m.box === 'out' ? '<i class="ti ti-send" aria-hidden="true"></i> ' : ''}${h(m.box === 'out' ? `${m.from} → ${m.to}` : m.from)}</span>
+      <span class="mb-at">${fmtAt(m.at)}</span>
+      <span class="mb-subj">${shipify(h(m.subject), sh)}</span>
+      <span class="mb-first">${shipify(h(firstLine(m.body)), sh)}</span>
+      <span class="mb-tags">${scope === 'all' ? `<span class="tag ship">${h(sh.name)} · ${h(sh.voy)}</span>` : ''}<span class="tag">${TAG.list}</span>${m.tags.map((t) => `<span class="tag work${m.box === 'out' ? ' out' : ''}">${h(t)}</span>`).join('')}${m.sc ? aiChip(m.sc) : ''}</span>
+    </button>
+    ${open ? mailOpen(m, sh) : ''}
+  </li>`;
+}
+function mailScope() { return VOYAGE_PAGES.includes(state.page) ? state.mailScope : 'all'; }
+function mailList() {
+  const scope = mailScope();
+  let list = allMails();
+  if (scope === 'voyage') list = list.filter((m) => m.ship === state.ship);
+  const q = state.mailQ.trim().toLowerCase();
+  if (q) list = list.filter((m) => [m.from, m.subject, m.body, ...m.tags, SHIPST[m.ship].name].join(' ').toLowerCase().includes(q));
+  return { n: list.length, html: list.map((m) => mailItem(m, scope)).join('') || '<li class="mb-empty muted small">메일 없음</li>' };
+}
+function mailboxHtml() {
+  const scope = mailScope();
+  const L = mailList();
+  const seg = VOYAGE_PAGES.includes(state.page) ? `<div class="seg mb-seg" role="group" aria-label="메일 범위"><button type="button" data-mail-scope="voyage" aria-pressed="${scope === 'voyage'}">이 항차</button><button type="button" data-mail-scope="all" aria-pressed="${scope === 'all'}">전체</button></div>` : '';
+  return `<div class="mb-head"><div class="mb-title"><b>메일함</b><span class="mb-n muted small">${L.n}</span>${seg}</div>
+    <label class="mb-search"><i class="ti ti-search" aria-hidden="true"></i><input type="search" class="mb-q form-control form-control-sm" placeholder="보낸 사람·제목·본문 검색" value="${h(state.mailQ)}" aria-label="메일 검색"></label></div>
+    <ul class="mb-list">${L.html}</ul>`;
+}
+function renderMailbox() {
+  $('#mailbox').innerHTML = mailboxHtml();
+  if (state.page === 'mail') $('#pg-mail').innerHTML = mailboxHtml();
+}
+function refreshMailLists() {
+  const L = mailList();
+  for (const box of [$('#mailbox'), $('#pg-mail')]) { if (!box?.querySelector('.mb-list')) continue; box.querySelector('.mb-list').innerHTML = L.html; box.querySelector('.mb-n').textContent = L.n; }
 }
 
-// ---- 공통 틀: 메뉴·상단 바·화면 머리 ----
-const NAV = [
-  ['ships', 'ti-ship', '입항 예정 선박', '출근 직후 · 새 메일 알림'],
-  ['ship', 'ti-anchor', '선박·항차 상세', '명부 이력 · 메일 · 할 일'],
-  ['compare', 'ti-arrows-diff', '수정본 대조', '수정본이 왔을 때'],
-  ['inquiry', 'ti-mail-question', '선사 문의', '회신을 기다릴 때'],
-  ['report', 'ti-file-export', '신고 준비', '마감 전'],
-];
-const NUM = ['①', '②', '③', '④', '⑤'];
+// ---- 공통 틀: 아이콘 레일 · 상단 바 · 열린 항차 탭 · 항차 머리 ----
+const RAIL = [['ships', 'ti-ship', '입항 예정 선박', '선박'], ['eval', 'ti-chart-bar', '평가 결과', '평가'], ['scope', 'ti-scale', '범위·근거', '근거']];
 function renderChrome() {
-  const sh = curShip();
   const cur = state.page;
-  $('#sysNav').innerHTML = `<div class="nav-group">업무</div>
-    <ul class="nav-list">${NAV.map(([k, ic, label, sub], i) => `<li><button type="button" class="nav-item" data-page="${k}" aria-current="${cur === k ? 'page' : 'false'}"><i class="ti ${ic}" aria-hidden="true"></i><span class="nav-l" title="${sub}">${NUM[i]} ${label}</span></button></li>`).join('')}</ul>
-    <div class="nav-ship" title="작업 중인 배"><b>${h(sh.name)}</b></div>
-    <div class="nav-group">참고</div>
-    <ul class="nav-list">
-      <li><button type="button" class="nav-item" data-page="eval" aria-current="${cur === 'eval' ? 'page' : 'false'}"><i class="ti ti-chart-bar" aria-hidden="true"></i><span><span class="nav-l">평가 결과</span></span></button></li>
-      <li><button type="button" class="nav-item" data-page="scope" aria-current="${cur === 'scope' ? 'page' : 'false'}"><i class="ti ti-scale" aria-hidden="true"></i><span><span class="nav-l">범위·법령 근거</span></span></button></li>
-    </ul>
-`;
+  $('#sysRail').innerHTML = RAIL.map(([k, ic, label, short]) => `<button type="button" class="rail-item${k === 'ships' && VOYAGE_PAGES.includes(cur) ? ' in' : ''}" data-page="${k}" aria-current="${cur === k ? 'page' : 'false'}" title="${label}" aria-label="${label}"><i class="ti ${ic}" aria-hidden="true"></i><span class="rail-l" aria-hidden="true">${short}</span></button>`).join('');
+  const onV = VOYAGE_PAGES.includes(cur);
+  $('#vtabs').innerHTML = `<button type="button" class="vtab-home${cur === 'ships' ? ' cur' : ''}" data-page="ships" aria-label="입항 예정 선박 목록"><i class="ti ti-list" aria-hidden="true"></i></button>${state.open.map((k) => {
+    const s = SHIPST[k];
+    const on = onV && state.ship === k;
+    return `<div class="vtab${on ? ' cur' : ''}"><button type="button" class="vtab-go" data-vtab="${k}" aria-current="${on ? 'page' : 'false'}" title="${h(s.name)} · V.${h(s.voy)}"><span class="vtab-t">${h(s.name)} · V.${h(s.voy)}</span></button><button type="button" class="vtab-x" data-vtab-close="${k}" aria-label="${h(s.name)} 탭 닫기"><i class="ti ti-x" aria-hidden="true"></i></button></div>`;
+  }).join('')}`;
+  renderVHead();
   const now = sysNow();
   $('#sysClock').innerHTML = `<i class="ti ti-clock" aria-hidden="true"></i><span class="sys-clock-t"><b>${hhmm(now)}</b><span>${mdw(now)} · ${DEMO.on ? '시연 시각' : '가상 시각'}</span></span>`;
-  const fresh = Object.values(SHIPST).filter((s) => s.stage === 'new' || (s.hero && s.stage === 'reply')).length;
+  const fresh = allMails().filter(isFresh).length;
   $('#sysBellN').textContent = fresh || '';
   $('#sysBellN').hidden = !fresh;
   $('#sysBell').setAttribute('aria-label', `새 메일 ${fresh}건`);
@@ -801,26 +863,20 @@ function renderChrome() {
   db.dataset.act = DEMO.on ? 'demo-end' : 'demo-start';
   db.classList.toggle('on', DEMO.on);
   renderDemoBar();
+  renderMailbox();
 }
-function closeNav() { $('#sysNav')?.classList.remove('open'); $('[data-act="nav-toggle"]')?.setAttribute('aria-expanded', 'false'); }
-
-const PAGE_INFO = {
-  ships: ['입항 예정 선박', '이번 주 입항할 배와 선원명부 상태입니다. 출근하자마자, 또는 새 메일 알림이 오면 여기서 확인합니다.'],
-  ship: ['선박·항차 상세', '이 배의 명부 이력, 관련 메일, 남은 할 일을 봅니다.'],
-  compare: ['수정본 대조', '수정본이 오면 바뀐 곳 가운데 사람이 꼭 봐야 할 곳을 근거와 함께 보고, 항목마다 결정합니다.'],
-  inquiry: ['선사 문의', '선사 문의로 둔 항목의 확인 요청을 보내고, 회신을 받아 다시 대조합니다.'],
-  report: ['신고 준비', '확정 명부로 출입국·세관·항만·검역 신고에 첨부할 자료를 내려받습니다. 신고 전송은 하지 않습니다.'],
-};
-function pageHead(page, actions = '') {
+const VTABS = [['ship', '개요'], ['compare', '선원명부'], ['inquiry', '선사 문의'], ['report', '신고 준비'], ['mail', '메일']];
+function renderVHead() {
+  const el = $('#vHead');
+  if (!VOYAGE_PAGES.includes(state.page)) { el.innerHTML = ''; return; }
   const sh = curShip();
-  const i = NAV.findIndex((x) => x[0] === page);
   const now = sysNow(), due = KDATE(sh.due);
-  const sit = ['compare', 'report'].includes(page) ? SCENARIOS[state.scenario - 1]?.ctx?.situation : '';
-  const meta = page === 'ships' ? '' : `<span class="pg-ship">${page === 'ship' ? '' : `<button type="button" class="linkish" data-page="ship">${h(sh.name)}</button>`}${page === 'ship' ? h(sh.name) : ''} <span class="muted">V.${h(sh.voy)}</span></span> ${stageBadge(sh.stage)} <span class="pg-due small ${due - now < 12 * 3600e3 ? 'due-soon' : 'muted'}">마감 ${h(sh.due.replace(/\(.\)/, ''))} · ${remain(now, due)} 남음</span>`;
-  return `<div class="pg-head"><div class="pg-title-row"><h1 class="pg-title"><span class="pg-num">${NUM[i]}</span>${PAGE_INFO[page][0]}${info(PAGE_INFO[page][1])}${meta}${info(sit)}</h1>${actions ? `<div class="pg-actions">${actions}</div>` : ''}</div></div>`;
+  const sit = ['compare', 'report'].includes(state.page) ? SCENARIOS[state.scenario - 1]?.ctx?.situation : '';
+  el.innerHTML = `<div class="vh"><div class="vh-top"><h1 class="vh-title">${h(sh.name)} <span class="vh-voy">V.${h(sh.voy)}</span></h1>${stageBadge(sh.stage)}<span class="vh-due ${due - now < 12 * 3600e3 ? 'due-soon' : 'muted'}">보고 마감까지 ${remain(now, due)}</span>${info(sit)}</div>
+    <nav class="vh-tabs" aria-label="항차 화면">${VTABS.map(([k, l]) => `<button type="button" class="vh-tab${k === 'mail' ? ' vh-mail' : ''}" data-page="${k}" aria-current="${state.page === k ? 'page' : 'false'}">${l}</button>`).join('')}</nav></div>`;
 }
 
-// ---- ① 입항 예정 선박 ----
+// ---- 첫 화면: 입항 예정 선박 ----
 function hintSeen() { try { return localStorage.getItem('crewdiff-demo-hint') === '1'; } catch { return false; } }
 function renderShips() {
   const now = sysNow();
@@ -834,120 +890,95 @@ function renderShips() {
     const soon = due - now < 12 * 3600e3;
     const pend = sh.sent ? pendingItems(sh.sent.report, sh.sent.decisions).length : 0;
     const look = {
-      new: '새 수정본 · 열면 바로 대조',
+      new: '새 수정본',
       v2: rep.blocked ? '판독 실패 · 사람 검토' : `<b>${see}건</b>`,
-      asked: `선사 회신 대기 · <b>${pend}건</b>`,
-      reply: '<b>회신 도착</b> · 다시 대조',
-      final: '없음 · 신고 준비 가능',
+      asked: `회신 대기 · <b>${pend}건</b>`,
+      reply: '<b>회신 도착</b>',
+      final: '없음',
     }[sh.stage];
     const isNew = sh.stage === 'new' || (sh.hero && sh.stage === 'reply');
-    return `<li><button type="button" class="ship-row${isNew ? ' fresh' : ''}${sh.key === state.ship ? ' cur' : ''}" data-ship="${sh.key}">
+    return `<li><button type="button" class="ship-row${isNew ? ' fresh' : ''}" data-ship="${sh.key}">
       <span class="c-st">${stageBadge(sh.stage)}</span>
       <span class="c-ship"><b>${h(sh.name)}</b><span class="muted small">V.${h(sh.voy)}</span></span>
       <span class="c-eta"><span class="lbl-m">입항</span>${h(sh.eta.replace(/\(.\)/, ''))} <span class="muted small">${h(sh.port)}</span></span>
       <span class="c-due ${soon ? 'due-soon' : ''}"><span class="lbl-m">마감까지</span>${remain(now, due)}</span>
       <span class="c-list"><span class="lbl-m">봐야 할 곳</span><span>${look}</span></span>
-      <i class="ti ti-chevron-right c-go" aria-hidden="true"></i>
     </button></li>`;
   }).join('');
-  $('#pg-ships').innerHTML = `${pageHead('ships')}
+  $('#pg-ships').innerHTML = `<div class="pg-head"><h1 class="pg-title">입항 예정 선박${info('입항 순. 마감은 출입국 보고 마감(입항 2시간 전). 배를 누르면 항차 탭이 열립니다.')}</h1></div>
     ${!DEMO.on && !hintSeen() ? `<div class="demo-hint"><div>처음이라면 <b>시연 시작</b>으로 6장면을 따라가 보세요.</div><button type="button" class="btn btn-sm btn-primary" data-act="demo-start">시연 시작</button><button type="button" class="btn btn-sm" data-act="hint-close" aria-label="안내 닫기">닫기</button></div>` : ''}
     <div class="kpis">${kpi(cnt((s) => ['new', 'v2', 'reply'].includes(s.stage)), '대조 필요', 'todo')}${kpi(cnt((s) => s.stage === 'asked'), '선사 문의 중', 'wait')}${kpi(cnt((s) => s.stage === 'final'), '확정', 'ok')}</div>
-    <div class="panel ship-list-panel"><div class="panel-head"><h3>입항 예정 ${ships.length}척${info('입항 순. 마감은 출입국 보고 마감(입항 2시간 전).')}</h3></div>
-      <div class="ship-head" aria-hidden="true"><span>상태</span><span>선박</span><span>입항</span><span>마감까지</span><span>봐야 할 곳</span><span></span></div>
+    <div class="panel ship-list-panel">
+      <div class="ship-head" aria-hidden="true"><span>상태</span><span>선박</span><span>입항</span><span>마감까지</span><span>봐야 할 곳</span></div>
       <ul class="ship-list">${rows}</ul></div>`;
 }
 
-// ---- ② 선박·항차 상세 ----
+// ---- 항차 개요: 명부 버전 타임라인 ----
 function renderShip() {
   const sh = curShip();
-  const now = sysNow();
   const rep2 = sh.hero ? REP.hanbit2 : REP[sh.key];
   const sc = SCENARIOS[sh.scenario - 1];
-  const order = ['new', 'v2', 'asked', 'reply', 'final'];
-  const at = order.indexOf(sh.stage);
+  const at = ['new', 'v2', 'asked', 'reply', 'final'].indexOf(sh.stage);
   const see2 = rep2.summary.suspect + rep2.summary.check;
   const pend = sh.sent ? pendingItems(sh.sent.report, sh.sent.decisions).length : 0;
+  const B = { done: ['ok', '완료'], cur: ['todo', '대조 필요'], wait: ['wait', '회신 대기'], plan: ['plan', '예정'], due: ['due', '마감'] };
+  const act = (label, attr) => `<button type="button" class="btn btn-sm btn-primary" ${attr}>${label}</button>`;
   const ev = [
-    [KDATE(sc.ctx.v1), '최초본 받음', `선원 ${rep2.A.rows.length}명 · FAL 5 서식`, 'done'],
-    [KDATE(sc.ctx.at), sh.hero ? '수정본 V2 · 정정 요청 메일' : '수정본 · 메일', `바뀐 곳 ${rep2.items.length}건 중 봐야 할 곳 ${see2}건`, at <= 1 ? 'cur' : 'done'],
+    { t: KDATE(sc.ctx.v1), title: '최초본', meta: `선원 ${rep2.A.rows.length}명`, st: 'done', mail: `in0-${sh.key}` },
+    { t: KDATE(sc.ctx.at), title: sh.hero ? '수정본 V2 · 정정 요청 메일' : '수정본 · 메일', meta: rep2.blocked ? '판독 실패' : `봐야 할 곳 ${see2}건`, st: at <= 1 ? 'cur' : 'done', mail: `in-${sh.key}`, act: at <= 1 ? act('선원명부 대조', 'data-page="compare"') : '' },
   ];
-  if (sh.sent || sh.hero) ev.push([sh.sent ? sh.sent.at : null, '선사 문의 발송', sh.sent ? `확인 요청 ${pend}건` : '필요하면', sh.sent ? (at === 2 ? 'cur wait' : 'done') : '']);
-  if (sh.hero) ev.push([at >= 3 ? D.t4 : null, '선장 회신 · 수정본 V3', at >= 3 ? `예상된 변경 ${REP.hanbit5.summary.expected}건` : '회신 대기', at === 3 ? 'cur' : at > 3 ? 'done' : '']);
-  ev.push([sh.stage === 'final' && sh.hero ? addMin(D.t4, 2) : null, '명부 확정', sh.stage === 'final' ? '결정 기록 저장' : '', sh.stage === 'final' ? 'done ok' : '']);
-  ev.push([KDATE(sh.due), '출입국 보고 마감', `${remain(now, KDATE(sh.due))} 남음`, 'due']);
-  const tl = `<ol class="hist">${ev.map(([t, l, s, c]) => `<li class="${c}"><span class="hist-t">${t ? `${mdw(t)} ${hhmm(t)}` : '—'}</span><span class="hist-dot" aria-hidden="true"></span><span class="hist-b"><b>${l}</b><span class="small muted">${h(s)}</span></span></li>`).join('')}</ol>`;
-  const todo = [];
-  if (at <= 1) todo.push([`수정본 대조 — 봐야 할 곳 ${see2}건`, 'compare', '대조 열기', true]);
-  if (at === 2) todo.push([`선사 회신 기다리기 — 문의 ${pend}건`, 'inquiry', '선사 문의', true]);
-  if (at === 3) todo.push(['선장 회신 반영해 다시 대조', 'compare', '대조 열기', true]);
-  todo.push(['신고 자료 준비', 'report', '신고 준비', at === 4]);
-  const mails = mailsOf(sh);
-  const sel = mails.find((m) => m.id === state.mail) || mails[0];
-  const freshId = sh.stage === 'new' || (sh.hero && sh.stage === 'reply') ? mails[0].id : null;
-  const rep = shipReport(sh);
-  $('#pg-ship').innerHTML = `${pageHead('ship', `<button type="button" class="btn btn-primary" data-page="${at === 2 ? 'inquiry' : at === 4 ? 'report' : 'compare'}">${at === 2 ? '<i class="ti ti-mail-question" aria-hidden="true"></i> 선사 문의 보기' : at === 4 ? '<i class="ti ti-file-export" aria-hidden="true"></i> 신고 준비' : '<i class="ti ti-arrows-diff" aria-hidden="true"></i> 수정본 대조 열기'}</button>`)}
-    <div class="ship-info panel"><dl>
-      <div><dt>입항 예정</dt><dd>${h(sh.port)} · ${h(sh.eta)}</dd></div>
-      <div><dt>선원</dt><dd>${rep.B.rows.length}명</dd></div>
-      <div><dt>선사 · 기국</dt><dd>${h(sh.operator)} · ${h(sh.flag)}</dd></div>
-    </dl></div>
-    <div class="ship-grid">
-      <div class="stack">
-        <div class="panel"><div class="panel-head"><h3>명부 이력</h3></div><div class="panel-body">${tl}</div></div>
-        <div class="panel"><div class="panel-head"><h3>할 일</h3></div><ul class="todo-list">${todo.map(([l, p, b, primary]) => `<li><span>${h(l)}</span><button type="button" class="btn btn-sm${primary ? ' btn-primary' : ''}" data-page="${p}">${b}</button></li>`).join('')}</ul></div>
-      </div>
-      <div class="ship-mails">
-        <div class="panel mail-box"><div class="panel-head"><h3>관련 메일 ${mails.length}건</h3></div>
-          <ul class="rp-mails">${mails.map((m) => `<li><button type="button" data-mailid="${m.id}" aria-pressed="${m.id === sel.id}" class="${m.id === freshId ? 'fresh' : ''}"><span class="rp-from">${m.box === 'out' ? '<i class="ti ti-send" aria-hidden="true"></i> ' : ''}${shipify(h(m.from), sh)}</span><span class="rp-at">${mdw(m.at)} ${hhmm(m.at)}</span><span class="rp-subj">${shipify(h(m.subject), sh)}</span>${m.files ? `<span class="rp-clip"><i class="ti ti-paperclip" aria-hidden="true"></i> ${h(m.files[0])}</span>` : ''}</button></li>`).join('')}</ul></div>
-        ${mailView(sel, sh, { fresh: sel.id === freshId, actions: sel.sc ? `<button type="button" class="btn btn-primary" data-page="compare"><i class="ti ti-arrows-diff" aria-hidden="true"></i> ${sel.sc === 5 ? '기준본과 다시 대조' : '첨부 명부 대조하기'}</button>` : '' })}
-      </div>
-    </div>`;
+  if (sh.hero || sh.sent) ev.push({ t: sh.sent ? sh.sent.at : null, title: '선사 문의', meta: sh.sent ? `확인 요청 ${pend}건` : '', st: !sh.sent ? 'plan' : at === 2 ? 'wait' : 'done', mail: sh.sent ? `out-${sh.key}` : '', act: at === 2 ? act('선사 문의 보기', 'data-page="inquiry"') : '' });
+  if (sh.hero) ev.push({ t: at >= 3 ? D.t4 : null, title: '선장 회신 · 수정본 V3', meta: at >= 3 ? `예상된 변경 ${REP.hanbit5.summary.expected}건` : '', st: at < 3 ? 'plan' : at === 3 ? 'cur' : 'done', mail: at >= 3 ? 'in5-hanbit' : '', act: at === 3 ? act('다시 대조', 'data-act="reply-compare"') : '' });
+  ev.push({ t: sh.stage === 'final' && sh.hero ? addMin(D.t4, 2) : null, title: '명부 확정', meta: sh.stage === 'final' ? '결정 기록 저장' : '', st: sh.stage === 'final' ? 'done' : 'plan', act: sh.stage === 'final' ? act('신고 준비', 'data-page="report"') : '' });
+  ev.push({ t: KDATE(sh.due), title: '출입국 보고 마감', st: 'due' });
+  const tl = `<ol class="itin">${ev.map((e) => `<li class="it-${e.st}">
+    <span class="it-t">${e.t ? `${mdw(e.t)}<b>${hhmm(e.t)}</b>` : '—'}</span><span class="it-dot" aria-hidden="true"></span>
+    <span class="it-b"><b>${h(e.title)}</b><span class="st-badge ${B[e.st][0]}">${B[e.st][1]}</span>${e.meta ? `<span class="it-meta">${h(e.meta)}</span>` : ''}</span>
+    <span class="it-a">${e.mail ? `<button type="button" class="btn btn-sm btn-ghost-secondary" data-open-mail="${e.mail}" aria-label="${h(e.title)} 메일 보기" title="메일 보기"><i class="ti ti-mail" aria-hidden="true"></i></button>` : ''}${e.act || ''}</span></li>`).join('')}</ol>`;
+  $('#pg-ship').innerHTML = `<p class="ov-line"><i class="ti ti-anchor" aria-hidden="true"></i> ${h(sh.port)} 입항 <b>${h(sh.eta)}</b><span class="muted"> · 선원 ${shipReport(sh).B.rows.length}명 · ${h(sh.operator)} · ${h(sh.flag)}</span></p>
+    <div class="panel"><div class="panel-head"><h3>명부 버전</h3></div><div class="panel-body">${tl}</div></div>`;
 }
 
-// ---- ④ 선사 문의 ----
+// ---- 선사 문의 ----
 function inquiryItems(rep, dec) {
   const held = sortedItems(rep).filter((it) => pendingItems(rep, dec).includes(it));
   return `<div class="table-wrap"><table class="grid changes rp-items"><thead><tr><th>인물</th><th>분류</th><th>문의 내용</th><th>이유</th></tr></thead><tbody>${held.map((it) => `<tr><td class="person">${h(it.person)}</td><td><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></td><td>${changeText(it)}</td><td class="basis small">${h(basisText(it))}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">문의 항목 없음</td></tr>'}</tbody></table></div>`;
 }
 function renderInquiry() {
   const sh = curShip();
-  const all = Object.values(SHIPST);
-  const board = `<div class="panel"><div class="panel-head"><h3>문의 현황 (모든 배)</h3></div>
-    <div class="table-wrap"><table class="grid inq-board"><thead><tr><th>선박</th><th>상태</th><th>보낸 시각</th><th>문의</th><th>회신</th></tr></thead><tbody>${all.map((s) => `<tr${s.key === sh.key ? ' class="cur"' : ''}><td><button type="button" class="linkish" data-ship-inq="${s.key}">${h(s.name)}</button></td><td>${stageBadge(s.stage)}</td>${s.sent ? `<td>${mdw(s.sent.at)} ${hhmm(s.sent.at)}</td><td>${pendingItems(s.sent.report, s.sent.decisions).length}건</td><td>${s.hero && ['reply', 'final'].includes(s.stage) ? `${hhmm(D.t4)} 도착` : '<span class="muted">대기</span>'}</td>` : '<td class="muted">—</td><td class="muted">—</td><td class="muted">—</td>'}</tr>`).join('')}</tbody></table></div></div>`;
   let sent;
   const rep = state.report;
   if (sh.sent) {
-    sent = `<div class="panel"><div class="panel-head"><h3>보낸 확인 요청</h3><span class="small muted">${mdw(sh.sent.at)} ${hhmm(sh.sent.at)} · ${sh.hero ? '선장' : '선사'}에게</span></div><div class="panel-body">
-      ${inquiryItems(sh.sent.report, sh.sent.decisions)}
-      <details class="raw" style="margin-top:10px"><summary class="small">보낸 메일 원문</summary><pre class="box mono wrap">${shipify(h(sh.sent.text), sh)}</pre></details></div></div>`;
+    sent = `<div class="panel"><div class="panel-head"><h3>보낸 확인 요청</h3><span class="small muted">${fmtAt(sh.sent.at)} · ${sh.hero ? '선장' : '선사'}에게 <button type="button" class="btn btn-sm btn-ghost-secondary" data-open-mail="out-${sh.key}" aria-label="보낸 메일 보기" title="메일 보기"><i class="ti ti-mail" aria-hidden="true"></i></button></span></div><div class="panel-body">
+      ${inquiryItems(sh.sent.report, sh.sent.decisions)}</div></div>`;
   } else if (rep && !rep.blocked && allDecided() && pendingItems(rep, state.decisions).length) {
-    sent = `<div class="panel"><div class="panel-head"><h3>확인 요청 작성</h3><span class="small muted">선사 문의 ${pendingItems(rep, state.decisions).length}건 · 아직 보내지 않음</span></div><div class="panel-body">
+    sent = `<div class="panel"><div class="panel-head"><h3>확인 요청 작성</h3><span class="small muted">선사 문의 ${pendingItems(rep, state.decisions).length}건</span></div><div class="panel-body">
       ${inquiryItems(rep, state.decisions)}
       <textarea class="form-control summary mono" id="summary" aria-label="선사에 보낼 확인 요청" style="margin-top:10px">${shipify(h(shipperSummary()), sh)}</textarea>
-      <div class="row-actions">${info('데모: 실제로 보내지 않고 보낸 메일에만 기록합니다.')}<span class="spacer"></span><button type="button" class="btn" data-act="copy-summary">복사</button><button type="button" class="btn" data-page="report">미확정 검토본 보기</button><button type="button" class="btn btn-primary" data-act="send-inquiry"><i class="ti ti-send" aria-hidden="true"></i> 확인 요청 보내기</button></div></div></div>`;
+      <div class="row-actions">${info('데모: 실제로 보내지 않고 메일함 보낸 메일에만 기록합니다.')}<span class="spacer"></span><button type="button" class="btn" data-act="copy-summary">복사</button><button type="button" class="btn" data-page="report">미확정 검토본 보기</button><button type="button" class="btn btn-primary" data-act="send-inquiry"><i class="ti ti-send" aria-hidden="true"></i> 확인 요청 보내기</button></div></div></div>`;
   } else {
-    const msg = !rep ? '대조 결과가 없습니다.' : rep.blocked ? '명부 판독 실패로 결정할 수 없습니다. 원본 확인이 먼저입니다.' : !allDecided() ? `결정하지 않은 항목 ${rep.items.filter((it) => !state.decisions[it.id]).length}건. 수정본 대조에서 먼저 정하세요.` : '선사 문의 항목 없음. 바로 신고 준비로 갈 수 있습니다.';
-    sent = `<div class="panel"><div class="panel-head"><h3>확인 요청</h3></div><div class="panel-body"><p style="margin:0 0 10px">${msg}</p><button type="button" class="btn btn-primary" data-page="${rep && allDecided() && !rep.blocked ? 'report' : 'compare'}">${rep && allDecided() && !rep.blocked ? '신고 준비로' : '수정본 대조로'}</button></div></div>`;
+    const msg = !rep ? '대조 결과가 없습니다.' : rep.blocked ? '명부 판독 실패로 결정할 수 없습니다. 원본 확인이 먼저입니다.' : !allDecided() ? `결정하지 않은 항목 ${rep.items.filter((it) => !state.decisions[it.id]).length}건. 선원명부 탭에서 먼저 정하세요.` : '선사 문의 항목 없음. 바로 신고 준비로 갈 수 있습니다.';
+    const ok = rep && allDecided() && !rep.blocked;
+    sent = `<div class="panel"><div class="panel-head"><h3>확인 요청</h3></div><div class="panel-body"><p style="margin:0 0 10px">${msg}</p><button type="button" class="btn btn-primary" data-page="${ok ? 'report' : 'compare'}">${ok ? '신고 준비 탭으로' : '선원명부 탭으로'}</button></div></div>`;
   }
   let recv;
   if (sh.hero && ['reply', 'final'].includes(sh.stage)) {
-    recv = mailView(D.reply, sh, { fresh: sh.stage === 'reply', actions: sh.stage === 'reply' ? '<button type="button" class="btn btn-primary" data-act="reply-compare"><i class="ti ti-arrows-diff" aria-hidden="true"></i> 기준본과 다시 대조</button>' : '<button type="button" class="btn" data-page="report">확정 명부 보기</button>' });
+    recv = `<div class="panel"><div class="panel-body wait-box"><i class="ti ti-mail-down ok" aria-hidden="true"></i><div><b>선장 회신 · 수정본 V3</b><div class="small muted">${fmtAt(D.t4)} 도착</div></div>
+      <button type="button" class="btn" data-open-mail="in5-hanbit"><i class="ti ti-mail" aria-hidden="true"></i> 메일 보기</button>${sh.stage === 'reply' ? '<button type="button" class="btn btn-primary" data-act="reply-compare"><i class="ti ti-arrows-diff" aria-hidden="true"></i> 기준본과 다시 대조</button>' : '<button type="button" class="btn" data-page="report">확정 명부 보기</button>'}</div></div>`;
   } else if (sh.sent) {
     recv = `<div class="panel"><div class="panel-body wait-box"><i class="ti ti-hourglass" aria-hidden="true"></i><div><b>회신 대기 중</b><div class="small muted">${hhmm(sh.sent.at)} 보냄</div></div>
-      ${sh.hero ? '<button type="button" class="btn" data-act="reply-arrive"><i class="ti ti-mail-down" aria-hidden="true"></i> 회신 도착(시연용: 01:15 선장 회신)</button>' : info('이 사례에는 회신 데이터가 없습니다. 회신 이후 흐름은 DEMO HANBIT 3에서 볼 수 있습니다.')}</div></div>`;
+      ${sh.hero ? '<button type="button" class="btn" data-act="reply-arrive"><i class="ti ti-mail-down" aria-hidden="true"></i> 회신 도착(시연용)</button>' : info('이 사례에는 회신 데이터가 없습니다. 회신 이후 흐름은 DEMO HANBIT 3에서 볼 수 있습니다.')}</div></div>`;
   } else recv = '<div class="panel"><div class="panel-body muted">받은 회신이 없습니다.</div></div>';
-  $('#pg-inquiry').innerHTML = `${pageHead('inquiry')}
-    <div class="inq-grid"><div class="stack">${sent}${board}</div><div class="stack"><h2 class="sub-title" style="margin:0">받은 회신${sh.hero ? info('회신 후 대조는 확정한 결정만 반영한 기준본과 수정본 V3를 비교합니다.') : ''}</h2>${recv}</div></div>`;
+  $('#pg-inquiry').innerHTML = `<div class="inq-grid"><div class="stack">${sent}</div><div class="stack"><h2 class="sub-title" style="margin:0">회신${sh.hero ? info('회신 후 대조는 확정한 결정만 반영한 기준본과 수정본 V3를 비교합니다.') : ''}</h2>${recv}</div></div>`;
 }
 
-// ---- ⑤ 신고 준비: 네 기관 ----
+// ---- 신고 준비: 네 기관 ----
 const AGENCY_SHORT = { immigration: ['출입국', 'ti-id'], customs: ['세관', 'ti-building-bank'], port: ['항만', 'ti-anchor'], quarantine: ['검역', 'ti-first-aid-kit'] };
 function agencyPanel() {
   const r = state.report;
   const ready = r && !r.blocked && allDecided() && !pendingItems(r, state.decisions).length;
   const sh = curShip();
-  return `<div class="agency-grid">${Object.values(LAWS).map((l) => `<div class="panel agency"><div class="ag-head"><i class="ti ${AGENCY_SHORT[l.id][1]}" aria-hidden="true"></i><b>${AGENCY_SHORT[l.id][0]}</b>${l.id === 'immigration' ? `<span class="small due-soon">마감 ${h(sh.due)}</span>` : ''}</div>
+  return `<div class="agency-grid">${Object.values(LAWS).map((l) => `<div class="panel agency"><div class="ag-head"><i class="ti ${AGENCY_SHORT[l.id][1]}" aria-hidden="true"></i><b>${AGENCY_SHORT[l.id][0]}</b>${l.id === 'immigration' ? `<span class="small due-soon">마감 ${h(sh.due.replace(/\(.\)/, ''))}</span>` : ''}</div>
     <div class="small" title="제출처: ${h(l.agency)} · ${h(l.law)} ${h(l.article)}">${h(l.report)}</div>
     <button type="button" class="btn btn-sm${ready ? ' btn-primary' : ''}" data-act="dl-agency" data-ag="${l.id}" ${ready ? '' : 'disabled'}><i class="ti ti-download" aria-hidden="true"></i> 첨부용 명부 CSV</button></div>`).join('')}</div>
     <p class="small muted" style="margin:8px 0 16px">${ready ? '네 곳 모두 같은 확정 명부를 씁니다.' : '<b>선사 문의·미결정 항목이 남아 내려받을 수 없습니다.</b>'}${info('신고는 담당자가 각 기관 시스템에 직접 입력·첨부합니다. 기관별 서식 변환은 하지 않습니다.')}</p>`;
@@ -959,13 +990,13 @@ function demoBeats() {
   const see2 = D.r2.summary.suspect + D.r2.summary.check;
   const pend2 = pendingItems(D.r2, D.d2).length, appr2 = D.r2.items.length - pend2;
   return [
-    { scene: 1, t: D.t1, page: 'ships', title: '수정본 메일 도착', toast: 'in-hanbit', adv: (t) => t.dataset.ship === 'hanbit', cap: `입항 전날 ${hhmm(D.t1)}, “생년월일 1건 정정” 수정본이 왔습니다.`, setup: () => { heroAt('new'); } },
-    { scene: 1, t: D.t1, page: 'ship', title: '배를 눌러 메일 확인', adv: (t) => t.dataset.page === 'compare', cap: '메일과 AI가 읽은 요청을 근거 문장과 함께 봅니다.', setup: () => { heroAt('v2'); state.mail = 'in-hanbit'; } },
-    { scene: 2, t: addMin(D.t1, 2), page: 'compare', title: '열자마자 대조', cap: `요청은 1건인데, 꼭 봐야 할 곳은 ${see2}건입니다.`, setup: () => { heroAt('v2'); state.step = 2; state.filter = 'all'; state.selected = sortedItems()[0]?.id || null; } },
-    { scene: 3, t: D.t3, page: 'inquiry', title: '결정 · 선사 문의', toast: 'out-hanbit', adv: (t) => t.dataset.act === 'reply-arrive', cap: `근거 있는 ${appr2}건은 반영, 근거 없는 ${pend2}건은 선사 문의로 보냅니다.`, setup: () => { heroAt('asked'); } },
-    { scene: 4, t: D.t4, page: 'inquiry', title: '선장 회신 도착', toast: 'in5-hanbit', adv: (t) => t.dataset.act === 'reply-compare', cap: `새벽 ${hhmm(D.t4)}, 선장 회신과 수정본 V3가 왔습니다.`, setup: () => { heroAt('reply'); } },
-    { scene: 5, t: addMin(D.t4, 2), page: 'compare', title: '다시 대조 · 확정', adv: (t) => t.dataset.act === 'next', cap: `다시 대조하니 ${D.r5.summary.expected}건 모두 예상된 변경 — 반영하고 확정합니다.`, setup: () => { heroAt('final'); state.step = 3; } },
-    { scene: 6, t: D.t6, page: 'report', title: '신고 준비 완료', cap: `${hhmm(D.t6)}, 네 기관 신고 자료 준비 완료. 마감까지 ${remain(D.t6, D.due)}.`, setup: () => { heroAt('final'); } },
+    { scene: 1, t: D.t1, page: 'ships', title: '수정본 메일 도착', toast: 'in-hanbit', adv: (t) => t.dataset.ship === 'hanbit' || t.dataset.mailid === 'in-hanbit', cap: `입항 전날 ${hhmm(D.t1)}, 메일함에 “생년월일 1건 정정” 수정본이 왔습니다.`, setup: () => { heroAt('new'); state.open = []; } },
+    { scene: 1, t: D.t1, page: 'ship', title: '메일 확인', adv: (t) => t.dataset.page === 'compare' || !!t.dataset.cmp, cap: 'AI가 읽은 요청은 메일의 근거 문장에 표시됩니다.', setup: () => { heroAt('v2'); state.mail = 'in-hanbit'; state.read.add('in-hanbit'); } },
+    { scene: 2, t: addMin(D.t1, 2), page: 'compare', title: '선원명부 대조', cap: `요청은 1건인데, 꼭 봐야 할 곳은 ${see2}건입니다.`, setup: () => { heroAt('v2'); state.step = 2; state.filter = 'all'; state.selected = sortedItems()[0]?.id || null; } },
+    { scene: 3, t: D.t3, page: 'inquiry', title: '선사 문의', toast: 'out-hanbit', adv: (t) => t.dataset.act === 'reply-arrive', cap: `근거 있는 ${appr2}건은 반영, 근거 없는 ${pend2}건은 선사 문의로 보냅니다.`, setup: () => { heroAt('asked'); } },
+    { scene: 4, t: D.t4, page: 'inquiry', title: '선장 회신 도착', toast: 'in5-hanbit', adv: (t) => t.dataset.act === 'reply-compare', cap: `새벽 ${hhmm(D.t4)}, 선장 회신과 수정본 V3가 메일함에 왔습니다.`, setup: () => { heroAt('reply'); } },
+    { scene: 5, t: addMin(D.t4, 2), page: 'compare', title: '다시 대조 · 확정', adv: (t) => t.dataset.act === 'next', cap: `다시 대조하니 ${D.r5.summary.expected}건 모두 예상된 변경이라 반영하고 확정합니다.`, setup: () => { heroAt('final'); state.step = 3; } },
+    { scene: 6, t: D.t6, page: 'report', title: '신고 준비 완료', cap: `${hhmm(D.t6)}, 네 기관 신고 자료 준비 완료, 마감까지 ${remain(D.t6, D.due)}.`, setup: () => { heroAt('final'); } },
   ];
 }
 function demoGo(i) {
@@ -974,7 +1005,10 @@ function demoGo(i) {
   DEMO.beat = Math.min(beats.length - 1, Math.max(0, i));
   const b = beats[DEMO.beat];
   state.mail = null;
+  state.mailScope = 'voyage';
+  state.read = new Set();
   b.setup();
+  if (b.page !== 'ships' && !state.open.includes('hanbit')) state.open = ['hanbit'];
   setPage(b.page);
   if (b.toast) showToast(mailsOf(SHIPST.hanbit).find((m) => m.id === b.toast));
 }
@@ -995,17 +1029,25 @@ function renderDemoBar() {
 function showToast(m) {
   const t = $('#toast');
   if (!m || !t) return;
-  t.innerHTML = `<i class="ti ${m.box === 'out' ? 'ti-send' : 'ti-mail'}" aria-hidden="true"></i><div><b>${m.box === 'out' ? '메일 보냄' : '새 메일'}</b> · ${hhmm(m.at)}<div class="small">${shipify(h(m.from), SHIPST.hanbit)} — ${h(m.subject)}</div></div>`;
+  t.innerHTML = `<i class="ti ${m.box === 'out' ? 'ti-send' : 'ti-mail'}" aria-hidden="true"></i><div><b>${m.box === 'out' ? '메일 보냄' : '새 메일'}</b> · ${hhmm(m.at)}<div class="small">${h(m.box === 'out' ? `${m.to}에게` : m.from)} — ${h(m.subject)}</div></div>`;
   t.hidden = false;
   t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
 }
 
-function openShipPage(key, page) {
+function openShipPage(key, page, { mail = null } = {}) {
   selectShip(key);
   const sh = curShip();
   if (!DEMO.on && sh.stage === 'new') sh.stage = 'v2';
-  state.mail = null;
+  state.mail = mail;
   setPage(page);
+}
+// 메일함에서 특정 메일 펼치기(모바일은 메일 탭으로)
+function revealMail(id) {
+  state.mail = id;
+  state.read.add(id);
+  if (window.innerWidth < 900) { setPage('mail'); } else renderMailbox();
+  const li = document.querySelector(`${window.innerWidth < 900 ? '#pg-mail' : '#mailbox'} [data-mail-li="${id}"]`);
+  li?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 function downloadCsv(csv, name) {
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
@@ -1022,42 +1064,78 @@ document.addEventListener('click', async (e) => {
   if (!t) return;
   // 시연 중에 그 장면의 다음 동작 버튼을 누르면 다음 장면으로 넘어간다
   if (DEMO.on && demoBeats()[DEMO.beat].adv?.(t)) { demoGo(DEMO.beat + 1); return; }
-  if (t.dataset.page) { if (!DEMO.on && ['compare', 'ship'].includes(t.dataset.page) && curShip().stage === 'new') curShip().stage = 'v2'; if (t.dataset.page === 'compare' && state.step === 4) state.step = 2; setPage(t.dataset.page); return; }
-  if (t.dataset.ship) { openShipPage(t.dataset.ship, 'ship'); return; }
-  if (t.dataset.shipInq) { selectShip(t.dataset.shipInq); setPage('inquiry'); return; }
-  if (t.dataset.mailid) { state.mail = t.dataset.mailid; renderShip(); return; }
+  if (t.dataset.page) {
+    const p = t.dataset.page;
+    if (!DEMO.on && VOYAGE_PAGES.includes(p) && curShip().stage === 'new') curShip().stage = 'v2';
+    if (p === 'compare' && state.step === 4) state.step = 2;
+    if (p === 'mail' && state.page !== 'mail') state.mailScope = 'voyage';
+    setPage(p); return;
+  }
+  if (t.dataset.ship) { openShipPage(t.dataset.ship, SHIPST[t.dataset.ship].last || 'ship'); return; }
+  if (t.dataset.vtab) { openShipPage(t.dataset.vtab, SHIPST[t.dataset.vtab].last || 'ship'); return; }
+  if (t.dataset.vtabClose) {
+    const k = t.dataset.vtabClose;
+    state.open = state.open.filter((x) => x !== k);
+    if (VOYAGE_PAGES.includes(state.page) && state.ship === k) { const next = state.open[state.open.length - 1]; if (next) openShipPage(next, SHIPST[next].last || 'ship'); else setPage('ships'); } else renderChrome();
+    return;
+  }
+  if (t.dataset.mailid) {
+    const id = t.dataset.mailid;
+    const m = allMails().find((x) => x.id === id);
+    if (!m) return;
+    state.read.add(id);
+    if (m.ship !== state.ship || !VOYAGE_PAGES.includes(state.page)) { openShipPage(m.ship, state.page === 'mail' ? 'mail' : SHIPST[m.ship].last || 'ship', { mail: id }); return; }
+    state.mail = state.mail === id ? null : id;
+    renderChrome(); return;
+  }
+  if (t.dataset.openMail) { revealMail(t.dataset.openMail); return; }
+  if (t.dataset.mailScope) { state.mailScope = t.dataset.mailScope; renderMailbox(); return; }
+  if (t.dataset.cmp) {
+    const m = allMails().find((x) => x.id === t.dataset.cmp);
+    if (!m) return;
+    const sh = SHIPST[m.ship];
+    if (m.sc === 5) { if (sh.stage === 'reply') { const sent = sh.sent; heroAt('reply'); if (sent) sh.sent = sent; state.step = 2; } setPage('compare'); return; }
+    if (sh.hero && !['new', 'v2'].includes(sh.stage)) { openShipPage('hanbit', 'compare', { mail: m.id }); return; }
+    selectShip(m.ship);
+    if (!DEMO.on && sh.stage === 'new') sh.stage = 'v2';
+    if (state.step === 1 || state.step === 4) state.step = 2;
+    state.mail = m.id;
+    setPage('compare'); return;
+  }
   if (t.dataset.demoScene) { demoGo(demoBeats().findIndex((b) => b.scene === Number(t.dataset.demoScene))); return; }
   const act = t.dataset.act;
-  if (act === 'nav-toggle') { const open = !$('#sysNav').classList.contains('open'); $('#sysNav').classList.toggle('open', open); t.setAttribute('aria-expanded', String(open)); return; }
   if (act === 'demo-start') { try { localStorage.setItem('crewdiff-demo-hint', '1'); } catch { /* 저장 안 돼도 됨 */ } demoGo(0); return; }
   if (act === 'demo-next') { demoGo(DEMO.beat + 1); return; }
   if (act === 'demo-prev') { demoGo(DEMO.beat - 1); return; }
   if (act === 'demo-end') { demoEnd(); return; }
   if (act === 'hint-close') { try { localStorage.setItem('crewdiff-demo-hint', '1'); } catch { /* 저장 안 돼도 됨 */ } $('.demo-hint')?.remove(); return; }
-  if (act === 'bell') { setPage('ships'); return; }
+  if (act === 'bell') {
+    state.mailScope = 'all';
+    if (window.innerWidth < 900) { setPage('mail'); return; }
+    renderMailbox(); $('#mailbox').scrollTop = 0; $('#mailbox .mb-item.fresh .mb-row, #mailbox .mb-row')?.focus(); return;
+  }
   if (act === 'send-inquiry') {
     const sh = curShip();
-    if (sh.hero) sh.stage = 'asked'; else sh.stage = 'asked';
+    sh.stage = 'asked';
     sh.sent = { at: sysNow(), decisions: { ...state.decisions }, report: state.report, text: shipperSummary() };
     renderChrome(); renderInquiry(); showToast(mailsOf(sh).find((m) => m.box === 'out')); return;
   }
   if (act === 'reply-arrive') { const sh = SHIPST.hanbit; sh.stage = 'reply'; renderChrome(); renderInquiry(); showToast(D.reply); return; }
-  if (act === 'reply-compare') { const sh = SHIPST.hanbit; const sent = sh.sent; heroAt('reply'); if (sent) sh.sent = sent; state.step = 2; setPage('compare'); return; }
+  if (act === 'reply-compare') { const sh = SHIPST.hanbit; const sent = sh.sent; heroAt('reply'); if (sent) sh.sent = sent; state.step = 2; state.read.add('in5-hanbit'); setPage('compare'); return; }
   if (act === 'dl-agency') { const sh = curShip(); downloadCsv(shipify(toFal5Csv(state.report, state.decisions), sh), `crew-list-fal5-${sh.voy}-${t.dataset.ag}.csv`); return; }
   if (t.dataset.step) { goStep(Number(t.dataset.step)); return; }
   if (t.dataset.scenario) {
     const n = Number(t.dataset.scenario);
     const sh = shipOfScenario(n);
     if (sh.hero) heroAt(n === 5 ? 'reply' : 'v2');
-    else { state.ship = sh.key; loadScenario(n); run(); if (sh.stage === 'new') sh.stage = 'v2'; }
+    else { saveWs(); state.ship = sh.key; loadScenario(n); run(); if (sh.stage === 'new') sh.stage = 'v2'; }
     state.step = 1; setPage('compare', { scroll: false }); return;
   }
   if (t.dataset.view) { state.view = t.dataset.view; render(); return; }
   if (t.dataset.filter) { state.filter = t.dataset.filter; render(); return; }
-  if (t.matches('tr.item')) { state.selected = t.dataset.item; render(); scrollMailHit(); if (window.innerWidth < 900) $('.detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (t.matches('tr.item')) { toggleItem(t.dataset.item); return; }
   if (t.dataset.decide) { state.decisions[t.dataset.decide] = t.dataset.v; state.conf = null; render(); return; }
   if (act === 'run') { readInputs(); run(); render(); }
-  if (act === 'quick') { heroAt('v2'); state.step = 2; setPage('compare'); return; }
   if (act === 'next') { if (state.step === 1 && !state.report) { readInputs(); run(); } goStep(state.step + 1); }
   if (act === 'prev') goStep(state.step - 1);
   if (act === 'restart') { loadScenario(state.scenario); state.step = 1; setPage('compare'); }
@@ -1071,13 +1149,19 @@ document.addEventListener('click', async (e) => {
   if (act === 'verify') { await doVerify(false); render(); }
   if (act === 'tamper') { await doVerify(true); render(); }
 });
+function toggleItem(id) {
+  state.selected = state.selected === id ? null : id;
+  render();
+  scrollMailHit();
+  if (state.selected) $('.detail-row')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && e.target.matches?.('tr.item')) { state.selected = e.target.dataset.item; render(); }
-  if (e.key === 'Escape') closeNav();
+  if (e.key === 'Enter' && e.target.matches?.('tr.item')) toggleItem(e.target.dataset.item);
   if (DEMO.on && !e.target.matches?.('input, textarea') && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) demoGo(DEMO.beat + (e.key === 'ArrowRight' ? 1 : -1));
 });
 document.addEventListener('input', (e) => {
   if (e.target.id === 'approver') state.approver = e.target.value || '데모 담당자';
+  if (e.target.classList?.contains('mb-q')) { state.mailQ = e.target.value; refreshMailLists(); return; }
   if (e.target.dataset?.input) { state.inputs[e.target.dataset.input] = e.target.value; state.report = null; renderStepper(); }
 });
 function readInputs() {
@@ -1129,13 +1213,17 @@ async function start() {
     if (params.has('sign') && state.step === 4 && !pendingItems(state.report, state.decisions).length) { await doSign(); sh.stage = 'final'; if (params.get('sign') === 'verify') await doVerify(false); if (params.get('sign') === 'tamper') await doVerify(true); }
     page = state.step === 4 ? 'report' : 'compare';
   } else {
-    const view = params.get('view');
-    const key = SHIPST[params.get('ship')] ? params.get('ship') : 'hanbit';
+    // 새 주소: ?voyage=hanbit&tab=overview|crew|inquiry|report|mail (&mail=메일 id). 예전 ?view=·?ship=도 그대로.
+    const TAB_PAGE = { overview: 'ship', crew: 'compare', inquiry: 'inquiry', report: 'report', mail: 'mail' };
+    let view = TAB_PAGE[tab] || params.get('view');
+    if (!view && params.has('voyage')) view = 'ship';
+    const key = SHIPST[params.get('voyage')] ? params.get('voyage') : SHIPST[params.get('ship')] ? params.get('ship') : 'hanbit';
     const stage = STAGE[params.get('stage')] ? params.get('stage') : null;
-    if (key === 'hanbit') heroAt(stage || ({ compare: 'v2', ship: 'v2', inquiry: 'asked', report: 'final' })[view] || 'new');
-    else { if (stage) SHIPST[key].stage = stage; selectShip(key); }
-    if (['ships', 'ship', 'compare', 'inquiry', 'report'].includes(view)) page = view;
+    if (key === 'hanbit') heroAt(stage || ({ compare: 'v2', ship: 'v2', mail: 'v2', inquiry: 'asked', report: 'final' })[view] || 'new');
+    else { if (stage) SHIPST[key].stage = stage; else if (view && SHIPST[key].stage === 'new') SHIPST[key].stage = 'v2'; selectShip(key); }
+    if (['ships', 'ship', 'compare', 'inquiry', 'report', 'mail'].includes(view)) page = view;
     if (page === 'compare') { state.step = Math.min(3, Number(params.get('step')) || 2); state.selected = state.selected || sortedItems()[0]?.id || null; }
+    if (params.get('mail')) { state.mail = params.get('mail'); state.read.add(state.mail); }
     if (tab === 'eval' || tab === 'scope') page = tab;
   }
   setPage(page, { scroll: false });
