@@ -1,18 +1,18 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js?v=202610211608';
-import { compareCrewLists } from './lib/engine.js?v=202610211608';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211608';
-import { colLetter, splitRows } from './lib/parse.js?v=202610211608';
-import { CLASS_LABEL } from './lib/classify.js?v=202610211608';
-import { RULES } from './lib/rules.js?v=202610211608';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211608';
-import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211608';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211608';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211608';
-import { DEMO_KID } from './lib/demo-key.js?v=202610211608';
-import { decodeJws, b64uJson } from './lib/jose.js?v=202610211608';
-import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js?v=202610211608';
-import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610211608';
+import { SCENARIOS } from './data/scenarios.js?v=202610211659';
+import { compareCrewLists } from './lib/engine.js?v=202610211659';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211659';
+import { colLetter, splitRows } from './lib/parse.js?v=202610211659';
+import { CLASS_LABEL } from './lib/classify.js?v=202610211659';
+import { RULES } from './lib/rules.js?v=202610211659';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211659';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211659';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211659';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211659';
+import { DEMO_KID } from './lib/demo-key.js?v=202610211659';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610211659';
+import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610211659';
+import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610211659';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -98,6 +98,7 @@ function setPage(page, { scroll = true } = {}) {
   renderChrome();
   if (page === 'ships') renderShips();
   if (page === 'ship') renderShip();
+  else dropMap();
   if (page === 'compare' || page === 'report') render();
   if (page === 'inquiry') renderInquiry();
   if (page === 'mail') $('#pg-mail').innerHTML = mailboxHtml(true);
@@ -913,6 +914,78 @@ function renderShips() {
       <ul class="ship-list">${rows}</ul></div>`;
 }
 
+// ---- 항차 개요: 항로 지도 + 일정 ----
+// 거리는 경유점 사이 대권거리(nm) 합. 현재 위치는 출항~입항 시각 사이를 거리 비례로 선형 보간(가상 시각 기준).
+const rad = (x) => (x * Math.PI) / 180;
+function gcNm(a, b) {
+  const s = Math.sin(rad(b[0] - a[0]) / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(rad(b[1] - a[1]) / 2) ** 2;
+  return 2 * 3440.065 * Math.asin(Math.sqrt(s));
+}
+function routeOf(sh) {
+  const ro = ROUTES[sh.key];
+  if (!ro) return null;
+  const pts = [ro.from.pos, ...ro.via, ro.to.pos];
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + gcNm(pts[i - 1], pts[i]));
+  const total = cum[cum.length - 1];
+  const dep = KDATE(ro.from.at), arr = KDATE(sh.eta), now = sysNow();
+  const f = Math.min(1, Math.max(0, (now - dep) / (arr - dep)));
+  const done = f * total;
+  let i = 1;
+  while (i < pts.length - 1 && cum[i] < done) i++;
+  const seg = cum[i] - cum[i - 1];
+  const k = seg ? Math.min(1, (done - cum[i - 1]) / seg) : 0;
+  const cur = [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k];
+  return { ro, pts, total, dep, arr, now, f, done, cur, past: [...pts.slice(0, i), cur], left: [cur, ...pts.slice(i)], kn: total / ((arr - dep) / 3600000) };
+}
+const nm = (x) => `${Math.round(x).toLocaleString('en-US')} nm`;
+const dm = (v, p, n) => { const a = Math.abs(v); return `${Math.floor(a)}°${String(Math.round((a % 1) * 60)).padStart(2, '0')}′${v >= 0 ? p : n}`; };
+let MAP = null;
+function dropMap() {
+  if (MAP) { MAP.remove(); MAP = null; }
+  delete document.documentElement.dataset.map;
+}
+function drawMap(r, sh) {
+  dropMap();
+  const el = $('#routeMap');
+  if (!el || !window.L) return;
+  const map = L.map(el, { scrollWheelZoom: false, dragging: !L.Browser.mobile, tap: false, zoomSnap: 0.25, attributionControl: true });
+  MAP = map;
+  document.documentElement.dataset.map = 'loading';
+  // CARTO 무료 타일은 이제 API 키가 필요해(키 없이 받으면 'API KEY REQUIRED' 그림) Esri 어두운 회색 바탕을 쓴다.
+  const tiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    minZoom: 3, maxZoom: 10,
+    attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a> — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  });
+  tiles.on('load', () => { if (MAP === map) document.documentElement.dataset.map = 'ready'; });
+  tiles.addTo(map);
+  map.attributionControl.setPrefix(false);
+  L.polyline(r.left, { color: '#8fa6c2', weight: 2, opacity: 0.9, dashArray: '3 7', lineCap: 'round', interactive: false }).addTo(map);
+  L.polyline(r.past, { color: '#58a6ff', weight: 3, opacity: 0.95, lineCap: 'round', interactive: false }).addTo(map);
+  const port = (pos, fill, label) => L.circleMarker(pos, { radius: 6, color: '#0b1626', weight: 2, fillColor: fill, fillOpacity: 1, interactive: false })
+    .bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -8], className: 'rt-label' }).addTo(map);
+  port(r.ro.from.pos, '#2fbf71', r.ro.from.en);
+  port(r.ro.to.pos, '#ef5a5a', r.ro.to.en);
+  L.marker(r.cur, { icon: L.divIcon({ className: 'rt-ship', html: '<i class="ti ti-ship"></i>', iconSize: [30, 30], iconAnchor: [15, 15] }), keyboard: false, title: `${sh.name} 현재 위치(가상)` }).addTo(map);
+  map.fitBounds(L.latLngBounds(r.pts), { paddingTopLeft: [64, 54], paddingBottomRight: [64, 30] });
+}
+function routePanel(sh, r) {
+  const ro = r.ro;
+  const sail = r.f <= 0 ? ['plan', '출항 전'] : r.f >= 1 ? ['done', '입항'] : ['cur', '항해 중'];
+  const rows = [
+    { st: 'done', t: r.dep, kind: '출항', title: ro.from.name, sub: `${ro.from.en} · ${ro.from.cc}`, badge: ['ok', '출항'] },
+    { st: 'now', t: r.now, kind: '현재 위치', title: `${dm(r.cur[0], 'N', 'S')} ${dm(r.cur[1], 'E', 'W')}`, sub: `평균 ${r.kn.toFixed(1)} kn · ${DEMO.on ? '시연' : '가상'} 시각 기준`, badge: [sail[0] === 'cur' ? 'todo' : sail[0] === 'done' ? 'ok' : 'plan', sail[1]], d: r.done },
+    { st: 'plan', t: r.arr, kind: '입항', title: sh.port, sub: `${ro.to.en} · ${ro.to.cc}`, badge: ['plan', '입항 예정'], d: r.total - r.done },
+    { st: 'due', t: KDATE(sh.due), kind: '출입국 보고 마감', title: '입항 2시간 전', sub: `남은 시간 ${remain(r.now, KDATE(sh.due))}`, badge: ['due', '마감'] },
+  ];
+  return `<div class="panel rt-panel"><div class="panel-head"><h3>항로</h3><span class="small muted">${h(ro.from.name)} → ${h(sh.port)} · 총 ${nm(r.total)}${info('지도·출항 시각·현재 위치는 화면 표시용 가상 데이터입니다. 거리는 경유점 기준 대권거리 합, 현재 위치는 출항~입항 사이 선형 보간.')}</span></div>
+    <div class="rt-grid"><div class="rt-map-wrap"><div id="routeMap" class="rt-map" role="img" aria-label="${h(ro.from.name)}에서 ${h(sh.port)}까지 항로 지도. 진행 ${Math.round(r.f * 100)}%"></div></div>
+    <div class="rt-side"><div class="rt-prog"><span>진행 <b>${Math.round(r.f * 100)}%</b></span><span class="muted">${nm(r.done)} / ${nm(r.total)}</span><div class="rt-bar"><i style="width:${(r.f * 100).toFixed(1)}%"></i></div></div>
+    <ol class="rt-itin">${rows.map((x) => `<li class="rt-${x.st}"><span class="rt-t">${mdw(x.t)}<b>${hhmm(x.t)}</b></span><span class="rt-dot" aria-hidden="true"></span>
+      <span class="rt-b"><span class="rt-k">${h(x.kind)}<span class="st-badge ${x.badge[0]}">${x.badge[1]}</span></span><b>${h(x.title)}</b><span class="rt-sub">${h(x.sub)}</span></span>
+      <span class="rt-d">${x.d != null ? nm(x.d) : ''}</span></li>`).join('')}</ol></div></div></div>`;
+}
+
 // ---- 항차 개요: 명부 버전 타임라인 ----
 function renderShip() {
   const sh = curShip();
@@ -935,8 +1008,12 @@ function renderShip() {
     <span class="it-t">${e.t ? `${mdw(e.t)}<b>${hhmm(e.t)}</b>` : '—'}</span><span class="it-dot" aria-hidden="true"></span>
     <span class="it-b"><b>${h(e.title)}</b><span class="st-badge ${B[e.st][0]}">${B[e.st][1]}</span>${e.meta ? `<span class="it-meta">${h(e.meta)}</span>` : ''}</span>
     <span class="it-a">${e.mail ? `<button type="button" class="btn btn-sm btn-ghost-secondary" data-open-mail="${e.mail}" aria-label="${h(e.title)} 메일 보기" title="메일 보기"><i class="ti ti-mail" aria-hidden="true"></i></button>` : ''}${e.act || ''}</span></li>`).join('')}</ol>`;
+  const route = routeOf(sh);
+  dropMap();
   $('#pg-ship').innerHTML = `<p class="ov-line"><i class="ti ti-anchor" aria-hidden="true"></i> ${h(sh.port)} 입항 <b>${h(sh.eta)}</b><span class="muted"> · 선원 ${shipReport(sh).B.rows.length}명 · ${h(sh.operator)} · ${h(sh.flag)}</span></p>
+    ${route ? routePanel(sh, route) : ''}
     <div class="panel"><div class="panel-head"><h3>명부 버전</h3></div><div class="panel-body">${tl}</div></div>`;
+  if (route) drawMap(route, sh);
 }
 
 // ---- 선사 문의 ----

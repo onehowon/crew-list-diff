@@ -943,3 +943,52 @@ details.law-fold { margin-top: 24px; }
 @media (max-width: 1280px) { .sys-layout { background: linear-gradient(to right, #fff 59px, var(--line) 59px, var(--line) 60px, transparent 60px, transparent calc(100% - 340px), var(--line) calc(100% - 340px), #fff calc(100% - 339px)); } }
 @media (max-width: 1100px) { .sys-layout { background: linear-gradient(to right, #fff 55px, var(--line) 55px, var(--line) 56px, transparent 56px, transparent calc(100% - 300px), var(--line) calc(100% - 300px), #fff calc(100% - 299px)); } }
 @media (max-width: 900px) { .sys-layout { background: none; } }
+
+/* ---- 항차 개요: 항로 지도 + 일정 ---- */
+.rt-panel { margin-bottom: 14px; overflow: hidden; }
+.rt-grid { display: grid; grid-template-columns: minmax(0, 58fr) minmax(0, 42fr); }
+.rt-map-wrap { background: #0c1a2c; min-width: 0; position: relative; z-index: 0; isolation: isolate; }
+.rt-map { height: 100%; min-height: 360px; background: #0c1a2c; font-family: inherit; }
+.rt-map .leaflet-tile-pane { filter: sepia(.5) hue-rotate(178deg) saturate(2.6) brightness(1.12); }
+.rt-map .leaflet-control-attribution { background: rgba(9, 20, 36, .72); color: #8fa3bb; font-size: 10px; }
+.rt-map .leaflet-control-attribution a { color: #b4c6dc; }
+.rt-map .leaflet-bar { border: 0; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); }
+.rt-map .leaflet-bar a { background: #15283f; color: #cfdbe9; border-bottom-color: #23395a; }
+.rt-map .leaflet-bar a:hover { background: #1d3554; color: #fff; }
+.rt-label { background: rgba(9, 20, 36, .82); border: 1px solid #2a4566; color: #dce6f2; font-size: 11px; font-weight: 600; letter-spacing: .03em; padding: 2px 6px; border-radius: 4px; box-shadow: none; }
+.rt-label::before { display: none; }
+.rt-ship { display: grid; place-items: center; border-radius: 50%; background: #58a6ff; color: #0b1626; font-size: 17px; box-shadow: 0 0 0 4px rgba(88, 166, 255, .28), 0 0 14px rgba(88, 166, 255, .55); }
+.rt-side { padding: 14px 16px; min-width: 0; border-left: 1px solid var(--line); }
+.rt-prog { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-size: 13px; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.rt-prog b { font-size: 15px; }
+.rt-bar { flex-basis: 100%; height: 6px; border-radius: 3px; background: #e7ecf2; overflow: hidden; }
+.rt-bar i { display: block; height: 100%; background: linear-gradient(90deg, #1d4471, #58a6ff); border-radius: 3px; }
+.rt-itin { list-style: none; margin: 4px 0 0; padding: 0; }
+.rt-itin li { display: grid; grid-template-columns: 62px 12px minmax(0, 1fr) auto; gap: 10px; align-items: start; position: relative; padding: 10px 0; }
+.rt-itin li + li { border-top: 1px solid var(--borderColor-muted, #eef1f5); }
+.rt-itin li::before { content: ""; position: absolute; left: 77px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.rt-itin li:first-child::before { top: 18px; }
+.rt-itin li:last-child::before { bottom: calc(100% - 18px); }
+.rt-t { display: grid; text-align: right; font-size: 11.5px; color: #7a8899; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.rt-t b { font-size: 14px; color: var(--ink); }
+.rt-dot { position: relative; z-index: 1; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; border: 2px solid #c9d3df; background: #fff; }
+.rt-done .rt-dot { background: #2fbf71; border-color: #2fbf71; }
+.rt-now .rt-dot { background: #58a6ff; border-color: #1f6feb; box-shadow: 0 0 0 3px #cfe0ff; }
+.rt-plan .rt-dot { border-color: #ef5a5a; }
+.rt-due .rt-dot { border-color: var(--c-suspect, #cf222e); }
+.rt-b { display: grid; gap: 1px; min-width: 0; }
+.rt-k { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #6b7a8d; }
+.rt-k .st-badge { font-size: 10.5px; padding: 0 6px; }
+.rt-b b { font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rt-due .rt-b b { color: var(--c-suspect, #cf222e); }
+.rt-sub { font-size: 12px; color: #6b7a8d; overflow-wrap: anywhere; }
+.rt-d { font-size: 12.5px; font-weight: 600; color: #3b4f68; white-space: nowrap; padding-top: 2px; font-variant-numeric: tabular-nums; }
+@media (max-width: 1100px) {
+  .rt-grid { grid-template-columns: minmax(0, 1fr); }
+  .rt-map { min-height: 300px; }
+  .rt-side { border-left: 0; border-top: 1px solid var(--line); }
+}
+@media (max-width: 600px) {
+  .rt-map { min-height: 240px; height: 240px; }
+  .rt-side { padding: 12px 12px; }
+}

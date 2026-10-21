@@ -16,6 +16,7 @@ const SCENES = [
   { name: '0-ships', q: '', mobile: true },
   { name: '0-ship', q: 'view=ship', mobile: true },
   { name: '0-voyage-overview', q: 'voyage=hanbit&tab=overview&mail=in-hanbit', mobile: true },
+  { name: '0-voyage-overview-other', q: 'voyage=haeun&tab=overview' },
   { name: '0-voyage-crew', q: 'voyage=hanbit&tab=crew', mobile: true },
   { name: '0-voyage-other', q: 'voyage=gaon&tab=crew&step=3' },
   { name: '0-mail-tab', q: 'voyage=hanbit&tab=mail&mail=in-hanbit', mobile: true, desktop: false },
@@ -65,7 +66,7 @@ const LAYOUT_CHECK = `(() => {
   const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
   let off = 0;
   for (const el of document.querySelectorAll('main *, header *, aside *, nav *, .vtabs *')) {
-    if (!visible(el) || el.closest('.table-wrap, pre, textarea, .mail-view, details:not([open])')) continue;
+    if (!visible(el) || el.closest('.table-wrap, pre, textarea, .mail-view, details:not([open]), .leaflet-pane')) continue;
     const r = el.getBoundingClientRect();
     if (r.right > W + 1 && off++ < 5) out.push('화면 밖: ' + el.tagName.toLowerCase() + '.' + [...el.classList].join('.') + ' 「' + (el.textContent || '').trim().slice(0, 20) + '」 ' + Math.round(r.right - W) + 'px');
   }
@@ -119,7 +120,7 @@ async function main() {
       await tab.send('Emulation.setDeviceMetricsOverride', { width: v.width, height: v.height, deviceScaleFactor: v.deviceScaleFactor || 1, mobile: !!v.mobile });
       await tab.send('Page.navigate', { url: `${BASE}?${shot.q}` });
       let ready = false;
-      for (let i = 0; i < 200 && !ready; i++) { await sleep(100); ready = await tab.evaluate(`document.documentElement.dataset.ready === '1' && document.fonts.status === 'loaded'`); }
+      for (let i = 0; i < 200 && !ready; i++) { await sleep(100); ready = await tab.evaluate(`document.documentElement.dataset.ready === '1' && document.fonts.status === 'loaded' && document.documentElement.dataset.map !== 'loading'`); }
       if (!ready) errors.push(`${shot.file}: 준비 신호 없음`);
       await sleep(300);
       for (const x of (await tab.evaluate(LAYOUT_CHECK)) || []) problems.push(`${shot.file}: ${x}`);
