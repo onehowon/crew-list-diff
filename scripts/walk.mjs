@@ -20,8 +20,8 @@ await send('Page.navigate', { url: BASE });
 for (let i = 0; i < 100; i++) { await sleep(100); if (await ev(`document.documentElement.dataset.ready==='1'`)) break; }
 const state = async (tag) => {
   const s = await ev(`(()=>{const m=document.querySelector('main')||document.body; const txt=(m.innerText||'').trim(); const bar=document.querySelector('[class*=demo]'); return {len: txt.length, head: txt.slice(0,80).replace(/\\n/g,' / '), active: document.querySelector('[aria-current=page], .active')?.innerText?.split('\\n')[0]}})()`);
-  if (errs.length || s.len < 300) TOTAL++;
-  console.log(tag, JSON.stringify(s), errs.length ? 'ERR ' + errs.splice(0).join(' | ') : '', s.len < 300 ? '본문 비어 있음' : '');
+  if (errs.length || s.len < 80) TOTAL++;
+  console.log(tag, JSON.stringify(s), errs.length ? 'ERR ' + errs.splice(0).join(' | ') : '', s.len < 80 ? '본문 비어 있음' : '');
   const png = await send('Page.captureScreenshot', { format: 'png' }); writeFileSync(join(OUT, tag + '.png'), Buffer.from(png.result.data, 'base64'));
 };
 const click = async (re) => ev(`(()=>{const b=[...document.querySelectorAll('button,a')].filter(x=>x.offsetParent&&${re}.test(x.innerText.trim())); if(!b.length) return 'none'; b[0].click(); return b[0].innerText.trim();})()`);

@@ -10,9 +10,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <!-- Pretendard 1.3.9 (OFL) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="app.css?v=202610211536">
+<link rel="stylesheet" href="app.css?v=202610211550">
 <link rel="icon" href="data:,">
-<script type="module" src="app.js?v=202610211536"></script>
+<script type="module" src="app.js?v=202610211550"></script>
 </head>
 <body>
 <a class="skip-link" href="#main">본문 바로가기</a>
@@ -22,7 +22,7 @@
     <span class="brand-mark" aria-hidden="true"><i class="ti ti-file-diff"></i></span>
     <span class="brand-name">CrewDiff</span>
     <span class="brand-sub">선원명부 변경대조</span>
-    <span class="brand-tag">데모</span>
+    <span class="brand-tag" title="모든 인물·선박·번호·메일은 가상입니다. 신고를 전송하지 않습니다.">데모</span>
   </div>
   <span class="sys-spacer"></span>
   <button type="button" class="btn btn-sm sys-demo-btn" data-act="demo-start"><i class="ti ti-player-play" aria-hidden="true"></i><span class="lbl"> 시연 시작</span></button>
@@ -38,14 +38,13 @@
     <section id="pg-ship" class="tab-panel" hidden></section>
     <section id="pg-work" class="tab-panel" hidden>
       <div id="pgHead"></div>
-      <div id="voyage"></div>
       <ol class="stepper" id="stepper" aria-label="처리 단계"></ol>
       <div id="stepBody"></div>
     </section>
     <section id="pg-inquiry" class="tab-panel" hidden></section>
     <section id="tab-eval" class="tab-panel" hidden></section>
     <section id="tab-scope" class="tab-panel" hidden></section>
-    <footer class="app-footer">CrewDiff PoC · 해운 AX 공모전 출품용 개념 검증 · 모든 인물·선박·번호·메일은 가상 · 신고를 전송하지 않음 · MIT License</footer>
+    <footer class="app-footer">CrewDiff PoC · 모든 인물·선박·메일은 가상 · 신고 전송 없음</footer>
   </main>
 </div>
 <div id="toast" class="arrive-toast" role="status" aria-live="polite" hidden></div>

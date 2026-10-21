@@ -1,21 +1,23 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js?v=202610211536';
-import { compareCrewLists } from './lib/engine.js?v=202610211536';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211536';
-import { colLetter, splitRows } from './lib/parse.js?v=202610211536';
-import { CLASS_LABEL } from './lib/classify.js?v=202610211536';
-import { RULES } from './lib/rules.js?v=202610211536';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211536';
-import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211536';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211536';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211536';
-import { DEMO_KID } from './lib/demo-key.js?v=202610211536';
-import { decodeJws, b64uJson } from './lib/jose.js?v=202610211536';
-import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js?v=202610211536';
+import { SCENARIOS } from './data/scenarios.js?v=202610211550';
+import { compareCrewLists } from './lib/engine.js?v=202610211550';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211550';
+import { colLetter, splitRows } from './lib/parse.js?v=202610211550';
+import { CLASS_LABEL } from './lib/classify.js?v=202610211550';
+import { RULES } from './lib/rules.js?v=202610211550';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211550';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211550';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211550';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211550';
+import { DEMO_KID } from './lib/demo-key.js?v=202610211550';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610211550';
+import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js?v=202610211550';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const params = new URLSearchParams(location.search);
+// 꼭 필요한 설명만 ⓘ 툴팁으로
+const info = (text) => (text ? `<span class="info" tabindex="0" role="img" title="${h(text)}" aria-label="${h(text)}"><i class="ti ti-info-circle" aria-hidden="true"></i></span>` : '');
 
 const STEPS = [
   { title: '자료 받기', sub: '최초본·수정본·메일' },
@@ -120,42 +122,13 @@ function renderStepper() {
     const n = i + 1;
     const cur = n === state.step;
     const done = n < state.step;
-    return `<li class="${done ? 'done' : ''}" ${cur ? 'aria-current="step"' : ''}><button type="button" data-step="${n}" ${canGo(n) ? '' : 'disabled'}><span class="num">${done ? '<i class="ti ti-check"></i>' : n}</span><span><span class="st-title">${n}. ${s.title}</span><span class="st-sub">${s.sub}</span></span></button></li>`;
+    return `<li class="${done ? 'done' : ''}" ${cur ? 'aria-current="step"' : ''}><button type="button" data-step="${n}" ${canGo(n) ? '' : 'disabled'}><span class="num">${done ? '<i class="ti ti-check"></i>' : n}</span><span class="st-title" title="${s.sub}">${s.title}</span></button></li>`;
   }).join('');
-}
-
-function voyageBar() {
-  const sc = SCENARIOS[state.scenario - 1];
-  const ctx = sc?.ctx || {};
-  const hd = state.report?.B.header || {};
-  const pend = state.report ? pendingItems(state.report, state.decisions).length : 0;
-  let status = ['대조 전', 'idle'];
-  if (state.report && state.report.blocked) status = ['명부 판독 실패 · 사람 검토', 'bad'];
-  else if (state.step === 4 && pend) status = [`선사 문의 ${pend}건 · 선장 회신 대기`, 'wait'];
-  else if (state.step === 4) status = ['확정', 'ok'];
-  else if (state.report) status = ['대조·결정 중', 'work'];
-  const t = (cls, label, sub) => `<li class="${cls}"><span class="dot"></span><b>${label}</b><span>${h(sub || '')}</span></li>`;
-  const v1 = state.scenario === 5 ? '기준본' : '최초본 V1';
-  const v2 = state.scenario === 5 ? '회신 + V3' : '수정본 V2 + 메일';
-  return `<section class="voyage" aria-label="항차 정보">
-    <div class="v-main">
-      <div class="v-ship"><i class="ti ti-anchor v-icon" aria-hidden="true"></i>${h(curShip().name)} <span class="v-voy">V.${h(curShip().voy)}</span></div>
-      <div class="v-meta">${h(curShip().port)} 입항 <b>${h(curShip().eta)}</b> · 출입국 보고 마감 <b>${h(curShip().due)}</b> <span class="muted">(입항 2시간 전)</span></div>
-    </div>
-    <ol class="v-timeline">
-      ${t('done', v1, (ctx.v1 || '').replace(/\s*(최초본|기준본).*$/, ''))}
-      ${t(state.step === 4 ? 'done' : 'cur', v2, ctx.at)}
-      ${t(state.step === 4 ? (pend ? 'cur wait' : 'done ok') : '', pend && state.step === 4 ? '확인 요청 → 회신 대기' : '확정 명부', state.step === 4 ? (pend ? `${pend}건` : '모두 결정') : '')}
-    </ol>
-    <span class="v-status ${status[1]}">${status[0]}</span>
-  </section>
-  ${ctx.situation ? `<p class="situation"><b>상황</b> ${h(ctx.situation)}</p>` : ''}`;
 }
 
 function render() {
   const isReport = state.page === 'report';
   $('#pgHead').innerHTML = pageHead(isReport ? 'report' : 'compare') + (isReport ? agencyPanel() : '');
-  $('#voyage').innerHTML = voyageBar();
   renderStepper();
   const body = $('#stepBody');
   if (isReport && (!state.report || state.report.blocked || !allDecided())) {
@@ -200,13 +173,13 @@ function mailBodyHtml(body, ai) {
 function aiReadHtml(n, mail, rep) {
   const ai = aiFor(n, mail);
   if (!ai) {
-    return `<div class="ai-read rule"><div class="ai-read-head"><i class="ti ti-list-check" aria-hidden="true"></i><b>메일 해석: 규칙 방식</b><span class="small muted">${SCENARIOS[n - 1] && mail !== SCENARIOS[n - 1].mail ? '메일을 직접 고쳐 AI 결과가 없으므로 규칙 방식으로 읽었습니다' : '이 메일은 규칙 방식으로 읽었습니다'}</span></div></div>`;
+    return `<div class="ai-read rule"><div class="ai-read-head"><i class="ti ti-list-check" aria-hidden="true"></i><b>메일 해석: 규칙 방식</b>${info(SCENARIOS[n - 1] && mail !== SCENARIOS[n - 1].mail ? '메일을 직접 고쳐 AI 결과가 없으므로 규칙 방식으로 읽었습니다' : '')}</div></div>`;
   }
   const rows = ai.instructions.map((it) => `<li><span class="ai-st ${it.apply ? 'on' : 'off'}">${it.apply ? '반영함' : `반영 안 함 · ${h(AI_REASON[it.not_applied_reason] || it.not_applied_reason || '')}`}</span>
     <span class="ai-what"><b>${h(AI_TYPE[it.type] || it.type)}</b> ${h(it.person || '')}${it.field ? ` · ${h(FIELD[it.field]?.ko || it.field)}` : ''}${it.value ? ` → <span class="mono">${h(it.value)}</span>` : ''}</span>
     <span class="ai-ev">“${h(it.evidence || '')}”</span></li>`).join('');
   const extra = (rep?.noticeWarnings || []).filter((w) => /근거 문장|특정하지/.test(w));
-  return `<div class="ai-read"><div class="ai-read-head"><i class="ti ti-sparkles" aria-hidden="true"></i><b>AI가 읽은 요청 ${ai.instructions.length}건</b><span class="small muted">미리 실행한 결과${AI.meta?.model ? ` · ${h(AI.meta.model)}` : ''} · 판정은 엔진 규칙이 하고, 근거 문장이 원문에 있는지 확인함</span></div>
+  return `<div class="ai-read"><div class="ai-read-head"><i class="ti ti-sparkles" aria-hidden="true"></i><b>AI가 읽은 요청 ${ai.instructions.length}건</b>${info(`미리 실행한 결과${AI.meta?.model ? ` · ${AI.meta.model}` : ''}. 판정은 엔진 규칙이 하고, 근거 문장이 원문에 있는지 확인합니다.`)}</div>
     ${rows ? `<ul class="ai-list">${rows}</ul>` : '<p class="small muted" style="margin:6px 0 0">반영할 요청 없음</p>'}${extra.length ? `<ul class="warn-list">${extra.map((w) => `<li>${h(w)}</li>`).join('')}</ul>` : ''}</div>`;
 }
 
@@ -219,10 +192,6 @@ function step1() {
   const box = (key, title, sub) => `<div class="panel"><div class="panel-head"><h3>${title}</h3><span class="muted small">${sub}</span></div><textarea class="mono" data-input="${key}" spellcheck="false" aria-label="${title}">${h(state.inputs[key])}</textarea></div>`;
   const others = SCENARIOS.map((x) => `<button type="button" class="case" data-scenario="${x.id}" aria-pressed="${x.id === state.scenario}"><b>${x.id}</b> ${h(x.title)} <span class="muted small">${h(shipOfScenario(x.id).name)}</span></button>`).join('');
   return `
-  ${state.scenario === 2 && !state.rebased ? `<div class="intro">
-    <div><p class="intro-lead">수정본이 오면, 바뀐 곳 가운데 <b>사람이 꼭 봐야 할 곳</b>만 근거와 함께 골라 줍니다.</p>
-    <p class="intro-sub"><span class="cls suspect">오류 의심</span> 규칙에 걸린 변경 &nbsp; <span class="cls check">확인 필요</span> 근거 없는 변경 &nbsp; <span class="cls expected">예상된 변경</span> 메일에 근거 있음</p></div>
-  </div>` : ''}
   <div class="inbox">
     <div class="mail">
       <div class="mail-head">
@@ -234,21 +203,20 @@ function step1() {
       <div class="attachments">${file('a', state.scenario === 5 ? '기준본 (확정한 결정만 반영)' : '최초본 선원명부', (ctx.v1 || '').replace(/\s*(최초본|기준본).*$/, '') || fmtInfo(state.inputs.a))}${file('b', state.scenario === 5 ? '수정본 V3' : '수정본 선원명부', (ctx.v2 || '').replace(/\s*수정본.*$/, '') || fmtInfo(state.inputs.b))}</div>
     </div>
     <aside class="inbox-side">
-      <div class="side-card"><h3>도구가 할 일</h3><ol class="todo"><li>두 명부를 FAL 5 항목으로 맞추고 같은 사람끼리 짝짓기</li><li>바뀐 곳마다 메일 근거·오류 규칙 찾기</li><li>사람이 볼 곳만 골라 보여 주기</li></ol>
+      <div class="side-card">
         <button type="button" class="btn btn-primary btn-block" data-act="next">변경 대조 결과 보기 →</button>
-        ${state.report ? '' : state.rebased ? '<p class="small muted" style="margin:8px 0 0">기준본이 최초본 칸에 들어갔습니다. 아래 원문 칸에 회신 후 수정본과 회신 메일을 붙여 넣으세요.</p>' : '<p class="small muted" style="margin:8px 0 0">입력을 고쳤습니다 — 누르면 다시 대조합니다.</p>'}</div>
+        ${state.report ? '' : state.rebased ? '<p class="small muted" style="margin:8px 0 0">아래 원문 칸에 회신 수정본·메일을 붙여 넣으세요.</p>' : '<p class="small muted" style="margin:8px 0 0">입력이 바뀌어 다시 대조합니다.</p>'}</div>
       <div class="side-card"><h3>다른 배(사례)</h3><div class="cases">${others}</div></div>
     </aside>
   </div>
-  <details class="raw panel"${state.rebased ? ' open' : ''}><summary>원문 보기 · 직접 붙여 넣기 <span class="muted small">(표는 CSV·엑셀 복사 모두 읽음)</span></summary>
+  <details class="raw panel"${state.rebased ? ' open' : ''}><summary>원문 보기 · 직접 붙여 넣기</summary>
     <div class="inputs">
       ${box('a', state.scenario === 5 ? '기준본' : '최초본 선원명부', fmtInfo(state.inputs.a))}
       ${box('b', '수정본 선원명부', fmtInfo(state.inputs.b))}
       ${box('mail', '메일 원문', '교대 통보·정정 요청·회신')}
     </div>
   </details>
-  ${state.report ? `<details class="raw panel"><summary>FAL 5 항목으로 정리된 명부 보기</summary>${normalizedView()}</details>` : ''}
-  <p class="note"><b>데모 범위:</b> 표는 브라우저에서 실제로 읽습니다. 메일은 AI가 <b>미리 읽어 둔 결과</b>를 기본으로 쓰며(이 화면에서 AI를 새로 호출하지 않음), 엔진이 근거 문장이 원문에 있는지 확인한 뒤 규칙으로 판정합니다. 메일을 직접 고치면 AI 결과가 없으므로 규칙 방식(부정·취소·조건·인용 문장은 지시로 쓰지 않음)으로 읽습니다. 메일 해석 성능은 '평가 결과' 탭에 있습니다.</p>`;
+  ${state.report ? `<details class="raw panel"><summary>정리된 명부 보기</summary>${normalizedView()}</details>` : ''}`;
 }
 
 function normalizedView() {
@@ -311,7 +279,7 @@ function diffPair(a, b) {
 
 function changeText(it) {
   if (it.kind === 'modify' || it.kind === 'standing') {
-    return `<b>${h(FIELD[it.field].ko)}</b> <span class="muted small">${FIELD[it.field].fal}. ${h(FIELD[it.field].en)}</span><br>${it.kind === 'standing' ? `<span class="val-after">${h(valueText(it.after))}</span>` : (() => { const [x, y] = diffPair(valueText(it.before), valueText(it.after)); return `<span class="vals"><span class="val-before">${x}</span><span class="arrow" aria-label="에서">→</span><span class="val-after">${y}</span></span>`; })()}`;
+    return `<b>${h(FIELD[it.field].ko)}</b><br>${it.kind === 'standing' ? `<span class="val-after">${h(valueText(it.after))}</span>` : (() => { const [x, y] = diffPair(valueText(it.before), valueText(it.after)); return `<span class="vals"><span class="val-before">${x}</span><span class="arrow" aria-label="에서">→</span><span class="val-after">${y}</span></span>`; })()}`;
   }
   if (it.kind === 'add') return `<b>명부에 추가</b> <span class="muted small">${h(it.rowB.cells.rank.value)} · ${h(it.rowB.cells.nationality.value)}</span>`;
   if (it.kind === 'remove') return `<b>명부에서 빠짐</b> <span class="muted small">${h(it.rowA.cells.rank.value)}</span>`;
@@ -320,18 +288,20 @@ function changeText(it) {
   return '';
 }
 
+// 근거 한 줄(규칙 코드 없이 짧게)
+const RULE_SHORT = { R1: '헷갈리는 글자', R2: '일·월 뒤바뀜', R3: '성·이름 뒤바뀜', R4: '만료 여권', R5: '중복 행', R6: '빈칸·판독 불가', R7: '형식 틀림', R8: '메일 지시와 다름' };
 function basisText(it) {
   const parts = [];
-  if (it.rules?.length) parts.push(it.rules.map((r) => `${r.title} (${r.id})`).join(', '));
+  if (it.rules?.length) parts.push(it.rules.map((r) => RULE_SHORT[r.id] || r.title).join(', '));
   if (it.directive) parts.push(`메일 ${it.directive.line}번째 줄`);
-  if (!parts.length) parts.push(it.reason);
+  if (!parts.length) parts.push(it.class === 'check' ? '근거 없음' : it.reason);
   return parts.join(' · ');
 }
 
 function step2() {
   const r = state.report;
   const s = r.summary;
-  const stat = (k, label, n, sub) => `<button type="button" class="stat ${k}" data-filter="${k}" aria-pressed="${state.filter === k}"><span class="stat-n">${n}</span><span class="stat-l">${label}</span><span class="stat-s">${sub}</span></button>`;
+  const stat = (k, label, n, sub) => `<button type="button" class="stat ${k}" data-filter="${k}" aria-pressed="${state.filter === k}" title="${sub}"><span class="stat-n">${n}</span><span class="stat-l">${label}</span></button>`;
   const chip = (k, label, n) => `<button type="button" class="chip" data-filter="${k}" aria-pressed="${state.filter === k}"><span class="dot ${k}"></span>${label} <span class="n">${n}</span></button>`;
   const items = sortedItems().filter((it) => state.filter === 'all' || it.class === state.filter);
   let lastPerson = null;
@@ -343,23 +313,21 @@ function step2() {
   }).join('');
   const cos = r.cosmetic.map((c) => `<tr><td>${h(c.person)}</td><td>${h(FIELD[c.field].ko)}</td><td class="mono">${h(c.before.raw)}</td><td class="mono">${h(c.after.raw)}</td><td class="muted">${h(c.before.ref)} · ${h(c.after.ref)}</td></tr>`).join('');
   return `
-  <h2 class="section-title">2. 변경 대조</h2>
-  <p class="section-lead">행 순서와 상관없이 같은 사람끼리 맞춘 뒤, 실제로 바뀐 항목만 보여 줍니다. <b>예상된 변경</b>은 메일에 근거 문장이 있을 때만, <b>오류 의심</b>은 정해 둔 오류 규칙 8가지(문자 혼동, 일·월 뒤바뀜, 메일 지시 미반영 등)에 걸릴 때만, 나머지는 모두 <b>확인 필요</b>입니다. 행을 누르면 두 원문과 근거가 나옵니다.</p>
   <div class="stats">
     ${stat('suspect', '오류 의심', s.suspect, '먼저 확인 · 규칙에 걸림')}
     ${stat('check', '확인 필요', s.check, '근거 없는 변경')}
     ${stat('expected', '예상된 변경', s.expected, '메일 근거 있음 · 근거 보고 반영')}
-    <div class="stat cosmetic"><span class="stat-n">${s.cosmetic}</span><span class="stat-l">표기 차이</span><span class="stat-s">자동 정리 · 경보 안 함</span></div>
+    <div class="stat cosmetic" title="대소문자·공백·날짜 형식 차이. 자동 정리, 경보 안 함"><span class="stat-n">${s.cosmetic}</span><span class="stat-l">표기 차이</span></div>
   </div>
   ${documentAlertBox(r)}${columnAlertBox(r)}
   ${state.scenario === 6 && r.mailReader === 'ai' ? readerCompare() : ''}
   <div class="compare">
     <div>
       <div class="panel">
-        <div class="panel-head"><h3>${state.filter === 'all' ? '바뀐 항목 전체' : CLASS_LABEL[state.filter]} ${items.length}건 <span class="muted small" style="font-weight:400">· 위험한 순서</span></h3>${state.filter === 'all' ? '' : chip('all', '전체 보기', r.items.length)}</div>
+        <div class="panel-head"><h3>${state.filter === 'all' ? '바뀐 항목' : CLASS_LABEL[state.filter]} ${items.length}건</h3>${state.filter === 'all' ? '' : chip('all', '전체 보기', r.items.length)}</div>
         <div class="table-wrap"><table class="grid changes"><thead><tr><th style="width:150px">인물</th><th style="width:96px">분류</th><th>바뀐 항목</th><th style="width:30%">근거</th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="muted">해당하는 변경이 없습니다.</td></tr>'}</tbody></table></div>
       </div>
-      <details class="cosmetic-fold panel"><summary>표기 차이 ${s.cosmetic}건 — 대소문자·공백·날짜 형식·직급 약어 차이(변경으로 세지 않음)</summary>
+      <details class="cosmetic-fold panel"><summary>표기 차이 ${s.cosmetic}건</summary>
         <div class="table-wrap"><table class="grid"><thead><tr><th>인물</th><th>항목</th><th>최초본 원문</th><th>수정본 원문</th><th>위치</th></tr></thead><tbody>${cos || '<tr><td colspan="5" class="muted">없음</td></tr>'}</tbody></table></div>
       </details>
     </div>
@@ -376,11 +344,11 @@ function step2() {
 function readerCompare() {
   const ruleR = compareCrewLists(state.inputs);
   const aiR = state.report;
-  const col = (title, icon, rep, note) => `<div class="rc-col"><div class="rc-head"><i class="ti ${icon}" aria-hidden="true"></i><b>${title}</b><span class="small muted">봐야 할 곳 ${rep.summary.suspect + rep.summary.check}건 · 예상된 변경 ${rep.summary.expected}건</span></div>
-    <ul class="rc-list">${sortedItems(rep).map((it) => `<li><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span> <b>${h(it.person)}</b> <span class="muted small">${it.field ? h(FIELD[it.field].ko) : h(KIND_LABEL[it.kind])} · ${h(it.reason)}</span></li>`).join('')}</ul><p class="small rc-note">${note}</p></div>`;
-  return `<div class="panel reader-compare"><div class="panel-head"><h3>같은 메일, 두 가지 읽기</h3><span class="small muted">한국어 이름·목록형 정정·이전 요청 취소</span></div><div class="rc-grid">
+  const col = (title, icon, rep, note) => `<div class="rc-col"><div class="rc-head"><i class="ti ${icon}" aria-hidden="true"></i><b>${title}</b>${info(note)}<span class="small muted">봐야 할 곳 ${rep.summary.suspect + rep.summary.check}건</span></div>
+    <ul class="rc-list">${sortedItems(rep).map((it) => `<li><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span> <b>${h(it.person)}</b> <span class="muted small">${it.field ? h(FIELD[it.field].ko) : h(KIND_LABEL[it.kind])}</span></li>`).join('')}</ul></div>`;
+  return `<div class="panel reader-compare"><div class="panel-head"><h3>같은 메일, 두 가지 읽기</h3></div><div class="rc-grid">
     ${col('규칙 방식', 'ti-list-check', ruleR, '한국어 이름 "최동현"을 명부의 CHOI DONGHYUN과 잇지 못해 여권번호 정정이 확인 필요로 남고, 메일 줄 단위 경보가 더 생깁니다.')}
-    ${col('AI 해석 (미리 실행한 결과, 기본)', 'ti-sparkles', aiR, '정정은 메일 근거가 있는 예상된 변경이 되고, 취소된 SANTOS 생년월일 요청은 반영하지 않습니다. 그래서 수정본에 들어온 SANTOS 값 변경은 여전히 오류 의심입니다.')}
+    ${col('AI 해석 (기본)', 'ti-sparkles', aiR, '정정은 메일 근거가 있는 예상된 변경이 되고, 취소된 SANTOS 생년월일 요청은 반영하지 않습니다. 그래서 수정본에 들어온 SANTOS 값 변경은 여전히 오류 의심입니다.')}
   </div></div>`;
 }
 
@@ -395,7 +363,7 @@ function rawLineHtml(P, line, col) {
 function detailPanel() {
   const r = state.report;
   const it = r.items.find((x) => x.id === state.selected);
-  if (!it) return '<div class="panel-body muted">왼쪽 표에서 변경을 고르면 두 원문과 근거를 나란히 보여 줍니다.</div>';
+  if (!it) return '<div class="panel-body muted">왼쪽에서 항목을 고르세요.</div>';
   const head = `<div class="panel-head"><h3>${h(it.person)}${it.field ? ` · ${h(FIELD[it.field].ko)}` : ''}</h3><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></div>`;
   const a = it.rowA, b = it.rowB;
   let src = '';
@@ -406,10 +374,9 @@ function detailPanel() {
       const rb = b ? b.cells[f.key].raw : '';
       const diff = it.field ? f.key === it.field || (it.rules || []).some((x) => x.id === 'R3') && (f.key === 'familyName' || f.key === 'givenNames') : false;
       const [da, db] = diff && a && b ? diffPair(ra, rb) : [h(ra), h(rb)];
-      return `<tr class="${diff ? 'diff' : ''}"><th>${f.fal}. ${h(f.ko)}</th><td class="mono">${a ? (ra ? da : '<span class="muted">(빈칸)</span>') : ''}</td><td class="mono">${b ? (rb ? db : '<span class="muted">(빈칸)</span>') : ''}</td></tr>`;
+      return `<tr class="${diff ? 'diff' : ''}"><th>${h(f.ko)}</th><td class="mono">${a ? (ra ? da : '<span class="muted">(빈칸)</span>') : ''}</td><td class="mono">${b ? (rb ? db : '<span class="muted">(빈칸)</span>') : ''}</td></tr>`;
     }).join('');
-    src = `<p class="small" style="margin:0 0 4px"><b>두 원문 나란히</b></p>
-      <table class="src-compare"><thead><tr><th>항목</th><th>${a ? `최초본 ${a.line}행` : '최초본 없음'}</th><th>${b ? `수정본 ${b.line}행` : '수정본 없음'}</th></tr></thead><tbody>${rows}</tbody></table>
+    src = `<table class="src-compare"><thead><tr><th>항목</th><th>${a ? `최초본 ${a.line}행` : '최초본 없음'}</th><th>${b ? `수정본 ${b.line}행` : '수정본 없음'}</th></tr></thead><tbody>${rows}</tbody></table>
       ${a ? `<div class="rawline mono" title="최초본 원문 줄"><span class="muted">최초본 ${a.line}행 │ </span>${rawLineHtml(r.A, a.line, it.before?.col)}</div>` : ''}
       ${b ? `<div class="rawline mono" title="수정본 원문 줄"><span class="muted">수정본 ${b.line}행 │ </span>${rawLineHtml(r.B, b.line, it.after?.col)}</div>` : ''}`;
   }
@@ -429,7 +396,10 @@ function detailPanel() {
   if (it.evidence?.formatAlert) ev += `<p class="small" style="margin:12px 0 0"><b>열 서식 확인 필요</b> · 이 열은 값을 해석하지 못해 원문 문자열로만 비교했습니다. 원문이 바뀌었으므로 확인 필요로 남깁니다.</p>`;
   if (it.class === 'check' && !it.directive && !it.rules?.length && !it.evidence?.formatAlert) ev += `<p class="small" style="margin:12px 0 0"><b>근거</b> · 이 변경을 설명하는 메일 지시도, 위반한 규칙도 없습니다. 근거가 부족하면 기본값은 확인 필요입니다.</p>`;
   const m = it.match ? `<dl class="kv" style="margin-top:12px"><dt>인물 대응</dt><dd>${h({ idNumber: '신분증번호 일치', 'idNumber~confusable': '신분증번호(혼동 문자 무시) 일치', 'name+dob': '성명+생년월일', name: '성명 유사도', 'name(dob 판독 불가)': '성명(생년월일 판독 불가)' }[it.match.method] || it.match.method)} · 신뢰도 ${it.match.confidence.toFixed(2)}</dd><dt>분류 이유</dt><dd>${h(it.reason)}</dd></dl>` : `<dl class="kv" style="margin-top:12px"><dt>분류 이유</dt><dd>${h(it.reason)}</dd></dl>`;
-  return `${head}<div class="panel-body">${src}${ev}${m}</div>`;
+  const lineOf = (row, tag) => (row ? `<span class="muted small">${tag} ${row.line}행</span>` : '');
+  const one = it.kind === 'modify' ? (() => { const [x, y] = diffPair(valueText(it.before), valueText(it.after)); return `<div class="dp-one">${lineOf(a, '최초본')}<span class="mono val-before">${x}</span><span class="arrow" aria-label="에서">→</span><span class="mono val-after">${y}</span>${lineOf(b, '수정본')}</div>`; })() : `<div class="dp-one">${changeText(it)}</div>`;
+  const why = it.directive ? `메일 ${it.directive.line}번째 줄 “${h((t => (t.length > 40 ? `${t.slice(0, 40)}…` : t))(String(it.directive.text || '').trim()))}”` : it.rules?.length ? it.rules.map((x) => `<span title="${h(RULES[x.id].desc)}">${h(RULE_SHORT[x.id] || x.title)}</span>`).join(', ') : h(it.class === 'check' ? '메일 지시도, 걸린 규칙도 없음' : it.reason);
+  return `${head}<div class="panel-body">${one}<p class="dp-why"><span class="muted small">근거</span> ${why}</p><details class="dp-src"><summary>원문 보기</summary><div class="dp-src-body">${src}${ev}${m}</div></details></div>`;
 }
 
 // ---------------- 3단계 ----------------
@@ -438,16 +408,14 @@ function step3() {
   const n = r.items.length;
   const done = r.items.filter((it) => state.decisions[it.id]).length;
   const changedPenaltyFields = [...new Set(r.items.filter((it) => impactOf(it).art100).map((it) => (it.field ? FIELD[it.field].ko : KIND_LABEL[it.kind])))];
-  const impact = Object.values(LAWS).map((l) => `<div class="panel impact"><h3>${h(l.report)}</h3><div class="law">${h(l.law)} ${h(l.article)} · 제출처: ${h(l.agency)}</div><div class="count">이번 변경 <b>${n}건</b>이 첨부 승무원명부에 반영되어야 합니다.</div><details><summary>조문 원문 보기</summary><blockquote>${h(l.quote)}${l.quoteNote ? `<br><span class="muted">(${h(l.quoteNote)})</span>` : ''}</blockquote>${l.formTitle ? `<p class="small muted" style="margin:6px 0 0">${h(l.formLabel)}: ${h(l.formTitle)}</p>` : ''}<p class="small muted" style="margin:6px 0 0">${h(l.version)}</p></details></div>`).join('');
+  const impact = Object.values(LAWS).map((l) => `<div class="panel impact"><h3>${h(l.report)}</h3><div class="law">${h(l.law)} ${h(l.article)} · 제출처: ${h(l.agency)}</div><div class="count">이번 변경 <b>${n}건</b> 반영 필요</div><details><summary>조문 원문 보기</summary><blockquote>${h(l.quote)}${l.quoteNote ? `<br><span class="muted">(${h(l.quoteNote)})</span>` : ''}</blockquote>${l.formTitle ? `<p class="small muted" style="margin:6px 0 0">${h(l.formLabel)}: ${h(l.formTitle)}</p>` : ''}<p class="small muted" style="margin:6px 0 0">${h(l.version)}</p></details></div>`).join('');
   const rows = sortedItems().map((it) => {
     const v = state.decisions[it.id];
     return `<div class="arow"><div><b>${h(it.person)}</b></div><div><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></div><div class="small">${changeText(it)} <span class="muted">· ${h(basisText(it))}</span></div><div class="seg" role="group" aria-label="${h(it.person)} 결정">${['approve', 'keep', 'pending'].map((k) => `<button type="button" data-decide="${it.id}" data-v="${k}" aria-pressed="${v === k}">${DECISION_LABEL[k]}</button>`).join('')}</div></div>`;
   }).join('');
   return `
-  <h2 class="section-title">3. 결정 · 관련 신고</h2>
-  <p class="section-lead">항목마다 <b>수정본 반영</b> · <b>최초본 유지</b>(최초본이 맞다고 확인함) · <b>선사 문의</b>(아직 모름) 중 하나를 정합니다. 선사 문의가 남으면 최종 명부 대신 미확정 검토본과 선사 확인 요청만 만듭니다.<br><span class="small">선원명부는 아래 네 신고에 첨부되는 자료이므로, 확정한 명부는 네 곳 모두에 같게 들어가야 합니다(신고별 요구 차이나 변경신고 필요 여부를 판정하지는 않습니다. 신고 전송도 하지 않습니다).</span></p>
   <div class="panel decide-panel">
-    <div class="panel-head"><h3>항목별 결정</h3>
+    <div class="panel-head"><h3>항목별 결정${info('수정본 반영 · 최초본 유지(최초본이 맞음) · 선사 문의(아직 모름) 중 하나. 선사 문의가 남으면 미확정 검토본만 만듭니다.')}</h3>
       <div class="progress-line"><span>처리 ${done}/${n}</span><span class="bar"><i style="width:${n ? (done / n) * 100 : 100}%"></i></span>
       <button type="button" class="btn btn-sm" data-act="approve-expected">예상된 변경 모두 반영</button>
       <button type="button" class="btn btn-sm" data-act="hold-rest">남은 항목 선사 문의</button></div>
@@ -456,16 +424,16 @@ function step3() {
   </div>
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
-    <label class="small" for="approver">승인자 표시명</label><input id="approver" class="form-control form-control-sm" value="${h(state.approver)}" style="width:160px">
+    <label class="small" for="approver">승인자</label><input id="approver" class="form-control form-control-sm" value="${h(state.approver)}" style="width:160px">
     <span class="spacer"></span>
-    ${allDecided() ? '' : `<span class="small muted">남은 결정 ${n - done}건 — 위의 '예상된 변경 모두 반영', '남은 항목 선사 문의'로 한 번에 정할 수 있습니다</span>`}
+    ${allDecided() ? '' : `<span class="small muted">남은 결정 ${n - done}건</span>`}
     <button type="button" class="btn btn-primary" data-act="next" ${allDecided() ? '' : 'disabled'}>${allDecided() && pendingItems(r, state.decisions).length ? '다음: 선사 문의' : '다음: 신고 준비'}</button>
   </div>
-  <h3 class="sub-title">이 명부가 첨부되는 신고 4가지</h3>
+  <details class="raw panel law-fold"><summary>관련 신고 4가지 · 과태료 조문</summary><div class="law-fold-body">
   <div class="impact-grid">${impact}</div>
-  <div class="panel penalty"><b>출입국관리법 제100조제1항제5호 관련 항목</b> <span class="muted small">— 이번 변경 중 국적·성명·성별·생년월일·여권번호에 해당: ${changedPenaltyFields.length ? h(changedPenaltyFields.join(', ')) : '없음'}</span>
+  <div class="panel penalty"><b>출입국관리법 제100조제1항제5호 관련 항목</b> <span class="muted small">— 이번 변경 중 해당: ${changedPenaltyFields.length ? h(changedPenaltyFields.join(', ')) : '없음'}</span>
     <blockquote>${h(IMMIGRATION_PENALTY.head)}<br>5. ${h(IMMIGRATION_PENALTY.quote)}</blockquote>
-    <p class="small muted" style="margin:6px 0 0">${h(IMMIGRATION_PENALTY.caution)}</p></div>`;
+    <p class="small muted" style="margin:6px 0 0">${h(IMMIGRATION_PENALTY.caution)}</p></div></div></details>`;
 }
 
 // ---------------- 4단계 ----------------
@@ -496,12 +464,10 @@ function step4() {
   const pend = pendingItems(r, state.decisions).length;
   const c = state.conf;
   const tech = (inner, open) => `<details class="tech"${open ? ' open' : ''}><summary class="small">기술 상세 — 위변조 확인(해시·전자서명)</summary><div class="tech-body">${inner}</div></details>`;
-  let conf = `<p class="small" style="margin-top:0">누가 어떤 변경을 반영·유지했는지와 확정 명부를 묶어, 나중에 한 글자라도 바뀌면 알 수 있게 남깁니다(내용이 맞는지를 보증하지는 않음).</p>
-    <button type="button" class="btn btn-primary" data-act="sign"><i class="ti ti-device-floppy"></i> 결정 기록 저장</button>
+  let conf = `<button type="button" class="btn btn-primary" data-act="sign"><i class="ti ti-device-floppy"></i> 결정 기록 저장</button>
     ${tech(`<p class="small muted" style="margin:0">최종 명부 SHA-256 해시 + ECDSA P-256(ES256) 서명. <b>프로토타입은 공개된 데모 키</b>(${DEMO_KID})라 누구나 같은 서명을 만들 수 있으며, 운영 시에는 담당자별 키를 씁니다.</p>`)}`;
   if (pend) {
-    conf = `<div class="alert alert-warning" style="margin:0 0 10px"><b>선사 문의 ${pend}건이 남아 최종 명부와 결정 기록을 만들지 않습니다.</b> 왼쪽은 미확정 검토본입니다(선사 문의 칸은 값 대신 "선사 문의"로 표시).</div>
-    <p class="small">선사 회신을 받으면, 지금 확정한 결정만 반영한 <b>기준본</b>과 회신 후 수정본을 다시 대조합니다. 회신으로 설명되는 변경은 메일 근거가 붙어 '예상된 변경'이 되고, 모든 항목이 정해지면 최종 명부를 만듭니다.</p>
+    conf = `<div class="alert alert-warning" style="margin:0 0 10px"><b>선사 문의 ${pend}건이 남아 결정 기록을 만들지 않습니다.</b>${info('선사 회신을 받으면 확정한 결정만 반영한 기준본과 회신 수정본을 다시 대조합니다.')}</div>
     <div class="row-actions" style="justify-content:flex-start">${state.scenario === 2 ? '<button type="button" class="btn btn-primary" data-act="scenario5"><i class="ti ti-mail-forward"></i> 예시 5: 선장 회신 받아 다시 대조</button>' : ''}<button type="button" class="btn" data-act="rebase">기준본으로 다시 대조(회신 수정본 붙여 넣기)</button></div>`;
   } else if (c) {
     conf = `<div class="saved-line"><i class="ti ti-circle-check" aria-hidden="true"></i><div><b>결정 기록 저장됨</b><div class="small muted">수정본 반영 ${c.payload.counts.approved}건 · 최초본 유지 ${c.payload.counts.kept}건 · ${h(c.payload.approver)} · ${h(c.payload.decidedAt)}</div></div></div>
@@ -514,13 +480,12 @@ function step4() {
   }
   return `
   <h2 class="section-title">${pend ? `미확정 검토본 — 선사 문의 ${pend}건` : '확정 명부 · 결정 기록'}</h2>
-  <p class="section-lead">${pend ? '선사 문의가 남아 있어 미확정 검토본과 선사 확인 요청만 만듭니다.' : '모든 항목이 정해져 FAL 5 순서 확정 명부와, 누가 무엇을 반영·유지했는지 남기는 결정 기록을 만듭니다.'} 기관 시스템 제출 파일이 아니라 담당자 확인용 준비 자료입니다.</p>
   <div class="export-grid">
     <div class="stack">
-      <div class="panel"><div class="panel-head"><h3>${pend ? '미확정 검토본 (최종 명부 아님)' : '확정 명부 (FAL 5 순서 CSV)'}</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono csv">${shipify(h(csv)).replaceAll('선사 문의', '<mark class="pend">선사 문의</mark>')}</pre><p class="small muted" style="margin:8px 0 0">수정본 반영은 수정본 값, 최초본 유지는 최초본 값(승선 제외·하선 유지), 선사 문의는 값 대신 "선사 문의"와 검토 상태 열로 표시합니다.</p></div></div>
+      <div class="panel"><div class="panel-head"><h3>${pend ? '미확정 검토본' : '확정 명부'}</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono csv">${shipify(h(csv)).replaceAll('선사 문의', '<mark class="pend">선사 문의</mark>')}</pre></div></div>
       <div class="panel"><div class="panel-head"><h3>선사에 보낼 확인 요청</h3><button type="button" class="btn btn-sm" data-act="copy-summary">복사</button></div><div class="panel-body"><textarea class="form-control summary mono" id="summary" aria-label="선사에 보낼 확인 요청">${shipify(h(shipperSummary()))}</textarea></div></div>
     </div>
-    <div class="panel"><div class="panel-head"><h3>결정 기록</h3><span class="muted small">${pend ? '선사 문의 해소 후 저장' : '누가 무엇을 반영했는지'}</span></div><div class="panel-body">${conf}</div></div>
+    <div class="panel"><div class="panel-head"><h3>결정 기록${info('누가 무엇을 반영·유지했는지와 확정 명부를 묶어, 나중에 바뀌면 알 수 있게 남깁니다. 내용이 맞는지 보증하지는 않습니다.')}</h3></div><div class="panel-body">${conf}</div></div>
   </div>
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">수정본 대조로</button>
@@ -605,18 +570,18 @@ function renderEval() {
   const llm = mr.find((r) => /근거/.test(r.name)) || mr[mr.length - 1];
   const fh = ev.fin.splits.holdout;
   el.innerHTML = `
-  <h2 class="section-title">평가 결과 — 합성 데이터</h2>
-  <p class="section-lead">가상으로 만든 명부·메일로 시험한 결과입니다. 실제 현장 자료에서는 달라질 수 있습니다.</p>
+  <h2 class="section-title">평가 결과${info('가상으로 만든 명부·메일로 시험한 결과입니다. 실제 현장 자료에서는 달라질 수 있습니다.')}</h2>
   <div class="eval-cards">
-    <div class="eval-card"><i class="ti ti-mail-check" aria-hidden="true"></i><div class="eval-big">${llm.tp}<small>/${llm.gold}건</small></div><div><b>메일 요청을 AI가 맞게 읽음</b><div class="small muted">“하지 말라”, “취소”, 조건부, 이전 메일 인용 같은 함정 문장을 반영으로 잘못 읽은 것 <b>${llm.trapApplied}/${llm.trapTotal}</b></div></div></div>
-    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${pc(fh.baselineIdMail.review.ratio)} <small>→</small> ${pc(fh.engine.review.ratio)}</div><div><b>사람이 하나씩 볼 칸</b><div class="small muted">같은 메일 정보를 준 엑셀식 비교 대비. 놓친 실제 오류는 둘 다 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
-    <div class="eval-card"><i class="ti ti-hand-stop" aria-hidden="true"></i><div class="eval-big small-big">멈춤</div><div><b>처음 보는 외국어 양식은 사람에게 넘김</b><div class="small muted">명부를 읽지 못하면 결정 단계로 가지 못하게 막습니다(시험 60쌍 모두 차단)</div></div></div>
+    <div class="eval-card"><i class="ti ti-mail-check" aria-hidden="true"></i><div class="eval-big">${llm.tp}<small>/${llm.gold}건</small></div><div><b>메일 요청을 AI가 맞게 읽음</b><div class="small muted" title="“하지 말라”, “취소”, 조건부, 이전 메일 인용 같은 함정 문장">함정 문장 오독 ${llm.trapApplied}/${llm.trapTotal}</div></div></div>
+    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${pc(fh.baselineIdMail.review.ratio)} <small>→</small> ${pc(fh.engine.review.ratio)}</div><div><b>사람이 하나씩 볼 칸</b><div class="small muted" title="같은 메일 정보를 준 엑셀식 비교 대비">놓친 실제 오류 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
+    <div class="eval-card"><i class="ti ti-hand-stop" aria-hidden="true"></i><div class="eval-big small-big">멈춤</div><div><b>못 읽는 양식은 사람에게 넘김</b><div class="small muted" title="명부를 읽지 못하면 결정 단계로 가지 못하게 막습니다">시험 60쌍 모두 차단</div></div></div>
   </div>
-  <details class="raw panel eval-more"><summary>시험 방법과 상세 표 보기 <span class="muted small">(메일 해석 비교 · 양식별 시험 · 한계 · 재현 방법)</span></summary><div class="eval-more-body">
+  <div class="panel eval-fin"><div class="panel-head"><h3>엑셀식 비교와 견줌${info('같은 메일 정보를 준 엑셀식 비교와 비교. 이미 결과를 본 홀드아웃을 지금 코드로 다시 잰 참고값입니다.')}</h3></div><div class="panel-body">${finTable}</div></div>
+  <details class="raw panel eval-more"><summary>시험 방법·상세 표 보기</summary><div class="eval-more-body">
   <div class="two-col">
     <div class="panel"><div class="panel-head"><h3>① 메일 해석: 규칙 방식 vs AI</h3><span class="muted small">메일 ${ev.mail.runs[0].mails}통 · 별도 작성자 출제</span></div><div class="panel-body">${mailTable}
       <p class="small" style="margin:8px 0 0">시험지(eval/mail-challenge)는 규칙 파서 코드를 보지 않은 별도 작성자가 명세만 보고 만들었고, 어느 쪽도 실행하기 전에 커밋했습니다. LLM은 정답을 보지 않고 고정 프롬프트로 메일만 읽었습니다(${h(ev.mail.llmMeta?.runner || '')}, ${h(ev.mail.llmMeta?.model || '')}). <b>한계:</b> 출제자와 해석자가 같은 계열 모델이라 문체가 익숙했을 수 있고, 실제 메일이 아닌 합성 102통이며, API 재실행 시 결과가 달라질 수 있습니다. 출력 원본: <code>eval/mail-challenge/llm-*.json</code>. 이 결과는 메일 해석만 잰 것이며, 앱 화면의 메일 해석은 아직 규칙 파서입니다.</p></div></div>
-    <div class="panel"><div class="panel-head"><h3>② 같은 메일 정보를 준 엑셀식 비교와 견줌 (참고값)</h3></div><div class="panel-body">${finTable}
+    <div class="panel"><div class="panel-head"><h3>② 같은 메일 정보를 준 엑셀식 비교와 견줌 (참고값)</h3></div><div class="panel-body">
       <p class="small" style="margin:8px 0 0">기준선3은 단순 대조에 엔진과 <b>같은 메일 지시</b>를 줬습니다. 같은 정보를 주면 놓친 오류는 둘 다 0이고, 엔진의 차이는 <b>개별 검토량</b>(표기 차이·인물 대응·오류 규칙)에서 나옵니다. 이미 결과를 본 홀드아웃을 지금 코드로 다시 잰 값이라 참고값입니다(<code>docs/eval-final.md</code>, H3·H4 포함). H4는 60쌍 모두 문서 차단 → 수동 검토(절감 아님).</p></div></div>
   </div>
   <h3 class="section-title" style="margin-top:24px">개발 과정 기록 — 개발 때 쓰지 않은 시험 세트(홀드아웃)의 첫 측정</h3>
@@ -672,8 +637,12 @@ function renderEval() {
 function renderScope() {
   $('#tab-scope').innerHTML = `
   <h2 class="section-title">범위와 근거</h2>
-  <p class="section-lead">선박대리점이 받은 선원명부와 수정 자료를 FAL 5 항목으로 정리하고, 변경 근거와 확인 필요 항목을 보여 주는 신고자료 준비 도우미입니다.</p>
-  <div class="two-col">
+  <ul class="facts scope-sum">
+    <li><b>하는 일</b> 선원명부 최초본·수정본·메일을 대조해 변경마다 오류 의심 · 확인 필요 · 예상된 변경으로 나누고 근거를 보여 줌</li>
+    <li><b>하지 않는 일</b> 신고 전송, 과태료 대상 판단, 화물목록(FAL 2) 등 다른 서식</li>
+    <li><b>근거</b> 오류 의심 규칙 8가지 · 출입국·세관·항만·검역 법령 원문 · IMO FAL Form 5 항목</li>
+  </ul>
+  <details class="raw panel"><summary>하는 일 · 하지 않는 일 자세히</summary><div class="two-col" style="padding:12px">
     <div class="panel"><div class="panel-head"><h3>하는 일</h3></div><div class="panel-body"><ul class="facts">
       <li>선원명부(IMO FAL Form 5) 최초본·수정본·수정 메일 대조</li>
       <li>행 순서와 무관한 인물 대응(신분증번호 → 성명+생년월일 → 성명)</li>
@@ -687,14 +656,14 @@ function renderScope() {
       <li>과태료·벌칙 대상 여부 판단</li>
       <li>현장 업무시간 절감 주장 — 후속 PoC에서 검증</li>
     </ul></div></div>
-  </div>
-  <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>오류 의심 규칙 (id 고정)</h3></div><div class="panel-body"><table class="grid"><tbody>${Object.values(RULES).map((r) => `<tr><td class="mono" style="width:40px"><b>${r.id}</b></td><td style="width:140px">${h(r.title)}</td><td>${h(r.desc)}</td></tr>`).join('')}</tbody></table>
-  <p class="small muted" style="margin:8px 0 0">분류 우선순위: 값 자체가 잘못된 규칙(R4·R6·R7)은 메일 지시가 있어도 오류 의심 → 메일 지시 값과 일치하면 예상된 변경(R1~R3 모양이어도) → 지시 값과 다르면 R8 → R1~R3 → 나머지 확인 필요.</p></div></div>
-  <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>법령 근거 (law.go.kr 원문 XML에서 글자 그대로 인용)</h3></div><div class="panel-body">
+  </div></details>
+  <details class="raw panel"><summary>오류 의심 규칙 8가지</summary><div class="panel-body"><table class="grid"><tbody>${Object.values(RULES).map((r) => `<tr><td class="mono" style="width:40px"><b>${r.id}</b></td><td style="width:140px">${h(r.title)}</td><td>${h(r.desc)}</td></tr>`).join('')}</tbody></table>
+  <p class="small muted" style="margin:8px 0 0">분류 우선순위: 값 자체가 잘못된 규칙(R4·R6·R7)은 메일 지시가 있어도 오류 의심 → 메일 지시 값과 일치하면 예상된 변경(R1~R3 모양이어도) → 지시 값과 다르면 R8 → R1~R3 → 나머지 확인 필요.</p></div></details>
+  <details class="raw panel"><summary>법령 근거 (law.go.kr 원문 인용)</summary><div class="panel-body">
     ${Object.values(LAWS).map((l) => `<div class="law-cite"><b>${h(l.law)} ${h(l.article)}</b> <span class="muted small">${h(l.version)}</span><blockquote style="margin:4px 0 0;padding:6px 10px;border-left:3px solid var(--borderColor-default);background:var(--bgColor-muted)">${h(l.quote)}</blockquote>${l.quoteNote ? `<p class="small muted" style="margin:2px 0 0">${h(l.quoteNote)}</p>` : ''}</div>`).join('')}
     <div class="law-cite"><b>${h(IMMIGRATION_PENALTY.law)} ${h(IMMIGRATION_PENALTY.article)}</b> <span class="muted small">${h(LAWS.immigration.version)}</span><blockquote style="margin:4px 0 0;padding:6px 10px;border-left:3px solid var(--borderColor-default);background:var(--bgColor-muted)">${h(IMMIGRATION_PENALTY.head)}<br>5. ${h(IMMIGRATION_PENALTY.quote)}</blockquote><p class="small muted" style="margin:2px 0 0">${h(IMMIGRATION_PENALTY.caution)}</p></div>
-  </div></div>
-  <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>IMO FAL Form 5 (Crew List) 항목</h3><span class="muted small">근거: FAL5_DE_2018.pdf</span></div><div class="panel-body"><p class="small" style="margin:0">${[...HEADER_FIELDS, { fal: '6', en: 'No.', ko: '번호' }, ...ROW_FIELDS, { fal: '18', en: 'Date and signature by master, authorized agent or officer', ko: '서명' }].map((f) => `${f.fal}. ${h(f.en)} (${h(f.ko)})`).join(' · ')}</p></div></div>`;
+  </div></details>
+  <details class="raw panel"><summary>IMO FAL Form 5 항목 (FAL5_DE_2018.pdf)</summary><div class="panel-body"><p class="small" style="margin:0">${[...HEADER_FIELDS, { fal: '6', en: 'No.', ko: '번호' }, ...ROW_FIELDS, { fal: '18', en: 'Date and signature by master, authorized agent or officer', ko: '서명' }].map((f) => `${f.fal}. ${h(f.en)} (${h(f.ko)})`).join(' · ')}</p></div></details>`;
 }
 
 // ---------------- 업무 시스템 화면(메뉴) ----------------
@@ -811,14 +780,14 @@ function renderChrome() {
   const sh = curShip();
   const cur = state.page;
   $('#sysNav').innerHTML = `<div class="nav-group">업무</div>
-    <ul class="nav-list">${NAV.map(([k, ic, label, sub], i) => `<li><button type="button" class="nav-item" data-page="${k}" aria-current="${cur === k ? 'page' : 'false'}"><i class="ti ${ic}" aria-hidden="true"></i><span><span class="nav-l">${NUM[i]} ${label}</span><span class="nav-s">${sub}</span></span></button></li>`).join('')}</ul>
-    <div class="nav-ship"><span class="small muted">작업 중인 배</span><b>${h(sh.name)}</b><span class="small">V.${h(sh.voy)} · ${h(sh.port)}</span>${stageBadge(sh.stage)}</div>
+    <ul class="nav-list">${NAV.map(([k, ic, label, sub], i) => `<li><button type="button" class="nav-item" data-page="${k}" aria-current="${cur === k ? 'page' : 'false'}"><i class="ti ${ic}" aria-hidden="true"></i><span class="nav-l" title="${sub}">${NUM[i]} ${label}</span></button></li>`).join('')}</ul>
+    <div class="nav-ship" title="작업 중인 배"><b>${h(sh.name)}</b></div>
     <div class="nav-group">참고</div>
     <ul class="nav-list">
       <li><button type="button" class="nav-item" data-page="eval" aria-current="${cur === 'eval' ? 'page' : 'false'}"><i class="ti ti-chart-bar" aria-hidden="true"></i><span><span class="nav-l">평가 결과</span></span></button></li>
       <li><button type="button" class="nav-item" data-page="scope" aria-current="${cur === 'scope' ? 'page' : 'false'}"><i class="ti ti-scale" aria-hidden="true"></i><span><span class="nav-l">범위·법령 근거</span></span></button></li>
     </ul>
-    <p class="nav-note">모든 인물·선박·메일은 가상입니다. 신고를 전송하지 않습니다.</p>`;
+`;
   const now = sysNow();
   $('#sysClock').innerHTML = `<i class="ti ti-clock" aria-hidden="true"></i><span class="sys-clock-t"><b>${hhmm(now)}</b><span>${mdw(now)} · ${DEMO.on ? '시연 시각' : '가상 시각'}</span></span>`;
   const fresh = Object.values(SHIPST).filter((s) => s.stage === 'new' || (s.hero && s.stage === 'reply')).length;
@@ -845,8 +814,10 @@ const PAGE_INFO = {
 function pageHead(page, actions = '') {
   const sh = curShip();
   const i = NAV.findIndex((x) => x[0] === page);
-  const crumb = page === 'ships' ? '' : `<nav class="pg-crumb" aria-label="위치"><button type="button" data-page="ships">입항 예정 선박</button><i class="ti ti-chevron-right" aria-hidden="true"></i>${page === 'ship' ? `<span>${h(sh.name)} V.${h(sh.voy)}</span>` : `<button type="button" data-page="ship">${h(sh.name)} V.${h(sh.voy)}</button><i class="ti ti-chevron-right" aria-hidden="true"></i><span>${PAGE_INFO[page][0]}</span>`}</nav>`;
-  return `<div class="pg-head">${crumb}<div class="pg-title-row"><h1 class="pg-title"><span class="pg-num">${NUM[i]}</span>${PAGE_INFO[page][0]}${page !== 'ships' ? ` <span class="pg-ship">${h(sh.name)} <span class="muted">V.${h(sh.voy)}</span></span> ${stageBadge(sh.stage)}` : ''}</h1>${actions ? `<div class="pg-actions">${actions}</div>` : ''}</div><p class="pg-lead">${PAGE_INFO[page][1]}</p></div>`;
+  const now = sysNow(), due = KDATE(sh.due);
+  const sit = ['compare', 'report'].includes(page) ? SCENARIOS[state.scenario - 1]?.ctx?.situation : '';
+  const meta = page === 'ships' ? '' : `<span class="pg-ship">${page === 'ship' ? '' : `<button type="button" class="linkish" data-page="ship">${h(sh.name)}</button>`}${page === 'ship' ? h(sh.name) : ''} <span class="muted">V.${h(sh.voy)}</span></span> ${stageBadge(sh.stage)} <span class="pg-due small ${due - now < 12 * 3600e3 ? 'due-soon' : 'muted'}">마감 ${h(sh.due.replace(/\(.\)/, ''))} · ${remain(now, due)} 남음</span>`;
+  return `<div class="pg-head"><div class="pg-title-row"><h1 class="pg-title"><span class="pg-num">${NUM[i]}</span>${PAGE_INFO[page][0]}${info(PAGE_INFO[page][1])}${meta}${info(sit)}</h1>${actions ? `<div class="pg-actions">${actions}</div>` : ''}</div></div>`;
 }
 
 // ---- ① 입항 예정 선박 ----
@@ -859,37 +830,32 @@ function renderShips() {
   const rows = ships.map((sh) => {
     const rep = shipReport(sh);
     const see = rep.summary.suspect + rep.summary.check;
-    const mails = mailsOf(sh);
-    const last = mails[0];
     const due = KDATE(sh.due);
-    const left = remain(now, due);
     const soon = due - now < 12 * 3600e3;
     const pend = sh.sent ? pendingItems(sh.sent.report, sh.sent.decisions).length : 0;
-    const list = {
-      new: `<span><b>수정본 도착</b> · 선원 ${rep.B.rows.length}명</span><span class="muted small">열면 바로 대조</span>`,
-      v2: `<span><b>봐야 할 곳 ${see}건</b> · 바뀐 곳 ${rep.items.length}건</span>${rep.blocked ? '<span class="muted small">판독 실패 · 사람 검토</span>' : `<span class="muted small">오류 의심 ${rep.summary.suspect} · 확인 필요 ${rep.summary.check}</span>`}`,
-      asked: `<span><b>선사 문의 ${pend}건</b> 회신 대기</span><span class="muted small">${sh.sent ? `${hhmm(sh.sent.at)} 확인 요청 보냄` : ''}</span>`,
-      reply: `<span><b>회신 도착</b> · 다시 대조</span><span class="muted small">기준본 ↔ 수정본 V3</span>`,
-      final: `<span><b>확정</b> · 선원 ${rep.B.rows.length}명</span><span class="muted small">신고 자료 준비 가능</span>`,
+    const look = {
+      new: '새 수정본 · 열면 바로 대조',
+      v2: rep.blocked ? '판독 실패 · 사람 검토' : `<b>${see}건</b>`,
+      asked: `선사 회신 대기 · <b>${pend}건</b>`,
+      reply: '<b>회신 도착</b> · 다시 대조',
+      final: '없음 · 신고 준비 가능',
     }[sh.stage];
     const isNew = sh.stage === 'new' || (sh.hero && sh.stage === 'reply');
     return `<li><button type="button" class="ship-row${isNew ? ' fresh' : ''}${sh.key === state.ship ? ' cur' : ''}" data-ship="${sh.key}">
       <span class="c-st">${stageBadge(sh.stage)}</span>
-      <span class="c-ship"><b>${h(sh.name)}</b><span class="muted small">V.${h(sh.voy)} · ${h(sh.operator)}</span></span>
-      <span class="c-eta"><span class="lbl-m">입항 예정</span><b>${h(sh.eta)}</b><span class="muted small">${h(sh.port)}</span></span>
-      <span class="c-due"><span class="lbl-m">출입국 보고 마감</span><b>${h(sh.due.replace(/^\S+\s/, ''))}</b><span class="small ${soon ? 'due-soon' : 'muted'}">${h(sh.due.split(' ')[0])} · ${left} 남음</span></span>
-      <span class="c-list"><span class="lbl-m">명부</span>${list}</span>
-      <span class="c-mail"><span class="lbl-m">최근 메일</span>${isNew ? '<span class="dot-new" aria-label="새 메일"></span>' : ''}<b>${mdw(last.at)} ${hhmm(last.at)}</b><span class="muted small">${last.box === 'out' ? '보냄 · ' : ''}${shipify(h(String(last.from).replace(/\s*<[^>]*>/, '')), sh)}</span></span>
+      <span class="c-ship"><b>${h(sh.name)}</b><span class="muted small">V.${h(sh.voy)}</span></span>
+      <span class="c-eta"><span class="lbl-m">입항</span>${h(sh.eta.replace(/\(.\)/, ''))} <span class="muted small">${h(sh.port)}</span></span>
+      <span class="c-due ${soon ? 'due-soon' : ''}"><span class="lbl-m">마감까지</span>${remain(now, due)}</span>
+      <span class="c-list"><span class="lbl-m">봐야 할 곳</span><span>${look}</span></span>
       <i class="ti ti-chevron-right c-go" aria-hidden="true"></i>
     </button></li>`;
   }).join('');
   $('#pg-ships').innerHTML = `${pageHead('ships')}
-    ${!DEMO.on && !hintSeen() ? `<div class="demo-hint"><i class="ti ti-player-play" aria-hidden="true"></i><div><b>처음 보신다면 ‘시연 시작’을 눌러 보세요.</b> 입항 전날 밤 21:40 수정본 메일이 온 때부터 신고 준비를 마칠 때까지 6장면을 이 화면 위에서 따라갑니다. 시연 없이 왼쪽 메뉴를 바로 눌러 봐도 됩니다.</div><button type="button" class="btn btn-sm btn-primary" data-act="demo-start">시연 시작</button><button type="button" class="btn btn-sm" data-act="hint-close" aria-label="안내 닫기">닫기</button></div>` : ''}
-    <div class="kpis">${kpi(ships.length, '이번 주 입항 예정')}${kpi(cnt((s) => s.stage === 'new'), '새 수정본(받음)', 'new')}${kpi(cnt((s) => s.stage === 'v2' || s.stage === 'reply'), '대조 필요', 'todo')}${kpi(cnt((s) => s.stage === 'asked'), '선사 문의 중', 'wait')}${kpi(cnt((s) => s.stage === 'final'), '확정', 'ok')}</div>
-    <div class="panel ship-list-panel"><div class="panel-head"><h3>입항 예정 · 11/02(월) ~ 11/08(일)</h3><span class="small muted">입항 순 · 출입국 보고 마감은 입항 2시간 전</span></div>
-      <div class="ship-head" aria-hidden="true"><span>상태</span><span>선박명 · 항차</span><span>입항 예정</span><span>출입국 보고 마감</span><span>명부</span><span>최근 메일</span><span></span></div>
-      <ul class="ship-list">${rows}</ul></div>
-    <p class="note small"><b>가상 데이터:</b> 선박·인물·메일은 모두 가상입니다. 다섯 배는 사례 데이터(사례 1·3·4·6과 대표 흐름 사례 2→5)이며, 목록의 배 이름은 화면 표시용입니다. 건수는 각 사례를 이 화면에서 엔진으로 실제로 대조한 값입니다.</p>`;
+    ${!DEMO.on && !hintSeen() ? `<div class="demo-hint"><div>처음이라면 <b>시연 시작</b>으로 6장면을 따라가 보세요.</div><button type="button" class="btn btn-sm btn-primary" data-act="demo-start">시연 시작</button><button type="button" class="btn btn-sm" data-act="hint-close" aria-label="안내 닫기">닫기</button></div>` : ''}
+    <div class="kpis">${kpi(cnt((s) => ['new', 'v2', 'reply'].includes(s.stage)), '대조 필요', 'todo')}${kpi(cnt((s) => s.stage === 'asked'), '선사 문의 중', 'wait')}${kpi(cnt((s) => s.stage === 'final'), '확정', 'ok')}</div>
+    <div class="panel ship-list-panel"><div class="panel-head"><h3>입항 예정 ${ships.length}척${info('입항 순. 마감은 출입국 보고 마감(입항 2시간 전).')}</h3></div>
+      <div class="ship-head" aria-hidden="true"><span>상태</span><span>선박</span><span>입항</span><span>마감까지</span><span>봐야 할 곳</span><span></span></div>
+      <ul class="ship-list">${rows}</ul></div>`;
 }
 
 // ---- ② 선박·항차 상세 ----
@@ -915,7 +881,7 @@ function renderShip() {
   if (at <= 1) todo.push([`수정본 대조 — 봐야 할 곳 ${see2}건`, 'compare', '대조 열기', true]);
   if (at === 2) todo.push([`선사 회신 기다리기 — 문의 ${pend}건`, 'inquiry', '선사 문의', true]);
   if (at === 3) todo.push(['선장 회신 반영해 다시 대조', 'compare', '대조 열기', true]);
-  todo.push([`신고 자료 준비 — 출입국 보고 마감 ${sh.due}`, 'report', '신고 준비', at === 4]);
+  todo.push(['신고 자료 준비', 'report', '신고 준비', at === 4]);
   const mails = mailsOf(sh);
   const sel = mails.find((m) => m.id === state.mail) || mails[0];
   const freshId = sh.stage === 'new' || (sh.hero && sh.stage === 'reply') ? mails[0].id : null;
@@ -923,18 +889,16 @@ function renderShip() {
   $('#pg-ship').innerHTML = `${pageHead('ship', `<button type="button" class="btn btn-primary" data-page="${at === 2 ? 'inquiry' : at === 4 ? 'report' : 'compare'}">${at === 2 ? '<i class="ti ti-mail-question" aria-hidden="true"></i> 선사 문의 보기' : at === 4 ? '<i class="ti ti-file-export" aria-hidden="true"></i> 신고 준비' : '<i class="ti ti-arrows-diff" aria-hidden="true"></i> 수정본 대조 열기'}</button>`)}
     <div class="ship-info panel"><dl>
       <div><dt>입항 예정</dt><dd>${h(sh.port)} · ${h(sh.eta)}</dd></div>
-      <div><dt>출입국 보고 마감</dt><dd>${h(sh.due)} <span class="${KDATE(sh.due) - now < 12 * 3600e3 ? 'due-soon' : 'muted'} small">${remain(now, KDATE(sh.due))} 남음</span></dd></div>
       <div><dt>선원</dt><dd>${rep.B.rows.length}명</dd></div>
       <div><dt>선사 · 기국</dt><dd>${h(sh.operator)} · ${h(sh.flag)}</dd></div>
-      <div><dt>명부 상태</dt><dd>${stageBadge(sh.stage)} <span class="small muted">${STAGE[sh.stage].sub}</span></dd></div>
     </dl></div>
     <div class="ship-grid">
       <div class="stack">
-        <div class="panel"><div class="panel-head"><h3>명부 이력</h3><span class="small muted">최초본 → 수정본 → 확정</span></div><div class="panel-body">${tl}</div></div>
+        <div class="panel"><div class="panel-head"><h3>명부 이력</h3></div><div class="panel-body">${tl}</div></div>
         <div class="panel"><div class="panel-head"><h3>할 일</h3></div><ul class="todo-list">${todo.map(([l, p, b, primary]) => `<li><span>${h(l)}</span><button type="button" class="btn btn-sm${primary ? ' btn-primary' : ''}" data-page="${p}">${b}</button></li>`).join('')}</ul></div>
       </div>
       <div class="ship-mails">
-        <div class="panel mail-box"><div class="panel-head"><h3>관련 메일 ${mails.length}건</h3><span class="small muted">받은·보낸 메일</span></div>
+        <div class="panel mail-box"><div class="panel-head"><h3>관련 메일 ${mails.length}건</h3></div>
           <ul class="rp-mails">${mails.map((m) => `<li><button type="button" data-mailid="${m.id}" aria-pressed="${m.id === sel.id}" class="${m.id === freshId ? 'fresh' : ''}"><span class="rp-from">${m.box === 'out' ? '<i class="ti ti-send" aria-hidden="true"></i> ' : ''}${shipify(h(m.from), sh)}</span><span class="rp-at">${mdw(m.at)} ${hhmm(m.at)}</span><span class="rp-subj">${shipify(h(m.subject), sh)}</span>${m.files ? `<span class="rp-clip"><i class="ti ti-paperclip" aria-hidden="true"></i> ${h(m.files[0])}</span>` : ''}</button></li>`).join('')}</ul></div>
         ${mailView(sel, sh, { fresh: sel.id === freshId, actions: sel.sc ? `<button type="button" class="btn btn-primary" data-page="compare"><i class="ti ti-arrows-diff" aria-hidden="true"></i> ${sel.sc === 5 ? '기준본과 다시 대조' : '첨부 명부 대조하기'}</button>` : '' })}
       </div>
@@ -948,9 +912,9 @@ function inquiryItems(rep, dec) {
 }
 function renderInquiry() {
   const sh = curShip();
-  const all = Object.values(SHIPST).filter((s) => s.sent);
-  const board = `<div class="panel"><div class="panel-head"><h3>문의 현황</h3><span class="small muted">모든 배</span></div>
-    <div class="table-wrap"><table class="grid inq-board"><thead><tr><th>선박 · 항차</th><th>상태</th><th>보낸 시각</th><th>문의</th><th>회신</th></tr></thead><tbody>${all.map((s) => `<tr${s.key === sh.key ? ' class="cur"' : ''}><td><button type="button" class="linkish" data-ship-inq="${s.key}">${h(s.name)} V.${h(s.voy)}</button></td><td>${stageBadge(s.stage)}</td><td>${mdw(s.sent.at)} ${hhmm(s.sent.at)}</td><td>${pendingItems(s.sent.report, s.sent.decisions).length}건</td><td>${s.hero && ['reply', 'final'].includes(s.stage) ? `${hhmm(D.t4)} 도착` : '<span class="muted">대기</span>'}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">보낸 확인 요청이 없습니다.</td></tr>'}</tbody></table></div></div>`;
+  const all = Object.values(SHIPST);
+  const board = `<div class="panel"><div class="panel-head"><h3>문의 현황 (모든 배)</h3></div>
+    <div class="table-wrap"><table class="grid inq-board"><thead><tr><th>선박</th><th>상태</th><th>보낸 시각</th><th>문의</th><th>회신</th></tr></thead><tbody>${all.map((s) => `<tr${s.key === sh.key ? ' class="cur"' : ''}><td><button type="button" class="linkish" data-ship-inq="${s.key}">${h(s.name)}</button></td><td>${stageBadge(s.stage)}</td>${s.sent ? `<td>${mdw(s.sent.at)} ${hhmm(s.sent.at)}</td><td>${pendingItems(s.sent.report, s.sent.decisions).length}건</td><td>${s.hero && ['reply', 'final'].includes(s.stage) ? `${hhmm(D.t4)} 도착` : '<span class="muted">대기</span>'}</td>` : '<td class="muted">—</td><td class="muted">—</td><td class="muted">—</td>'}</tr>`).join('')}</tbody></table></div></div>`;
   let sent;
   const rep = state.report;
   if (sh.sent) {
@@ -961,21 +925,20 @@ function renderInquiry() {
     sent = `<div class="panel"><div class="panel-head"><h3>확인 요청 작성</h3><span class="small muted">선사 문의 ${pendingItems(rep, state.decisions).length}건 · 아직 보내지 않음</span></div><div class="panel-body">
       ${inquiryItems(rep, state.decisions)}
       <textarea class="form-control summary mono" id="summary" aria-label="선사에 보낼 확인 요청" style="margin-top:10px">${shipify(h(shipperSummary()), sh)}</textarea>
-      <div class="row-actions"><span class="small muted">데모: 메일은 실제로 보내지 않고 ‘보낸 메일’에만 기록합니다.</span><span class="spacer"></span><button type="button" class="btn" data-act="copy-summary">복사</button><button type="button" class="btn" data-page="report">미확정 검토본 보기</button><button type="button" class="btn btn-primary" data-act="send-inquiry"><i class="ti ti-send" aria-hidden="true"></i> 확인 요청 보내기</button></div></div></div>`;
+      <div class="row-actions">${info('데모: 실제로 보내지 않고 보낸 메일에만 기록합니다.')}<span class="spacer"></span><button type="button" class="btn" data-act="copy-summary">복사</button><button type="button" class="btn" data-page="report">미확정 검토본 보기</button><button type="button" class="btn btn-primary" data-act="send-inquiry"><i class="ti ti-send" aria-hidden="true"></i> 확인 요청 보내기</button></div></div></div>`;
   } else {
-    const msg = !rep ? '대조 결과가 없습니다.' : rep.blocked ? '명부 판독 실패로 결정할 수 없습니다. 원본 확인이 먼저입니다.' : !allDecided() ? `아직 결정하지 않은 항목이 ${rep.items.filter((it) => !state.decisions[it.id]).length}건 있습니다. 수정본 대조에서 항목마다 수정본 반영 · 최초본 유지 · 선사 문의를 정하면 선사 문의 항목으로 확인 요청을 만듭니다.` : '선사 문의로 둔 항목이 없습니다. 바로 신고 준비로 갈 수 있습니다.';
+    const msg = !rep ? '대조 결과가 없습니다.' : rep.blocked ? '명부 판독 실패로 결정할 수 없습니다. 원본 확인이 먼저입니다.' : !allDecided() ? `결정하지 않은 항목 ${rep.items.filter((it) => !state.decisions[it.id]).length}건. 수정본 대조에서 먼저 정하세요.` : '선사 문의 항목 없음. 바로 신고 준비로 갈 수 있습니다.';
     sent = `<div class="panel"><div class="panel-head"><h3>확인 요청</h3></div><div class="panel-body"><p style="margin:0 0 10px">${msg}</p><button type="button" class="btn btn-primary" data-page="${rep && allDecided() && !rep.blocked ? 'report' : 'compare'}">${rep && allDecided() && !rep.blocked ? '신고 준비로' : '수정본 대조로'}</button></div></div>`;
   }
   let recv;
   if (sh.hero && ['reply', 'final'].includes(sh.stage)) {
     recv = mailView(D.reply, sh, { fresh: sh.stage === 'reply', actions: sh.stage === 'reply' ? '<button type="button" class="btn btn-primary" data-act="reply-compare"><i class="ti ti-arrows-diff" aria-hidden="true"></i> 기준본과 다시 대조</button>' : '<button type="button" class="btn" data-page="report">확정 명부 보기</button>' });
   } else if (sh.sent) {
-    recv = `<div class="panel"><div class="panel-body wait-box"><i class="ti ti-hourglass" aria-hidden="true"></i><div><b>회신 대기 중</b><div class="small muted">보낸 시각 ${hhmm(sh.sent.at)} · 출입국 보고 마감 ${h(sh.due)}까지 ${remain(sysNow(), KDATE(sh.due))}</div></div>
-      ${sh.hero ? '<button type="button" class="btn" data-act="reply-arrive"><i class="ti ti-mail-down" aria-hidden="true"></i> 회신 도착(시연용: 01:15 선장 회신)</button>' : '<span class="small muted">이 사례에는 회신 데이터가 없습니다. 회신 이후 흐름은 대표 배 DEMO HANBIT 3에서 볼 수 있습니다.</span>'}</div></div>`;
+    recv = `<div class="panel"><div class="panel-body wait-box"><i class="ti ti-hourglass" aria-hidden="true"></i><div><b>회신 대기 중</b><div class="small muted">${hhmm(sh.sent.at)} 보냄</div></div>
+      ${sh.hero ? '<button type="button" class="btn" data-act="reply-arrive"><i class="ti ti-mail-down" aria-hidden="true"></i> 회신 도착(시연용: 01:15 선장 회신)</button>' : info('이 사례에는 회신 데이터가 없습니다. 회신 이후 흐름은 DEMO HANBIT 3에서 볼 수 있습니다.')}</div></div>`;
   } else recv = '<div class="panel"><div class="panel-body muted">받은 회신이 없습니다.</div></div>';
   $('#pg-inquiry').innerHTML = `${pageHead('inquiry')}
-    <div class="inq-grid"><div class="stack">${sent}${board}</div><div class="stack"><h2 class="sub-title" style="margin:0">받은 회신</h2>${recv}
-    ${sh.hero ? '<p class="small muted" style="margin:0">회신 후 대조는 지금 확정한 결정만 반영한 기준본과 수정본 V3를 비교합니다(데모의 기준본은 대표 결정 — 예상된 변경 반영, 나머지 선사 문의 — 으로 미리 만든 파일).</p>' : ''}</div></div>`;
+    <div class="inq-grid"><div class="stack">${sent}${board}</div><div class="stack"><h2 class="sub-title" style="margin:0">받은 회신${sh.hero ? info('회신 후 대조는 확정한 결정만 반영한 기준본과 수정본 V3를 비교합니다.') : ''}</h2>${recv}</div></div>`;
 }
 
 // ---- ⑤ 신고 준비: 네 기관 ----
@@ -985,9 +948,9 @@ function agencyPanel() {
   const ready = r && !r.blocked && allDecided() && !pendingItems(r, state.decisions).length;
   const sh = curShip();
   return `<div class="agency-grid">${Object.values(LAWS).map((l) => `<div class="panel agency"><div class="ag-head"><i class="ti ${AGENCY_SHORT[l.id][1]}" aria-hidden="true"></i><b>${AGENCY_SHORT[l.id][0]}</b>${l.id === 'immigration' ? `<span class="small due-soon">마감 ${h(sh.due)}</span>` : ''}</div>
-    <div class="small">${h(l.report)}</div><div class="small muted">제출처: ${h(l.agency)} · ${h(l.law)} ${h(l.article)}</div>
+    <div class="small" title="제출처: ${h(l.agency)} · ${h(l.law)} ${h(l.article)}">${h(l.report)}</div>
     <button type="button" class="btn btn-sm${ready ? ' btn-primary' : ''}" data-act="dl-agency" data-ag="${l.id}" ${ready ? '' : 'disabled'}><i class="ti ti-download" aria-hidden="true"></i> 첨부용 명부 CSV</button></div>`).join('')}</div>
-    <p class="small muted" style="margin:8px 0 16px">${ready ? '네 곳 모두 같은 확정 명부(FAL 5 순서)를 씁니다. ' : '<b>선사 문의 또는 미결정 항목이 남아 있어 내려받을 수 없습니다.</b> '}CrewDiff는 신고를 전송하지 않습니다 — 담당자가 각 기관 신고 시스템에 직접 입력·첨부합니다. 기관별 서식 변환은 하지 않습니다.</p>`;
+    <p class="small muted" style="margin:8px 0 16px">${ready ? '네 곳 모두 같은 확정 명부를 씁니다.' : '<b>선사 문의·미결정 항목이 남아 내려받을 수 없습니다.</b>'}${info('신고는 담당자가 각 기관 시스템에 직접 입력·첨부합니다. 기관별 서식 변환은 하지 않습니다.')}</p>`;
 }
 
 // ---- 시연(현장 재현) ----
@@ -996,13 +959,13 @@ function demoBeats() {
   const see2 = D.r2.summary.suspect + D.r2.summary.check;
   const pend2 = pendingItems(D.r2, D.d2).length, appr2 = D.r2.items.length - pend2;
   return [
-    { scene: 1, t: D.t1, page: 'ships', title: '수정본 메일 도착', toast: 'in-hanbit', adv: (t) => t.dataset.ship === 'hanbit', cap: `입항 전날 밤 ${hhmm(D.t1)}. 선사가 수정본 V2와 함께 “생년월일 1건 정정” 메일을 보냈습니다. 입항 예정 선박 목록에 새 메일이 표시됩니다. 출입국 보고 마감은 내일 아침 ${hhmm(D.due)}.`, setup: () => { heroAt('new'); } },
-    { scene: 1, t: D.t1, page: 'ship', title: '배를 눌러 메일 확인', adv: (t) => t.dataset.page === 'compare', cap: '목록에서 배를 누르면 선박·항차 화면이 열립니다. 명부 이력과 방금 온 메일, AI가 메일에서 읽은 요청(근거 문장 표시)을 봅니다.', setup: () => { heroAt('v2'); state.mail = 'in-hanbit'; } },
-    { scene: 2, t: addMin(D.t1, 2), page: 'compare', title: '열자마자 대조', cap: `‘첨부 명부 대조하기’를 누르면 최초본·수정본·메일을 바로 대조합니다. 요청은 1건인데, 꼭 봐야 할 곳은 ${see2}건입니다. 행을 누르면 두 원문과 근거가 나옵니다.`, setup: () => { heroAt('v2'); state.step = 2; state.filter = 'all'; state.selected = sortedItems()[0]?.id || null; } },
-    { scene: 3, t: D.t3, page: 'inquiry', title: '결정 · 선사 문의', toast: 'out-hanbit', adv: (t) => t.dataset.act === 'reply-arrive', cap: `메일 근거가 있는 정정 ${appr2}건은 수정본 반영, 근거 없는 ${pend2}건은 선사 문의로 정하고, 선사 문의 화면에서 선장에게 확인 요청을 보냅니다.`, setup: () => { heroAt('asked'); } },
-    { scene: 4, t: D.t4, page: 'inquiry', title: '선장 회신 도착', toast: 'in5-hanbit', adv: (t) => t.dataset.act === 'reply-compare', cap: `새벽 ${hhmm(D.t4)}, 선장이 회신과 다시 고친 수정본 V3를 보냈습니다. 받은 회신이 선사 문의 화면에 붙습니다.`, setup: () => { heroAt('reply'); } },
-    { scene: 5, t: addMin(D.t4, 2), page: 'compare', title: '다시 대조 · 확정', adv: (t) => t.dataset.act === 'next', cap: `확정한 결정만 반영한 기준본과 V3를 다시 대조합니다. ${D.r5.summary.expected}건 모두 회신에 근거가 있는 예상된 변경이라 수정본 반영으로 정하고 명부를 확정합니다.`, setup: () => { heroAt('final'); state.step = 3; } },
-    { scene: 6, t: D.t6, page: 'report', title: '신고 준비 완료', cap: `${hhmm(D.t6)}, 확정 명부로 네 기관 신고 자료 준비를 마쳤습니다. 출입국 보고 마감까지 ${remain(D.t6, D.due)} 남았습니다. 신고 전송은 담당자가 각 기관 시스템에서 합니다.`, setup: () => { heroAt('final'); } },
+    { scene: 1, t: D.t1, page: 'ships', title: '수정본 메일 도착', toast: 'in-hanbit', adv: (t) => t.dataset.ship === 'hanbit', cap: `입항 전날 ${hhmm(D.t1)}, “생년월일 1건 정정” 수정본이 왔습니다.`, setup: () => { heroAt('new'); } },
+    { scene: 1, t: D.t1, page: 'ship', title: '배를 눌러 메일 확인', adv: (t) => t.dataset.page === 'compare', cap: '메일과 AI가 읽은 요청을 근거 문장과 함께 봅니다.', setup: () => { heroAt('v2'); state.mail = 'in-hanbit'; } },
+    { scene: 2, t: addMin(D.t1, 2), page: 'compare', title: '열자마자 대조', cap: `요청은 1건인데, 꼭 봐야 할 곳은 ${see2}건입니다.`, setup: () => { heroAt('v2'); state.step = 2; state.filter = 'all'; state.selected = sortedItems()[0]?.id || null; } },
+    { scene: 3, t: D.t3, page: 'inquiry', title: '결정 · 선사 문의', toast: 'out-hanbit', adv: (t) => t.dataset.act === 'reply-arrive', cap: `근거 있는 ${appr2}건은 반영, 근거 없는 ${pend2}건은 선사 문의로 보냅니다.`, setup: () => { heroAt('asked'); } },
+    { scene: 4, t: D.t4, page: 'inquiry', title: '선장 회신 도착', toast: 'in5-hanbit', adv: (t) => t.dataset.act === 'reply-compare', cap: `새벽 ${hhmm(D.t4)}, 선장 회신과 수정본 V3가 왔습니다.`, setup: () => { heroAt('reply'); } },
+    { scene: 5, t: addMin(D.t4, 2), page: 'compare', title: '다시 대조 · 확정', adv: (t) => t.dataset.act === 'next', cap: `다시 대조하니 ${D.r5.summary.expected}건 모두 예상된 변경 — 반영하고 확정합니다.`, setup: () => { heroAt('final'); state.step = 3; } },
+    { scene: 6, t: D.t6, page: 'report', title: '신고 준비 완료', cap: `${hhmm(D.t6)}, 네 기관 신고 자료 준비 완료. 마감까지 ${remain(D.t6, D.due)}.`, setup: () => { heroAt('final'); } },
   ];
 }
 function demoGo(i) {
