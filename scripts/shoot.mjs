@@ -14,6 +14,12 @@ const PORT = 9334;
 
 const SCENES = [
   { name: '1-input', q: '' },
+  { name: 'replay-2', q: 'tab=replay&scene=2', mobile: true },
+  { name: 'replay-3', q: 'tab=replay&scene=3' },
+  { name: 'replay-4', q: 'tab=replay&scene=4' },
+  { name: 'replay-6', q: 'tab=replay&scene=6', mobile: true },
+  { name: '1-detail', q: 'step=1&scenario=2' },
+  { name: '2-ai-compare', q: 'step=2&scenario=6&item=C001' },
   { name: '1-normalized', q: 'step=1&scenario=1&run=1' },
   { name: '2-crew-change', q: 'step=2&scenario=1&item=C003', mobile: true },
   { name: '2-errors', q: 'step=2&scenario=2&item=C001', mobile: true },

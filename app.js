@@ -19,16 +19,16 @@ const params = new URLSearchParams(location.search);
 const STEPS = [
   { title: '자료 받기', sub: '최초본·수정본·메일' },
   { title: '변경 대조', sub: '봐야 할 곳과 근거' },
-  { title: '관련 신고·결정', sub: '반영·유지·확인 대기' },
+  { title: '관련 신고·결정', sub: '반영·유지·선사 문의' },
   { title: '내보내기', sub: '확정 명부 또는 미확정 검토본' },
 ];
 const KIND_LABEL = { modify: '값 변경', add: '추가(승선)', remove: '삭제(하선)', duplicate: '중복 행', directive: '메일 지시', standing: '기존 값' };
 const ORDER = { suspect: 0, check: 1, expected: 2 };
 
 const state = {
-  tab: params.get('tab') || 'demo',
+  tab: params.get('tab') || (['step', 'scenario', 'item', 'decide', 'filter'].some((k) => params.has(k)) ? 'demo' : 'replay'),
   step: Math.min(4, Math.max(1, Number(params.get('step')) || 1)),
-  scenario: Math.min(5, Math.max(1, Number(params.get('scenario')) || 2)),
+  scenario: Math.min(SCENARIOS.length, Math.max(1, Number(params.get('scenario')) || 2)),
   inputs: null,
   report: null,
   view: 'B',
@@ -51,23 +51,37 @@ function loadScenario(n) {
   state.selected = null;
 }
 
+// AI가 미리 읽어 둔 메일 해석(data/ai/scenario-ai.json). 메일을 직접 고치면 없으므로 규칙 방식으로 읽는다.
+let AI = { meta: null, byId: {} };
+function aiFor(n, mail) {
+  const sc = SCENARIOS[n - 1];
+  if (!sc || mail !== sc.mail) return null;
+  return AI.byId[`S${n}`] || null;
+}
+function compareWith(n, inputs) {
+  const ai = aiFor(n, inputs.mail);
+  return compareCrewLists({ ...inputs, aiInstructions: ai ? ai.instructions : null });
+}
+
 function run() {
-  state.report = compareCrewLists(state.inputs);
+  state.report = state.rebased ? compareCrewLists(state.inputs) : compareWith(state.scenario, state.inputs);
   state.decisions = {};
   state.conf = null;
   const items = sortedItems();
   if (!state.selected || !items.some((it) => it.id === state.selected)) state.selected = items[0]?.id || null;
 }
 
-function sortedItems() {
-  if (!state.report) return [];
-  return state.report.items.slice().sort((a, b) => ORDER[a.class] - ORDER[b.class] || (a.rowB?.line ?? a.rowA?.line ?? 999) - (b.rowB?.line ?? b.rowA?.line ?? 999));
+function sortedItems(rep = state.report) {
+  if (!rep) return [];
+  return rep.items.slice().sort((a, b) => ORDER[a.class] - ORDER[b.class] || (a.rowB?.line ?? a.rowA?.line ?? 999) - (b.rowB?.line ?? b.rowA?.line ?? 999));
 }
 
 function setTab(tab) {
   state.tab = tab;
   for (const b of document.querySelectorAll('.top-tab')) b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false');
-  for (const id of ['demo', 'eval', 'scope']) $(`#tab-${id}`).hidden = id !== tab;
+  for (const id of ['replay', 'demo', 'eval', 'scope']) $(`#tab-${id}`).hidden = id !== tab;
+  $('#replayBadge').hidden = tab !== 'replay';
+  if (tab === 'replay') renderReplay();
   if (tab === 'eval') renderEval();
   if (tab === 'scope') renderScope();
 }
@@ -93,7 +107,7 @@ function renderStepper() {
     const n = i + 1;
     const cur = n === state.step;
     const done = n < state.step;
-    return `<li class="${done ? 'done' : ''}" ${cur ? 'aria-current="step"' : ''}><button type="button" data-step="${n}" ${canGo(n) ? '' : 'disabled'}><span class="num">${done ? '✓' : n}</span><span><span class="st-title">${n}. ${s.title}</span><span class="st-sub">${s.sub}</span></span></button></li>`;
+    return `<li class="${done ? 'done' : ''}" ${cur ? 'aria-current="step"' : ''}><button type="button" data-step="${n}" ${canGo(n) ? '' : 'disabled'}><span class="num">${done ? '<i class="ti ti-check"></i>' : n}</span><span><span class="st-title">${n}. ${s.title}</span><span class="st-sub">${s.sub}</span></span></button></li>`;
   }).join('');
 }
 
@@ -104,7 +118,7 @@ function voyageBar() {
   const pend = state.report ? pendingItems(state.report, state.decisions).length : 0;
   let status = ['대조 전', 'idle'];
   if (state.report && state.report.blocked) status = ['명부 판독 실패 · 사람 검토', 'bad'];
-  else if (state.step === 4 && pend) status = [`확인 대기 ${pend}건 · 선장 회신 대기`, 'wait'];
+  else if (state.step === 4 && pend) status = [`선사 문의 ${pend}건 · 선장 회신 대기`, 'wait'];
   else if (state.step === 4) status = ['확정', 'ok'];
   else if (state.report) status = ['대조·결정 중', 'work'];
   const t = (cls, label, sub) => `<li class="${cls}"><span class="dot"></span><b>${label}</b><span>${h(sub || '')}</span></li>`;
@@ -112,7 +126,7 @@ function voyageBar() {
   const v2 = state.scenario === 5 ? '회신 + V3' : '수정본 V2 + 메일';
   return `<section class="voyage" aria-label="항차 정보">
     <div class="v-main">
-      <div class="v-ship"><span class="v-icon" aria-hidden="true">⚓</span>${h(hd.shipName?.value || 'DEMO HANBIT 3')} <span class="v-voy">V.${h(hd.voyage?.value || '2611E')}</span></div>
+      <div class="v-ship"><i class="ti ti-anchor v-icon" aria-hidden="true"></i>${h(hd.shipName?.value || 'DEMO HANBIT 3')} <span class="v-voy">V.${h(hd.voyage?.value || '2611E')}</span></div>
       <div class="v-meta">${h(({ BUSAN: '부산', ULSAN: '울산', INCHEON: '인천', GWANGYANG: '광양', PYEONGTAEK: '평택' })[hd.port?.value] || hd.port?.value || '부산')} 입항 <b>${h(ctx.eta || hd.date?.value || '')}</b> · 출입국 보고 마감 <b>${h(ctx.due || '입항 2시간 전')}</b> <span class="muted">(입항 2시간 전)</span></div>
     </div>
     <ol class="v-timeline">
@@ -153,6 +167,30 @@ function splitMail(text) {
   return { head, body: body.join('\n').trim() };
 }
 
+// AI가 읽은 요청 목록(미리 실행한 결과) — 메일 패널용
+const AI_TYPE = { correction: '정정', sign_on: '승선', sign_off: '하선', rank_change: '직급 변경' };
+const AI_REASON = { negation: '하지 말라는 문장', cancel: '취소된 요청', conditional: '조건부', quote: '이전 메일 인용', superseded: '뒤 문장으로 바뀜', other_vessel: '다른 배', question: '질문', info: '단순 안내' };
+function mailBodyHtml(body, ai) {
+  let out = h(body);
+  for (const it of ai?.instructions || []) {
+    const ev = h(String(it.evidence || '').trim());
+    if (ev && out.includes(ev)) out = out.replace(ev, `<mark class="ev ${it.apply ? 'on' : 'off'}">${ev}</mark>`);
+  }
+  return out;
+}
+function aiReadHtml(n, mail, rep) {
+  const ai = aiFor(n, mail);
+  if (!ai) {
+    return `<div class="ai-read rule"><div class="ai-read-head"><i class="ti ti-list-check" aria-hidden="true"></i><b>메일 해석: 규칙 방식</b><span class="small muted">${SCENARIOS[n - 1] && mail !== SCENARIOS[n - 1].mail ? '메일을 직접 고쳐 AI 결과가 없으므로 규칙 방식으로 읽었습니다' : '이 메일은 규칙 방식으로 읽었습니다'}</span></div></div>`;
+  }
+  const rows = ai.instructions.map((it) => `<li><span class="ai-st ${it.apply ? 'on' : 'off'}">${it.apply ? '반영함' : `반영 안 함 · ${h(AI_REASON[it.not_applied_reason] || it.not_applied_reason || '')}`}</span>
+    <span class="ai-what"><b>${h(AI_TYPE[it.type] || it.type)}</b> ${h(it.person || '')}${it.field ? ` · ${h(FIELD[it.field]?.ko || it.field)}` : ''}${it.value ? ` → <span class="mono">${h(it.value)}</span>` : ''}</span>
+    <span class="ai-ev">“${h(it.evidence || '')}”</span></li>`).join('');
+  const extra = (rep?.noticeWarnings || []).filter((w) => /근거 문장|특정하지/.test(w));
+  return `<div class="ai-read"><div class="ai-read-head"><i class="ti ti-sparkles" aria-hidden="true"></i><b>AI가 읽은 요청 ${ai.instructions.length}건</b><span class="small muted">미리 실행한 결과${AI.meta?.model ? ` · ${h(AI.meta.model)}` : ''} · 판정은 엔진 규칙이 하고, 근거 문장이 원문에 있는지 확인함</span></div>
+    ${rows ? `<ul class="ai-list">${rows}</ul>` : '<p class="small muted" style="margin:6px 0 0">반영할 요청 없음</p>'}${extra.length ? `<ul class="warn-list">${extra.map((w) => `<li>${h(w)}</li>`).join('')}</ul>` : ''}</div>`;
+}
+
 function step1() {
   const sc = SCENARIOS[state.scenario - 1];
   const ctx = sc?.ctx || {};
@@ -165,7 +203,6 @@ function step1() {
   ${state.scenario === 2 && !state.rebased ? `<div class="intro">
     <div><p class="intro-lead">수정본이 오면, 바뀐 곳 가운데 <b>사람이 꼭 봐야 할 곳</b>만 근거와 함께 골라 줍니다.</p>
     <p class="intro-sub"><span class="cls suspect">오류 의심</span> 규칙에 걸린 변경 &nbsp; <span class="cls check">확인 필요</span> 근거 없는 변경 &nbsp; <span class="cls expected">예상된 변경</span> 메일에 근거 있음</p></div>
-    <button type="button" class="btn btn-primary btn-large" data-act="quick">▶ 이 메일 바로 대조해 보기</button>
   </div>` : ''}
   <div class="inbox">
     <div class="mail">
@@ -173,7 +210,8 @@ function step1() {
         <div class="mail-from"><span class="avatar" aria-hidden="true">${h((m.head.from || ctx.from || '선사').trim().charAt(0))}</span><div><b>${h(m.head.from || ctx.from || '보낸 사람 없음')}</b><span class="muted small">${h(ctx.at || '')}</span></div></div>
         <div class="mail-subject">${h(m.head.subject || '(제목 없음)')}</div>
       </div>
-      <pre class="mail-body">${h(m.body || '(메일 본문 없음)')}</pre>
+      <pre class="mail-body">${m.body ? mailBodyHtml(m.body, aiFor(state.scenario, state.inputs.mail)) : '(메일 본문 없음)'}</pre>
+      <div class="mail-ai">${aiReadHtml(state.scenario, state.inputs.mail, state.report)}</div>
       <div class="attachments">${file('a', state.scenario === 5 ? '기준본 (확정한 결정만 반영)' : '최초본 선원명부', (ctx.v1 || '').replace(/\s*(최초본|기준본).*$/, '') || fmtInfo(state.inputs.a))}${file('b', state.scenario === 5 ? '수정본 V3' : '수정본 선원명부', (ctx.v2 || '').replace(/\s*수정본.*$/, '') || fmtInfo(state.inputs.b))}</div>
     </div>
     <aside class="inbox-side">
@@ -191,7 +229,7 @@ function step1() {
     </div>
   </details>
   ${state.report ? `<details class="raw panel"><summary>FAL 5 항목으로 정리된 명부 보기</summary>${normalizedView()}</details>` : ''}
-  <p class="note"><b>데모 범위:</b> 표는 브라우저에서 실제로 읽습니다. 앱의 메일 해석은 규칙 기반이며(부정·취소·조건·인용 문장은 지시로 쓰지 않음), LLM 메일 해석은 '평가 결과' 탭의 시험으로 따로 측정했습니다.</p>`;
+  <p class="note"><b>데모 범위:</b> 표는 브라우저에서 실제로 읽습니다. 메일은 AI가 <b>미리 읽어 둔 결과</b>를 기본으로 쓰며(이 화면에서 AI를 새로 호출하지 않음), 엔진이 근거 문장이 원문에 있는지 확인한 뒤 규칙으로 판정합니다. 메일을 직접 고치면 AI 결과가 없으므로 규칙 방식(부정·취소·조건·인용 문장은 지시로 쓰지 않음)으로 읽습니다. 메일 해석 성능은 '평가 결과' 탭에 있습니다.</p>`;
 }
 
 function normalizedView() {
@@ -226,13 +264,13 @@ function normalizedView() {
 function documentAlertBox(r) {
   const al = r.documentAlerts || [];
   if (!al.length) return '';
-  return `<div class="flash flash-error" role="alert" style="margin-bottom:12px"><b>명부 판독 실패 — 이 결과로 승인할 수 없습니다</b><ul class="small" style="margin:4px 0 0 18px">${al.map((x) => `<li>${h(x.detail)}</li>`).join('')}</ul><div class="small">표의 머리글을 FAL 5 항목으로 지정하거나 원문을 사람이 직접 확인해야 합니다. 아래 목록에 변경이 적게 보여도 '변경 없음'이라는 뜻이 아닙니다.</div></div>`;
+  return `<div class="alert alert-danger" role="alert" style="margin-bottom:12px"><b>명부 판독 실패 — 이 결과로 승인할 수 없습니다</b><ul class="small" style="margin:4px 0 0 18px">${al.map((x) => `<li>${h(x.detail)}</li>`).join('')}</ul><div class="small">표의 머리글을 FAL 5 항목으로 지정하거나 원문을 사람이 직접 확인해야 합니다. 아래 목록에 변경이 적게 보여도 '변경 없음'이라는 뜻이 아닙니다.</div></div>`;
 }
 function columnAlertBox(r) {
   const al = r.columnAlerts || [];
   if (!al.length) return '';
   const src = (x) => x.sources.map((s) => (s === 'A' ? '최초본' : '수정본')).join('·');
-  return `<div class="flash flash-warn" style="margin-bottom:12px"><b>열 단위 서식 확인 필요 ${al.length}건</b> — 셀마다 경보하지 않고 열당 한 번 알립니다.<ul class="small" style="margin:4px 0 0 18px">${al.map((x) => `<li>${src(x)} ${x.col}열 "${h(x.header)}"${x.field ? ` (${h(FIELD[x.field].ko)})` : ''}: ${h(x.detail)}</li>`).join('')}</ul></div>`;
+  return `<div class="alert alert-warning" style="margin-bottom:12px"><b>열 단위 서식 확인 필요 ${al.length}건</b> — 셀마다 경보하지 않고 열당 한 번 알립니다.<ul class="small" style="margin:4px 0 0 18px">${al.map((x) => `<li>${src(x)} ${x.col}열 "${h(x.header)}"${x.field ? ` (${h(FIELD[x.field].ko)})` : ''}: ${h(x.detail)}</li>`).join('')}</ul></div>`;
 }
 function valueText(c) {
   if (!c) return '';
@@ -240,9 +278,21 @@ function valueText(c) {
   return c.raw?.trim() ? c.raw.trim() : '(빈칸)';
 }
 
+// 화면 표시용: 앞뒤 공통 글자를 빼고 달라진 글자만 표시 (O↔0 같은 혼동 문자를 눈으로 찾게)
+function diffPair(a, b) {
+  a = String(a ?? ''); b = String(b ?? '');
+  if (a === b) return [h(a), h(b)];
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  let j = 0;
+  while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+  const m = (x) => { const mid = x.slice(i, x.length - j); return h(x.slice(0, i)) + (mid ? `<mark class="dch">${h(mid)}</mark>` : '') + h(x.slice(x.length - j)); };
+  return [m(a), m(b)];
+}
+
 function changeText(it) {
   if (it.kind === 'modify' || it.kind === 'standing') {
-    return `<b>${h(FIELD[it.field].ko)}</b> <span class="muted small">${FIELD[it.field].fal}. ${h(FIELD[it.field].en)}</span><br>${it.kind === 'standing' ? '' : `<span class="val-before">${h(valueText(it.before))}</span><span class="arrow">→</span>`}<span class="val-after">${h(valueText(it.after))}</span>`;
+    return `<b>${h(FIELD[it.field].ko)}</b> <span class="muted small">${FIELD[it.field].fal}. ${h(FIELD[it.field].en)}</span><br>${it.kind === 'standing' ? `<span class="val-after">${h(valueText(it.after))}</span>` : (() => { const [x, y] = diffPair(valueText(it.before), valueText(it.after)); return `<span class="vals"><span class="val-before">${x}</span><span class="arrow" aria-label="에서">→</span><span class="val-after">${y}</span></span>`; })()}`;
   }
   if (it.kind === 'add') return `<b>명부에 추가</b> <span class="muted small">${h(it.rowB.cells.rank.value)} · ${h(it.rowB.cells.nationality.value)}</span>`;
   if (it.kind === 'remove') return `<b>명부에서 빠짐</b> <span class="muted small">${h(it.rowA.cells.rank.value)}</span>`;
@@ -280,16 +330,17 @@ function step2() {
     ${stat('suspect', '오류 의심', s.suspect, '먼저 확인 · 규칙에 걸림')}
     ${stat('check', '확인 필요', s.check, '근거 없는 변경')}
     ${stat('expected', '예상된 변경', s.expected, '메일 근거 있음 · 근거 보고 반영')}
-    <div class="stat cosmetic"><span class="stat-n">${s.cosmetic}</span><span class="stat-l">표기만 다름</span><span class="stat-s">자동 정리 · 경보 안 함</span></div>
+    <div class="stat cosmetic"><span class="stat-n">${s.cosmetic}</span><span class="stat-l">표기 차이</span><span class="stat-s">자동 정리 · 경보 안 함</span></div>
   </div>
-  <div class="chips">${chip('all', '전체 보기', r.items.length)}</div>
   ${documentAlertBox(r)}${columnAlertBox(r)}
+  ${state.scenario === 6 && r.mailReader === 'ai' ? readerCompare() : ''}
   <div class="compare">
     <div>
       <div class="panel">
+        <div class="panel-head"><h3>${state.filter === 'all' ? '바뀐 항목 전체' : CLASS_LABEL[state.filter]} ${items.length}건 <span class="muted small" style="font-weight:400">· 위험한 순서</span></h3>${state.filter === 'all' ? '' : chip('all', '전체 보기', r.items.length)}</div>
         <div class="table-wrap"><table class="grid changes"><thead><tr><th style="width:150px">인물</th><th style="width:96px">분류</th><th>바뀐 항목</th><th style="width:30%">근거</th></tr></thead><tbody>${rows || '<tr><td colspan="4" class="muted">해당하는 변경이 없습니다.</td></tr>'}</tbody></table></div>
       </div>
-      <details class="cosmetic-fold panel"><summary>표기만 다름 ${s.cosmetic}건 — 대소문자·공백·날짜 형식·직급 약어 차이(변경으로 세지 않음)</summary>
+      <details class="cosmetic-fold panel"><summary>표기 차이 ${s.cosmetic}건 — 대소문자·공백·날짜 형식·직급 약어 차이(변경으로 세지 않음)</summary>
         <div class="table-wrap"><table class="grid"><thead><tr><th>인물</th><th>항목</th><th>최초본 원문</th><th>수정본 원문</th><th>위치</th></tr></thead><tbody>${cos || '<tr><td colspan="5" class="muted">없음</td></tr>'}</tbody></table></div>
       </details>
     </div>
@@ -300,6 +351,18 @@ function step2() {
     <span class="spacer"></span>
     <button type="button" class="btn btn-primary" data-act="next" ${r.blocked ? 'disabled title="명부 판독 실패로 결정 단계로 갈 수 없습니다"' : ''}>다음: 관련 신고·결정</button>
   </div>`;
+}
+
+// 사례 6: 같은 메일을 규칙 방식과 AI(미리 실행한 결과)로 읽었을 때의 차이
+function readerCompare() {
+  const ruleR = compareCrewLists(state.inputs);
+  const aiR = state.report;
+  const col = (title, icon, rep, note) => `<div class="rc-col"><div class="rc-head"><i class="ti ${icon}" aria-hidden="true"></i><b>${title}</b><span class="small muted">봐야 할 곳 ${rep.summary.suspect + rep.summary.check}건 · 예상된 변경 ${rep.summary.expected}건</span></div>
+    <ul class="rc-list">${sortedItems(rep).map((it) => `<li><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span> <b>${h(it.person)}</b> <span class="muted small">${it.field ? h(FIELD[it.field].ko) : h(KIND_LABEL[it.kind])} · ${h(it.reason)}</span></li>`).join('')}</ul><p class="small rc-note">${note}</p></div>`;
+  return `<div class="panel reader-compare"><div class="panel-head"><h3>같은 메일, 두 가지 읽기</h3><span class="small muted">한국어 이름·목록형 정정·이전 요청 취소</span></div><div class="rc-grid">
+    ${col('규칙 방식', 'ti-list-check', ruleR, '한국어 이름 "최동현"을 명부의 CHOI DONGHYUN과 잇지 못해 여권번호 정정이 확인 필요로 남고, 메일 줄 단위 경보가 더 생깁니다.')}
+    ${col('AI 해석 (미리 실행한 결과, 기본)', 'ti-sparkles', aiR, '정정은 메일 근거가 있는 예상된 변경이 되고, 취소된 SANTOS 생년월일 요청은 반영하지 않습니다. 그래서 수정본에 들어온 SANTOS 값 변경은 여전히 오류 의심입니다.')}
+  </div></div>`;
 }
 
 function rawLineHtml(P, line, col) {
@@ -323,7 +386,8 @@ function detailPanel() {
       const ra = a ? a.cells[f.key].raw : '';
       const rb = b ? b.cells[f.key].raw : '';
       const diff = it.field ? f.key === it.field || (it.rules || []).some((x) => x.id === 'R3') && (f.key === 'familyName' || f.key === 'givenNames') : false;
-      return `<tr class="${diff ? 'diff' : ''}"><th>${f.fal}. ${h(f.ko)}</th><td class="mono">${a ? h(ra) || '<span class="muted">(빈칸)</span>' : ''}</td><td class="mono">${b ? h(rb) || '<span class="muted">(빈칸)</span>' : ''}</td></tr>`;
+      const [da, db] = diff && a && b ? diffPair(ra, rb) : [h(ra), h(rb)];
+      return `<tr class="${diff ? 'diff' : ''}"><th>${f.fal}. ${h(f.ko)}</th><td class="mono">${a ? (ra ? da : '<span class="muted">(빈칸)</span>') : ''}</td><td class="mono">${b ? (rb ? db : '<span class="muted">(빈칸)</span>') : ''}</td></tr>`;
     }).join('');
     src = `<p class="small" style="margin:0 0 4px"><b>두 원문 나란히</b></p>
       <table class="src-compare"><thead><tr><th>항목</th><th>${a ? `최초본 ${a.line}행` : '최초본 없음'}</th><th>${b ? `수정본 ${b.line}행` : '수정본 없음'}</th></tr></thead><tbody>${rows}</tbody></table>
@@ -362,33 +426,33 @@ function step3() {
   }).join('');
   return `
   <h2 class="section-title">3. 관련 신고·결정</h2>
-  <p class="section-lead">선원명부는 아래 네 신고에 첨부되는 자료이므로, 확정한 명부는 네 곳 모두에 같게 들어가야 합니다(신고별 요구 차이나 변경신고 필요 여부를 판정하지는 않습니다. 신고 전송도 하지 않습니다). 항목마다 <b>수정본 반영</b> · <b>최초본 유지</b>(최초본이 맞다고 확인함) · <b>확인 대기</b>(아직 모름) 중 하나를 정합니다. 확인 대기가 남으면 최종 명부 대신 미확정 검토본과 선사 확인 요청만 만듭니다.</p>
-  <div class="impact-grid">${impact}</div>
-  <div class="panel penalty"><b>출입국관리법 제100조제1항제5호 관련 항목</b> <span class="muted small">— 이번 변경 중 국적·성명·성별·생년월일·여권번호에 해당: ${changedPenaltyFields.length ? h(changedPenaltyFields.join(', ')) : '없음'}</span>
-    <blockquote>${h(IMMIGRATION_PENALTY.head)}<br>5. ${h(IMMIGRATION_PENALTY.quote)}</blockquote>
-    <p class="small muted" style="margin:6px 0 0">${h(IMMIGRATION_PENALTY.caution)}</p></div>
-  <div class="panel" style="margin-top:16px">
+  <p class="section-lead">항목마다 <b>수정본 반영</b> · <b>최초본 유지</b>(최초본이 맞다고 확인함) · <b>선사 문의</b>(아직 모름) 중 하나를 정합니다. 선사 문의가 남으면 최종 명부 대신 미확정 검토본과 선사 확인 요청만 만듭니다.<br><span class="small">선원명부는 아래 네 신고에 첨부되는 자료이므로, 확정한 명부는 네 곳 모두에 같게 들어가야 합니다(신고별 요구 차이나 변경신고 필요 여부를 판정하지는 않습니다. 신고 전송도 하지 않습니다).</span></p>
+  <div class="panel decide-panel">
     <div class="panel-head"><h3>항목별 결정</h3>
       <div class="progress-line"><span>처리 ${done}/${n}</span><span class="bar"><i style="width:${n ? (done / n) * 100 : 100}%"></i></span>
       <button type="button" class="btn btn-sm" data-act="approve-expected">예상된 변경 모두 반영</button>
-      <button type="button" class="btn btn-sm" data-act="hold-rest">남은 항목 확인 대기</button></div>
+      <button type="button" class="btn btn-sm" data-act="hold-rest">남은 항목 선사 문의</button></div>
     </div>
     <div class="approve-list">${rows || '<div class="arow muted">변경이 없습니다.</div>'}</div>
   </div>
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
-    <label class="small" for="approver">승인자 표시명</label><input id="approver" class="form-control input-sm" value="${h(state.approver)}" style="width:160px">
+    <label class="small" for="approver">승인자 표시명</label><input id="approver" class="form-control form-control-sm" value="${h(state.approver)}" style="width:160px">
     <span class="spacer"></span>
-    ${allDecided() ? '' : `<span class="small muted">남은 결정 ${n - done}건 — 위의 '예상된 변경 모두 반영', '남은 항목 확인 대기'로 한 번에 정할 수 있습니다</span>`}
+    ${allDecided() ? '' : `<span class="small muted">남은 결정 ${n - done}건 — 위의 '예상된 변경 모두 반영', '남은 항목 선사 문의'로 한 번에 정할 수 있습니다</span>`}
     <button type="button" class="btn btn-primary" data-act="next" ${allDecided() ? '' : 'disabled'}>다음: 내보내기</button>
-  </div>`;
+  </div>
+  <h3 class="sub-title">이 명부가 첨부되는 신고 4가지</h3>
+  <div class="impact-grid">${impact}</div>
+  <div class="panel penalty"><b>출입국관리법 제100조제1항제5호 관련 항목</b> <span class="muted small">— 이번 변경 중 국적·성명·성별·생년월일·여권번호에 해당: ${changedPenaltyFields.length ? h(changedPenaltyFields.join(', ')) : '없음'}</span>
+    <blockquote>${h(IMMIGRATION_PENALTY.head)}<br>5. ${h(IMMIGRATION_PENALTY.quote)}</blockquote>
+    <p class="small muted" style="margin:6px 0 0">${h(IMMIGRATION_PENALTY.caution)}</p></div>`;
 }
 
 // ---------------- 4단계 ----------------
-function shipperSummary() {
-  const r = state.report;
+function shipperSummary(r = state.report, decisions = state.decisions) {
   const hd = r.B.header;
-  const held = sortedItems().filter((it) => pendingItems(r, state.decisions).includes(it));
+  const held = sortedItems(r).filter((it) => pendingItems(r, decisions).includes(it));
   const ok = r.items.length - held.length;
   const line = (it) => {
     const what = it.kind === 'modify' ? `${FIELD[it.field].ko} ${valueText(it.before)} → ${valueText(it.after)}` : it.kind === 'directive' ? `메일 ${it.directive.line}번째 줄 지시("${it.directive.text.trim()}")` : KIND_LABEL[it.kind];
@@ -397,7 +461,7 @@ function shipperSummary() {
   return [
     `[${hd.shipName?.value || ''} ${hd.voyage?.value || ''} ${hd.port?.value || ''}] 수정 선원명부 확인 결과`,
     '',
-    `결정 완료 ${ok}건, 확인 요청 ${held.length}건 (표기만 다른 ${r.cosmetic.length}건은 변경으로 보지 않음)`,
+    `결정 완료 ${ok}건, 확인 요청 ${held.length}건 (표기 차이 ${r.cosmetic.length}건은 변경으로 보지 않음)`,
     '',
     held.length ? '확인 요청드립니다:' : '확인 요청 사항 없음.',
     ...held.map(line),
@@ -412,29 +476,32 @@ function step4() {
   const csv = toFal5Csv(r, state.decisions);
   const pend = pendingItems(r, state.decisions).length;
   const c = state.conf;
-  let conf = `<p class="small">누가 어떤 변경을 반영·유지했는지와 확정 명부를 묶어, 나중에 한 글자라도 바뀌면 알 수 있는 확정 기록으로 남깁니다(내용이 맞는지를 보증하지는 않음).</p><p class="small muted">기술: 최종 명부 SHA-256 해시 + ECDSA P-256(ES256) 서명. <b>프로토타입은 공개된 데모 키</b>(${DEMO_KID})라 누구나 같은 서명을 만들 수 있으며, 운영 시에는 담당자별 키를 씁니다.</p>
-    <button type="button" class="btn btn-primary" data-act="sign">확정 기록 생성·서명</button>`;
+  const tech = (inner, open) => `<details class="tech"${open ? ' open' : ''}><summary class="small">기술 상세 — 위변조 확인(해시·전자서명)</summary><div class="tech-body">${inner}</div></details>`;
+  let conf = `<p class="small" style="margin-top:0">누가 어떤 변경을 반영·유지했는지와 확정 명부를 묶어, 나중에 한 글자라도 바뀌면 알 수 있게 남깁니다(내용이 맞는지를 보증하지는 않음).</p>
+    <button type="button" class="btn btn-primary" data-act="sign"><i class="ti ti-device-floppy"></i> 결정 기록 저장</button>
+    ${tech(`<p class="small muted" style="margin:0">최종 명부 SHA-256 해시 + ECDSA P-256(ES256) 서명. <b>프로토타입은 공개된 데모 키</b>(${DEMO_KID})라 누구나 같은 서명을 만들 수 있으며, 운영 시에는 담당자별 키를 씁니다.</p>`)}`;
   if (pend) {
-    conf = `<div class="flash flash-warn" style="margin:0 0 10px"><b>확인 대기 ${pend}건이 남아 최종 명부와 확정 기록을 만들지 않습니다.</b> 왼쪽은 미확정 검토본입니다(확인 대기 칸은 값 대신 "확인 대기"로 표시).</div>
+    conf = `<div class="alert alert-warning" style="margin:0 0 10px"><b>선사 문의 ${pend}건이 남아 최종 명부와 결정 기록을 만들지 않습니다.</b> 왼쪽은 미확정 검토본입니다(선사 문의 칸은 값 대신 "선사 문의"로 표시).</div>
     <p class="small">선사 회신을 받으면, 지금 확정한 결정만 반영한 <b>기준본</b>과 회신 후 수정본을 다시 대조합니다. 회신으로 설명되는 변경은 메일 근거가 붙어 '예상된 변경'이 되고, 모든 항목이 정해지면 최종 명부를 만듭니다.</p>
-    <div class="row-actions" style="justify-content:flex-start">${state.scenario === 2 ? '<button type="button" class="btn btn-primary" data-act="scenario5">▶ 예시 5: 선장 회신 받아 다시 대조</button>' : ''}<button type="button" class="btn" data-act="rebase">기준본으로 다시 대조(회신 수정본 붙여 넣기)</button></div>`;
+    <div class="row-actions" style="justify-content:flex-start">${state.scenario === 2 ? '<button type="button" class="btn btn-primary" data-act="scenario5"><i class="ti ti-mail-forward"></i> 예시 5: 선장 회신 받아 다시 대조</button>' : ''}<button type="button" class="btn" data-act="rebase">기준본으로 다시 대조(회신 수정본 붙여 넣기)</button></div>`;
   } else if (c) {
-    conf = `<div class="verify-result ok" style="margin:0 0 10px">✔ 확정 기록 서명됨 · 수정본 반영 ${c.payload.counts.approved}건 / 최초본 유지 ${c.payload.counts.kept}건</div><dl class="kv" style="grid-template-columns:140px 1fr"><dt>승인자</dt><dd>${h(c.payload.approver)}</dd><dt>결정 시각</dt><dd>${h(c.payload.decidedAt)}</dd><dt>반영 / 유지</dt><dd>${c.payload.counts.approved} / ${c.payload.counts.kept}</dd><dt>최종 명부 SHA-256</dt><dd class="mono" style="word-break:break-all">${h(c.payload.finalListSha256)}</dd><dt>서명 키</dt><dd class="mono">${h(DEMO_KID)} (데모)</dd></dl>
-      <details style="margin-top:10px"><summary class="small">기술 상세 — 서명된 확정 기록(JWS)와 내용(JSON)</summary>
+    conf = `<div class="saved-line"><i class="ti ti-circle-check" aria-hidden="true"></i><div><b>결정 기록 저장됨</b><div class="small muted">수정본 반영 ${c.payload.counts.approved}건 · 최초본 유지 ${c.payload.counts.kept}건 · ${h(c.payload.approver)} · ${h(c.payload.decidedAt)}</div></div></div>
+      ${tech(`<dl class="kv" style="grid-template-columns:140px 1fr"><dt>최종 명부 SHA-256</dt><dd class="mono" style="word-break:break-all">${h(c.payload.finalListSha256)}</dd><dt>서명 키</dt><dd class="mono">${h(DEMO_KID)} (데모)</dd></dl>
+      <details style="margin-top:8px"><summary class="small">서명된 기록(JWS)과 내용(JSON)</summary>
       <pre class="box wrap mono" style="max-height:90px;margin-top:6px">${h(c.jws)}</pre>
       <pre class="box mono" style="max-height:180px">${h(JSON.stringify(c.payload, null, 2))}</pre></details>
-      <div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn" data-act="verify">서명·해시 검증</button><button type="button" class="btn" data-act="tamper">변조 시험(결정 1건을 바꿔 검증)</button></div>
-      ${c.verify ? `<div class="verify-result ${c.verify.ok ? 'ok' : 'bad'}">${h(c.verify.label)}: 서명 ${c.verify.signature ? '유효' : '무효'} · 최종 명부 해시 ${c.verify.hash == null ? '대조 안 함' : c.verify.hash ? '일치' : '불일치'} → <b>${c.verify.ok ? '파일 무결성 확인' : '변조 감지'}</b> <span class="muted">(서명 이후 바뀌지 않았는지를 확인할 뿐, 명부 내용이 맞는지 검증한 것은 아님)</span></div>` : ''}`;
+      <div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn btn-sm" data-act="verify">서명·해시 검증</button><button type="button" class="btn btn-sm" data-act="tamper">변조 시험(결정 1건을 바꿔 검증)</button></div>
+      ${c.verify ? `<div class="verify-result ${c.verify.ok ? 'ok' : 'bad'}">${h(c.verify.label)}: 서명 ${c.verify.signature ? '유효' : '무효'} · 최종 명부 해시 ${c.verify.hash == null ? '대조 안 함' : c.verify.hash ? '일치' : '불일치'} → <b>${c.verify.ok ? '파일 무결성 확인' : '변조 감지'}</b> <span class="muted">(서명 이후 바뀌지 않았는지를 확인할 뿐, 명부 내용이 맞는지 검증한 것은 아님)</span></div>` : ''}`, !!c.verify)}`;
   }
   return `
-  <h2 class="section-title">4. 내보내기${pend ? ` — 미확정 (확인 대기 ${pend}건)` : ' — 확정'}</h2>
-  <p class="section-lead">${pend ? '확인 대기가 남아 있어 미확정 검토본과 선사 확인 요청만 만듭니다.' : '모든 항목이 정해져 FAL 5 순서 확정 명부와, 누가 무엇을 반영·유지했는지 남기는 확정 기록을 만듭니다.'} 기관 시스템 제출 파일이 아니라 담당자 확인용 준비 자료입니다.</p>
+  <h2 class="section-title">4. 내보내기${pend ? ` — 미확정 (선사 문의 ${pend}건)` : ' — 확정'}</h2>
+  <p class="section-lead">${pend ? '선사 문의가 남아 있어 미확정 검토본과 선사 확인 요청만 만듭니다.' : '모든 항목이 정해져 FAL 5 순서 확정 명부와, 누가 무엇을 반영·유지했는지 남기는 결정 기록을 만듭니다.'} 기관 시스템 제출 파일이 아니라 담당자 확인용 준비 자료입니다.</p>
   <div class="export-grid">
     <div class="stack">
-      <div class="panel"><div class="panel-head"><h3>${pend ? '미확정 검토본 (최종 명부 아님)' : '확정 명부 (FAL 5 순서 CSV)'}</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono">${h(csv)}</pre><p class="small muted" style="margin:8px 0 0">수정본 반영은 수정본 값, 최초본 유지는 최초본 값(승선 제외·하선 유지), 확인 대기는 값 대신 "확인 대기"와 검토 상태 열로 표시합니다.</p></div></div>
+      <div class="panel"><div class="panel-head"><h3>${pend ? '미확정 검토본 (최종 명부 아님)' : '확정 명부 (FAL 5 순서 CSV)'}</h3><button type="button" class="btn btn-sm" data-act="download">CSV 내려받기</button></div><div class="panel-body"><pre class="box mono csv">${h(csv).replaceAll('선사 문의', '<mark class="pend">선사 문의</mark>')}</pre><p class="small muted" style="margin:8px 0 0">수정본 반영은 수정본 값, 최초본 유지는 최초본 값(승선 제외·하선 유지), 선사 문의는 값 대신 "선사 문의"와 검토 상태 열로 표시합니다.</p></div></div>
       <div class="panel"><div class="panel-head"><h3>선사에 보낼 확인 요청</h3><button type="button" class="btn btn-sm" data-act="copy-summary">복사</button></div><div class="panel-body"><textarea class="form-control summary mono" id="summary" aria-label="선사에 보낼 확인 요청">${h(shipperSummary())}</textarea></div></div>
     </div>
-    <div class="panel"><div class="panel-head"><h3>확정 기록</h3><span class="muted small">${pend ? '확인 대기 해소 후 생성' : '위변조 확인 가능'}</span></div><div class="panel-body">${conf}</div></div>
+    <div class="panel"><div class="panel-head"><h3>결정 기록</h3><span class="muted small">${pend ? '선사 문의 해소 후 저장' : '누가 무엇을 반영했는지'}</span></div><div class="panel-body">${conf}</div></div>
   </div>
   <div class="row-actions">
     <button type="button" class="btn" data-act="prev">이전</button>
@@ -472,9 +539,9 @@ function metricRows(r) {
   const e = r.engine, b1 = r.baselineRow, b2 = r.baselineId;
   const row = (label, f, cls = '') => `<tr class="${cls}"><td>${label}</td><td class="engine">${f(e)}</td><td>${f(b1)}</td><td>${f(b2)}</td></tr>`;
   return [
-    row('실질 변경 재현율 (놓친 수)', (x) => `${pc(x.substantiveRecall.rate)} (${x.substantiveRecall.missed})`),
-    row('오류 의심 정밀도', (x) => (x.suspect ? pc(x.suspect.precision) : '분류 없음')),
-    row('오류 의심 재현율', (x) => (x.suspect ? pc(x.suspect.recall) : '분류 없음')),
+    row('실제 변경을 찾아낸 비율 (놓친 수)', (x) => `${pc(x.substantiveRecall.rate)} (${x.substantiveRecall.missed})`),
+    row('오류 의심 중 실제 오류 비율', (x) => (x.suspect ? pc(x.suspect.precision) : '분류 없음')),
+    row('실제 오류를 오류 의심으로 찾은 비율', (x) => (x.suspect ? pc(x.suspect.recall) : '분류 없음')),
     row('쌍당 오경보 (표기만 다른 셀 경보)', (x) => `${x.falseAlarms.perPair.toFixed(2)} (${x.falseAlarms.cosmeticAlarms})`),
     row('개별 검수 항목 / 쌍', (x) => x.review.perPair.toFixed(1)),
     row('검수 범위 비율', (x) => pc(x.review.ratio)),
@@ -484,8 +551,8 @@ function metricRows(r) {
   ].join('');
 }
 function metricTable(r, caption, compact = false) {
-  const hd = compact ? ['본 엔진', '기준선1 행', '기준선2 ID키'] : ['본 엔진', '기준선1 행 번호 대조', '기준선2 신분증번호 키 대조'];
-  return `<div class="table-wrap"><table class="metric-table${compact ? ' compact' : ''}"><caption class="sr-only">${h(caption)}</caption><thead><tr><th>지표</th>${hd.map((x) => `<th>${x}</th>`).join('')}</tr></thead><tbody>${metricRows(r)}</tbody></table></div>`;
+  const hd = compact ? ['CrewDiff', '엑셀식(행)', '엑셀식(여권번호)'] : ['CrewDiff', '엑셀식 비교 — 같은 행끼리', '엑셀식 비교 — 여권번호로 짝지음'];
+  return `<div class="table-wrap"><table class="metric-table${compact ? ' compact' : ''}"><caption class="visually-hidden">${h(caption)}</caption><thead><tr><th>지표</th>${hd.map((x) => `<th>${x}</th>`).join('')}</tr></thead><tbody>${metricRows(r)}</tbody></table></div>`;
 }
 function ruleTable(r) {
   const e = r.engine;
@@ -496,7 +563,7 @@ function renderEval() {
   const el = $('#tab-eval');
   const ev = state.eval;
   if (!ev) { el.innerHTML = '<p class="muted">평가 결과를 불러오는 중…</p>'; return; }
-  if (ev.error) { el.innerHTML = `<div class="flash flash-error">평가 결과 파일을 읽지 못했습니다: ${h(ev.error)}. <code class="cmd">node eval/run.mjs --split all</code> 실행 후 다시 여세요.</div>`; return; }
+  if (ev.error) { el.innerHTML = `<div class="alert alert-danger">평가 결과 파일을 읽지 못했습니다: ${h(ev.error)}. <code class="cmd">node eval/run.mjs --split all</code> 실행 후 다시 여세요.</div>`; return; }
   const h3 = ev.h3.splits.holdout3, h4 = ev.h4.splits.holdout4, first = ev.first.splits.holdout, cur = ev.current.splits.holdout, dev = ev.current.splits.dev;
   const ds = ev.current.dataset;
   const missed = (r) => Object.entries(r.engine.review.missedErrorsByRule).map(([k, v]) => `${k} ${v}`).join(', ') || '없음';
@@ -508,33 +575,42 @@ function renderEval() {
     ${mrow('정밀도 (맞힘/낸 지시)', (r) => `${pc(r.precision)} (${r.tp}/${r.tp + r.fp})`)}
     <tr class="key">${mr.map((r, i) => (i ? '' : '<td>함정(부정·취소·조건·인용 등)을 반영으로 읽음</td>')).join('')}${mr.map((r) => `<td>${r.trapApplied} / ${r.trapTotal}</td>`).join('')}</tr>
   </tbody></table></div>`;
-  const fcols = [['engine', '본 엔진'], ['baselineId', '기준선2 신분증번호 키'], ['baselineIdMail', '기준선3 + 같은 메일 지시']];
+  const fcols = [['engine', 'CrewDiff'], ['baselineId', '엑셀식 비교(여권번호로 짝지음)'], ['baselineIdMail', '엑셀식 비교 + 같은 메일 정보']];
   const frow = (label, f, cls = '') => `<tr class="${cls}"><td>${label}</td>${fcols.map(([c]) => `<td class="${c === 'engine' ? 'engine' : ''}">${f(ev.fin.splits.holdout[c])}</td>`).join('')}</tr>`;
-  const finTable = `<div class="table-wrap"><table class="metric-table"><thead><tr><th>지표 (H1·H2, 쌍 60, 실제 오류 84)</th>${fcols.map((c) => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
+  const finTable = `<div class="table-wrap"><table class="metric-table"><thead><tr><th>지표 (개발 때 쓰지 않은 양식 시험, 60쌍, 실제 오류 84)</th>${fcols.map((c) => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
     ${frow('개별 검토 비율 (÷ 수정본 칸 수)', (x) => pc(x.review.ratio))}
     ${frow('일괄 반영 후보 (근거 확인 후 반영)', (x) => String(x.workload.batch))}
     ${frow('검토 대상 밖으로 빠진 실제 오류', (x) => String(x.review.missedErrorsOutside), 'key')}
   </tbody></table></div>`;
+  const llm = mr.find((r) => /근거/.test(r.name)) || mr[mr.length - 1];
+  const fh = ev.fin.splits.holdout;
   el.innerHTML = `
   <h2 class="section-title">평가 결과 — 합성 데이터</h2>
+  <p class="section-lead">가상으로 만든 명부·메일로 시험한 결과입니다. 실제 현장 자료에서는 달라질 수 있습니다.</p>
+  <div class="eval-cards">
+    <div class="eval-card"><i class="ti ti-mail-check" aria-hidden="true"></i><div class="eval-big">${llm.tp}<small>/${llm.gold}건</small></div><div><b>메일 요청을 AI가 맞게 읽음</b><div class="small muted">“하지 말라”, “취소”, 조건부, 이전 메일 인용 같은 함정 문장을 반영으로 잘못 읽은 것 <b>${llm.trapApplied}/${llm.trapTotal}</b></div></div></div>
+    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${pc(fh.baselineIdMail.review.ratio)} <small>→</small> ${pc(fh.engine.review.ratio)}</div><div><b>사람이 하나씩 볼 칸</b><div class="small muted">같은 메일 정보를 준 엑셀식 비교 대비. 놓친 실제 오류는 둘 다 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
+    <div class="eval-card"><i class="ti ti-hand-stop" aria-hidden="true"></i><div class="eval-big small-big">멈춤</div><div><b>처음 보는 외국어 양식은 사람에게 넘김</b><div class="small muted">명부를 읽지 못하면 결정 단계로 가지 못하게 막습니다(시험 60쌍 모두 차단)</div></div></div>
+  </div>
+  <details class="raw panel eval-more"><summary>시험 방법과 상세 표 보기 <span class="muted small">(메일 해석 비교 · 양식별 시험 · 한계 · 재현 방법)</span></summary><div class="eval-more-body">
   <div class="two-col">
-    <div class="panel"><div class="panel-head"><h3>① 메일 지시 해석: 규칙 파서 vs LLM</h3><span class="muted small">메일 ${ev.mail.runs[0].mails}통 · 별도 작성자 출제</span></div><div class="panel-body">${mailTable}
+    <div class="panel"><div class="panel-head"><h3>① 메일 해석: 규칙 방식 vs AI</h3><span class="muted small">메일 ${ev.mail.runs[0].mails}통 · 별도 작성자 출제</span></div><div class="panel-body">${mailTable}
       <p class="small" style="margin:8px 0 0">시험지(eval/mail-challenge)는 규칙 파서 코드를 보지 않은 별도 작성자가 명세만 보고 만들었고, 어느 쪽도 실행하기 전에 커밋했습니다. LLM은 정답을 보지 않고 고정 프롬프트로 메일만 읽었습니다(${h(ev.mail.llmMeta?.runner || '')}, ${h(ev.mail.llmMeta?.model || '')}). <b>한계:</b> 출제자와 해석자가 같은 계열 모델이라 문체가 익숙했을 수 있고, 실제 메일이 아닌 합성 102통이며, API 재실행 시 결과가 달라질 수 있습니다. 출력 원본: <code>eval/mail-challenge/llm-*.json</code>. 이 결과는 메일 해석만 잰 것이며, 앱 화면의 메일 해석은 아직 규칙 파서입니다.</p></div></div>
-    <div class="panel"><div class="panel-head"><h3>② 같은 메일 정보를 준 비교 (제출 버전, 참고값)</h3></div><div class="panel-body">${finTable}
+    <div class="panel"><div class="panel-head"><h3>② 같은 메일 정보를 준 엑셀식 비교와 견줌 (참고값)</h3></div><div class="panel-body">${finTable}
       <p class="small" style="margin:8px 0 0">기준선3은 단순 대조에 엔진과 <b>같은 메일 지시</b>를 줬습니다. 같은 정보를 주면 놓친 오류는 둘 다 0이고, 엔진의 차이는 <b>개별 검토량</b>(표기 차이·인물 대응·오류 규칙)에서 나옵니다. 이미 결과를 본 홀드아웃을 지금 코드로 다시 잰 값이라 참고값입니다(<code>docs/eval-final.md</code>, H3·H4 포함). H4는 60쌍 모두 문서 차단 → 수동 검토(절감 아님).</p></div></div>
   </div>
-  <h3 class="section-title" style="margin-top:24px">개발 과정 기록 — 각 홀드아웃의 첫 측정</h3>
+  <h3 class="section-title" style="margin-top:24px">개발 과정 기록 — 개발 때 쓰지 않은 시험 세트(홀드아웃)의 첫 측정</h3>
   <p class="section-lead">합성 수정본 쌍 320개(개발 140 · 홀드아웃 H1·H2 60 · H3 60 · H4 60), 라벨된 실질 변경 ${total}건. 각 홀드아웃은 한 번만 씁니다. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 주장하지 않으며 후속 PoC 과제입니다.</p>
   <div class="panel eval-summary"><b>요약 — 세 홀드아웃의 1회차를 모두 공개하며 하나로 합치지 않습니다</b><ul class="facts small" style="margin:6px 0 0">
     <li><b>개발에 쓰지 않은 서식(H1·H2)</b>: 확인 대상에서 빠진 실제 오류 ${first.engine.review.missedErrorsOutside}건(단순 대조는 ${first.baselineRow.review.missedErrorsOutside}건·${first.baselineId.review.missedErrorsOutside}건), 담당자가 개별 확인할 범위 ${pc(first.engine.review.ratio)}.</li>
     <li><b>처음 보는 날짜·머리글(H3)</b>: 놓친 오류는 ${h3.engine.review.missedErrorsOutside}건이었지만 경보가 많아(쌍당 ${h3.engine.falseAlarms.perPair.toFixed(2)}건) 단순 신분증번호 대조(${h3.baselineId.falseAlarms.perPair.toFixed(2)}건)보다 확인 부담이 컸습니다.</li>
     <li><b>처음 보는 언어의 머리글(H4)</b>: 명부를 읽지 못했습니다(실질 변경 재현율 ${pc(h4.engine.substantiveRecall.rate)}). 지금은 이런 문서를 자동으로 막고 사람에게 넘깁니다. 실서비스는 AI로 머리글을 매핑할 계획이며, 머리글 매핑 AI의 성능은 아직 측정하지 않았습니다(메일 해석 AI만 위 ①에서 측정).</li>
   </ul></div>
-  <h3 class="section-title">1. 개발에 쓰지 않은 서식 — 첫 측정</h3>
+  <h3 class="section-title">1. 개발 때 쓰지 않은 양식 시험 — 첫 측정</h3>
   <div class="panel" style="margin-top:8px"><div class="panel-head"><h3>H1·H2 1회차(한국어 머리글 · 약어 머리글·미국식 날짜)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
     <div class="panel-body">${metricTable(first, 'H1·H2 1회차')}
     <p class="small" style="margin:8px 0 0">이 결과를 본 뒤 엔진 버그 3건(한쪽 버전에만 있는 열을 변경으로 잡음, 미국식 날짜의 입항일·메일 날짜 해석)을 고쳤으므로 H1·H2는 더 이상 깨끗한 홀드아웃이 아닙니다. 그래서 H3를 새로 만들었습니다.</p></div></div>
-  <h3 class="section-title" style="margin-top:24px">2. 처음 보는 서식 스트레스 테스트 — 약점 확인</h3>
+  <h3 class="section-title" style="margin-top:24px">2. 처음 보는 양식 시험 — 약점 확인</h3>
   <div class="two-col">
     <div class="panel"><div class="panel-head"><h3>H4 1회차(개선 후, 처음 보는 언어의 머리글)</h3><span class="muted small">쌍 ${h4.engine.pairs} · 오류 ${h4.engine.labels.suspect}</span></div>
       <div class="panel-body">${metricTable(h4, 'H4 1회차', true)}
@@ -569,7 +645,7 @@ function renderEval() {
       <p>H4·H3 1회차 원본: <code>docs/eval-H4-first-run.json</code>, <code>docs/eval-H3-first-run.json</code> — <code>node eval/run.mjs --split h3|h4</code>는 결과 파일이 있으면 재실행을 거부합니다.</p>
       <p>H1·H2 1회차 원본: <code>docs/eval-holdout-first-run.json</code> (커밋 기록으로 시점 확인 가능)</p>
       <p class="muted">이 화면의 수치는 위 JSON 파일을 그대로 읽어 표시합니다.</p></div></div>
-  </div>`;
+  </div></div></details>`;
 }
 
 // ---------------- 범위·법령 탭 ----------------
@@ -583,7 +659,7 @@ function renderScope() {
       <li>행 순서와 무관한 인물 대응(신분증번호 → 성명+생년월일 → 성명)</li>
       <li>변경마다 예상된 변경 / 확인 필요 / 오류 의심 3단계 분류와 근거 표시</li>
       <li>표기만 다른 것(대소문자·공백·날짜 형식·직급 약어·행 순서)은 경보하지 않음</li>
-      <li>담당자 결정(수정본 반영·최초본 유지·확인 대기). 확인 대기가 남으면 미확정 검토본, 모두 정해지면 FAL 5 순서 확정 명부와 서명된 확정 기록</li>
+      <li>담당자 결정(수정본 반영·최초본 유지·선사 문의). 선사 문의가 남으면 미확정 검토본, 모두 정해지면 FAL 5 순서 확정 명부와 서명된 확정 기록</li>
     </ul></div></div>
     <div class="panel"><div class="panel-head"><h3>하지 않는 일</h3></div><div class="panel-body"><ul class="facts">
       <li>신고 전송(출입국·세관·항만·검역 시스템 연동 없음). KL-Net·정부 창구 연계는 향후 연계 후보이며 연동을 확인하지 않았습니다.</li>
@@ -601,11 +677,202 @@ function renderScope() {
   <div class="panel" style="margin-top:16px"><div class="panel-head"><h3>IMO FAL Form 5 (Crew List) 항목</h3><span class="muted small">근거: FAL5_DE_2018.pdf</span></div><div class="panel-body"><p class="small" style="margin:0">${[...HEADER_FIELDS, { fal: '6', en: 'No.', ko: '번호' }, ...ROW_FIELDS, { fal: '18', en: 'Date and signature by master, authorized agent or officer', ko: '서명' }].map((f) => `${f.fal}. ${h(f.en)} (${h(f.ko)})`).join(' · ')}</p></div></div>`;
 }
 
+// ---------------- 현장 재현 모드 ----------------
+// 입항 전날 밤 대리점 담당자의 화면을 장면별로 재현한다. 수치는 모두 엔진을 실제로 돌린 결과(사례 2 → 사례 5).
+const RP = { scene: Math.min(6, Math.max(1, Number(params.get('scene')) || 1)), open: null, box: null, data: null, toastScene: 0 };
+const KDATE = (s) => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\D+(\d{1,2}):(\d{2})/); return m ? new Date(2026, m[1] - 1, +m[2], +m[3], +m[4]) : null; };
+const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+const mdw = (d) => `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}(${DOW[d.getDay()]})`;
+const addMin = (d, m) => new Date(d.getTime() + m * 60000);
+
+async function prepareReplay() {
+  const s2 = SCENARIOS[1], s5 = SCENARIOS[4];
+  const r2 = compareWith(2, { a: s2.a, b: s2.b, mail: s2.mail });
+  const d2 = {}; for (const it of r2.items) d2[it.id] = it.class === 'expected' ? 'approve' : 'pending';
+  const r5 = compareWith(5, { a: s5.a, b: s5.b, mail: s5.mail });
+  const d5 = {}; for (const it of r5.items) d5[it.id] = 'approve';
+  const t1 = KDATE(s2.ctx.at), t3 = KDATE(s5.ctx.v1), t4 = KDATE(s5.ctx.at), due = KDATE(s2.ctx.due);
+  const t6 = new Date(2026, 10, 3, 6, 10); // 재현용 가상 시각
+  let conf = null;
+  try {
+    const finalCsv = toFal5Csv(r5, d5);
+    const payload = await buildConfirmation({ report: r5, decisions: d5, approver: '데모 담당자', at: '2026-11-03T01:17:00+09:00', finalCsv });
+    conf = { payload, jws: await signConfirmation(payload), finalCsv };
+  } catch { conf = null; }
+  const m2 = splitMail(s2.mail), m5 = splitMail(s5.mail);
+  const hd = r2.B.header;
+  const mails = {
+    m2: { id: 'm2', box: 'in', from: m2.head.from || s2.ctx.from, at: t1, subject: m2.head.subject || '수정 선원명부', body: m2.body, sc: 2, files: ['수정본 선원명부 V2', `${r2.B.rows.length}명`] },
+    m5: { id: 'm5', box: 'in', from: m5.head.from || s5.ctx.from, at: t4, subject: m5.head.subject || '회신', body: m5.body, sc: 5, files: ['수정본 선원명부 V3', `${r5.B.rows.length}명`] },
+    s1: { id: 's1', box: 'out', from: '나 → 선장(DEMO HANBIT 3)', at: t3, subject: `[${hd.shipName?.value || ''} ${hd.voyage?.value || ''}] 수정 선원명부 확인 요청`, body: shipperSummary(r2, d2).replace('(데모 담당자', '(데모 담당자'), sc: 0 },
+  };
+  RP.data = { r2, d2, r5, d5, t1, t3, t4, t6, due, conf, mails, hd };
+}
+
+function rpScenes() {
+  const D = RP.data;
+  const see2 = D.r2.summary.suspect + D.r2.summary.check;
+  const pend2 = pendingItems(D.r2, D.d2).length, appr2 = D.r2.items.length - pend2;
+  return [
+    { t: D.t1, title: '수정본 메일 도착', mails: ['m2'], open: 'm2', view: 'mail', cap: `입항 전날 밤 ${hhmm(D.t1)}. 선사가 수정본 V2와 함께 “생년월일 1건 정정” 메일을 보냈습니다. 출입국 보고 마감은 내일 아침 ${hhmm(D.due)}.` },
+    { t: addMin(D.t1, 2), virt: true, title: '열자마자 대조', mails: ['m2'], view: 'result2', cap: `메일을 열면 도구가 최초본·수정본·메일을 바로 대조합니다. 요청은 1건인데, 꼭 봐야 할 곳은 ${see2}건입니다.` },
+    { t: D.t3, title: '결정 · 선사 문의', mails: ['m2', 's1'], open: 's1', view: 'sent', cap: `메일 근거가 있는 정정 ${appr2}건은 수정본 반영, 근거 없는 ${pend2}건은 선사 문의로 두고 선장에게 확인 요청을 보냅니다.` },
+    { t: D.t4, title: '선장 회신 도착', mails: ['m5', 'm2', 's1'], open: 'm5', view: 'mail', cap: `새벽 ${hhmm(D.t4)}, 선장이 회신과 다시 고친 수정본 V3를 보냈습니다.` },
+    { t: addMin(D.t4, 2), virt: true, title: '다시 대조 · 확정', mails: ['m5', 'm2', 's1'], view: 'result5', cap: `확정한 결정만 반영한 기준 명부와 V3를 다시 대조합니다. ${D.r5.summary.expected}건 모두 회신에 근거가 있는 예상된 변경이라 반영하고 명부를 확정합니다.` },
+    { t: D.t6, virt: true, title: '신고 준비 완료', mails: ['m5', 'm2', 's1'], view: 'done', cap: `${hhmm(D.t6)}, 확정 명부로 신고 준비를 마쳤습니다. 출입국 보고 마감까지 ${remain(D.t6, D.due)} 남았습니다.` },
+  ];
+}
+function remain(now, due) {
+  const m = Math.max(0, Math.round((due - now) / 60000));
+  const hh = Math.floor(m / 60), mm = m % 60;
+  return hh ? `${hh}시간 ${mm}분` : `${mm}분`;
+}
+
+function rpMailList(sc) {
+  const D = RP.data;
+  const box = RP.box || (sc.view === 'sent' ? 'out' : 'in');
+  const ids = sc.mails.filter((id) => D.mails[id].box === box);
+  const nIn = sc.mails.filter((id) => D.mails[id].box === 'in').length, nOut = sc.mails.length - nIn;
+  const cur = RP.open || sc.open;
+  const fresh = sc.open && sc.view === 'mail' ? sc.open : null;
+  return `<div class="rp-box-tabs" role="tablist"><button type="button" role="tab" data-rpbox="in" aria-selected="${box === 'in'}"><i class="ti ti-inbox" aria-hidden="true"></i> 받은 메일 <span class="n">${nIn}</span></button><button type="button" role="tab" data-rpbox="out" aria-selected="${box === 'out'}"><i class="ti ti-send" aria-hidden="true"></i> 보낸 메일 <span class="n">${nOut}</span></button></div>
+  <ul class="rp-mails">${ids.map((id) => { const m = D.mails[id]; return `<li><button type="button" data-rpmail="${id}" aria-pressed="${cur === id}" class="${fresh === id ? 'fresh' : ''}"><span class="rp-from">${h(m.from)}</span><span class="rp-at">${mdw(m.at)} ${hhmm(m.at)}</span><span class="rp-subj">${h(m.subject)}</span>${m.files ? `<span class="rp-clip"><i class="ti ti-paperclip" aria-hidden="true"></i> ${h(m.files[0])}</span>` : ''}</button></li>`; }).join('') || '<li class="muted small rp-empty">메일 없음</li>'}</ul>`;
+}
+
+function rpMailView(id, sc) {
+  const D = RP.data, m = D.mails[id];
+  const next = sc.view === 'mail' && sc.open === id ? `<button type="button" class="btn btn-primary" data-act="rp-next"><i class="ti ti-arrows-diff" aria-hidden="true"></i> ${m.sc === 5 ? '기준 명부와 다시 대조' : '첨부 명부 대조하기'}</button>` : '';
+  const ai = m.sc ? aiFor(m.sc, SCENARIOS[m.sc - 1].mail) : null;
+  return `<article class="rp-mail">
+    <header class="rp-mail-head"><div class="rp-mail-subj">${h(m.subject)}</div><div class="small muted">${h(m.from)} · ${mdw(m.at)} ${hhmm(m.at)}</div></header>
+    <pre class="mail-body">${m.sc ? mailBodyHtml(m.body, ai) : h(m.body)}</pre>
+    ${m.files ? `<div class="attachments"><div class="attach"><span class="attach-ic" aria-hidden="true"><i class="ti ti-file-spreadsheet"></i></span><span><b>${h(m.files[0])}</b><span class="muted small">${h(m.files[1])}</span></span></div></div>` : ''}
+    ${m.sc ? `<div class="mail-ai">${aiReadHtml(m.sc, SCENARIOS[m.sc - 1].mail, m.sc === 2 ? D.r2 : D.r5)}</div>` : ''}
+    ${next ? `<div class="rp-actions">${next}</div>` : ''}
+  </article>`;
+}
+
+function rpItems(rep, dec) {
+  return `<div class="table-wrap"><table class="grid changes rp-items"><tbody>${sortedItems(rep).map((it) => `<tr class="rp-row"><td class="person">${h(it.person)}</td><td><span class="cls ${it.class}">${CLASS_LABEL[it.class]}</span></td><td>${changeText(it)}</td><td class="basis small">${h(basisText(it))}</td>${dec ? `<td class="rp-dec"><span class="dec ${dec[it.id]}">${DECISION_LABEL[dec[it.id]]}</span></td>` : ''}</tr>`).join('')}</tbody></table></div>`;
+}
+
+function rpMain(sc) {
+  const D = RP.data;
+  if (RP.open) return rpMailView(RP.open, sc);
+  if (sc.view === 'mail') return rpMailView(sc.open, sc);
+  const detail = (scn, st, label = '자세히 보기') => `<button type="button" class="btn" data-act="rp-detail" data-sc="${scn}" data-st="${st}"><i class="ti ti-list-details" aria-hidden="true"></i> ${label}</button>`;
+  if (sc.view === 'result2') {
+    const s = D.r2.summary;
+    return `<section class="rp-card"><div class="rp-kicker">대조 결과 · 최초본 V1 ↔ 수정본 V2 + 메일</div>
+      <div class="rp-headline"><span class="big">${s.suspect + s.check}</span><span>건은 사람이 꼭 봐야 할 곳</span></div>
+      <div class="rp-counts"><span class="cls suspect">오류 의심 ${s.suspect}</span><span class="cls check">확인 필요 ${s.check}</span><span class="cls expected">예상된 변경 ${s.expected}</span><span class="muted small">표기 차이 ${s.cosmetic}건은 자동 정리</span></div>
+      ${rpItems(D.r2)}
+      <div class="rp-actions">${detail(2, 2, '근거 자세히 보기')}<button type="button" class="btn btn-primary" data-act="rp-next">결정하고 선사에 문의 <i class="ti ti-arrow-right" aria-hidden="true"></i></button></div></section>`;
+  }
+  if (sc.view === 'sent') {
+    const pend = pendingItems(D.r2, D.d2).length;
+    return `<section class="rp-card"><div class="rp-kicker">담당자 결정</div>
+      <div class="rp-headline"><span class="big ok">${D.r2.items.length - pend}</span><span>건 수정본 반영</span><span class="big wait">${pend}</span><span>건 선사 문의</span></div>
+      ${rpItems(D.r2, D.d2)}
+      <div class="rp-actions">${detail(2, 3, '결정 화면 자세히 보기')}</div></section>
+      ${rpMailView('s1', sc)}`;
+  }
+  if (sc.view === 'result5') {
+    const c = D.conf;
+    return `<section class="rp-card"><div class="rp-kicker">다시 대조 · 기준 명부 ↔ 수정본 V3 + 선장 회신</div>
+      <div class="rp-headline"><span class="big ok">${D.r5.summary.expected}</span><span>건 모두 회신에 근거 있음 → 수정본 반영, 명부 확정</span></div>
+      ${rpItems(D.r5, D.d5)}
+      ${c ? `<div class="saved-line"><i class="ti ti-circle-check" aria-hidden="true"></i><div><b>확정 명부 · 결정 기록 저장됨</b><div class="small muted">수정본 반영 ${c.payload.counts.approved}건 · 최초본 유지 ${c.payload.counts.kept}건 · 선사 문의 0건</div></div></div>` : ''}
+      <div class="rp-actions">${detail(5, 4, '확정 명부 자세히 보기')}<button type="button" class="btn btn-primary" data-act="rp-next">다음 장면 <i class="ti ti-arrow-right" aria-hidden="true"></i></button></div></section>`;
+  }
+  // done
+  const see2 = D.r2.summary.suspect + D.r2.summary.check;
+  const pend2 = pendingItems(D.r2, D.d2).length;
+  const ev = [
+    [D.t1, `수정본 V2 · 정정 요청 메일 도착`],
+    [addMin(D.t1, 2), `대조 — 꼭 봐야 할 곳 ${see2}건`],
+    [D.t3, `정정 ${D.r2.items.length - pend2}건 반영 · ${pend2}건 선사 문의 발송`],
+    [D.t4, `선장 회신 · 수정본 V3 도착`],
+    [addMin(D.t4, 2), `다시 대조 — ${D.r5.summary.expected}건 반영, 명부 확정`],
+    [D.t6, `출입국·세관·항만·검역 신고 준비 완료`],
+  ];
+  return `<section class="rp-card rp-done"><div class="rp-kicker">신고 준비 완료</div>
+    <div class="rp-headline"><i class="ti ti-circle-check ok-ic" aria-hidden="true"></i><span>확정 명부 준비 완료 · 마감까지 <b>${remain(D.t6, D.due)}</b></span></div>
+    <ol class="rp-log">${ev.map(([t, x]) => `<li><span class="rp-at">${mdw(t)} ${hhmm(t)}</span><span>${h(x)}</span></li>`).join('')}</ol>
+    <p class="small muted" style="margin:10px 0 0">CrewDiff는 신고를 전송하지 않습니다. 확정 명부는 담당자가 각 기관 시스템에 신고할 때 쓰는 준비 자료입니다.</p>
+    <div class="rp-actions"><button type="button" class="btn" data-act="rp-download"><i class="ti ti-download" aria-hidden="true"></i> 확정 명부 CSV 내려받기</button>${detail(5, 4, '단계별 상세 화면')}</div></section>`;
+}
+
+function renderReplay() {
+  const el = $('#tab-replay');
+  if (!RP.data) { el.innerHTML = '<p class="muted">재현 화면을 준비하는 중…</p>'; return; }
+  const scenes = rpScenes();
+  const sc = scenes[RP.scene - 1];
+  const D = RP.data;
+  const hd = D.hd;
+  const port = ({ BUSAN: '부산' })[hd.port?.value] || hd.port?.value || '';
+  el.innerHTML = `
+  <div class="rp-top">
+    <div class="rp-clock"><span class="rp-clock-ic"><i class="ti ti-clock" aria-hidden="true"></i></span><div><div class="rp-time">${hhmm(sc.t)}</div><div class="rp-date">${mdw(sc.t)}${sc.virt ? ' · 재현용 시각' : ''}</div></div></div>
+    <div class="rp-due"><div class="rp-due-l">출입국 보고 마감 ${mdw(D.due)} ${hhmm(D.due)}까지</div><div class="rp-due-n ${D.due - sc.t <= 60 * 60000 ? 'soon' : ''}">${remain(sc.t, D.due)}</div></div>
+    <div class="rp-ship"><i class="ti ti-ship" aria-hidden="true"></i><div><b>${h(hd.shipName?.value || '')}</b> <span class="muted">V.${h(hd.voyage?.value || '')}</span><div class="small muted">${h(port)} 입항 ${h(SCENARIOS[1].ctx.eta)} · 선원 ${D.r2.B.rows.length}명</div></div></div>
+  </div>
+  <div class="rp-caption" aria-live="polite">
+    <span class="rp-scene-no">장면 ${RP.scene}/6</span>
+    <p><b>${h(sc.title)}</b> ${h(sc.cap)}</p>
+    <div class="rp-nav"><button type="button" class="btn btn-sm rp-prev" data-act="rp-prev" ${RP.scene === 1 ? 'disabled' : ''} aria-label="이전 장면"><i class="ti ti-chevron-left"></i></button><button type="button" class="btn btn-sm btn-primary" data-act="rp-next" ${RP.scene === 6 ? 'disabled' : ''}>다음 장면 <i class="ti ti-chevron-right"></i></button></div>
+  </div>
+  <ol class="rp-dots" aria-label="장면 선택">${scenes.map((x, i) => `<li><button type="button" data-scene="${i + 1}" aria-current="${i + 1 === RP.scene ? 'step' : 'false'}" class="${i + 1 < RP.scene ? 'done' : ''}"><span class="rp-dot-t">${hhmm(x.t)}</span><span class="rp-dot-l">${h(x.title)}</span></button></li>`).join('')}</ol>
+  <div class="rp-body">
+    <aside class="rp-inbox" aria-label="업무 메일함">${rpMailList(sc)}</aside>
+    <div class="rp-main">${rpMain(sc)}</div>
+  </div>
+  <p class="note small"><b>재현(가상 상황):</b> 인물·선박·메일은 모두 가상입니다. 대조 결과와 건수는 이 화면에서 엔진을 실제로 돌린 값이고, 메일 해석은 AI가 미리 읽어 둔 결과를 씁니다. 시각 중 ‘재현용 시각’ 표시는 장면 연출을 위한 가상 시각입니다.</p>`;
+  rpToast(sc);
+}
+
+function rpToast(sc) {
+  if (RP.toastScene === RP.scene) return;
+  RP.toastScene = RP.scene;
+  const id = sc.view === 'mail' ? sc.open : sc.view === 'sent' ? 's1' : null;
+  const t = $('#toast');
+  if (!id || !t) { if (t) t.hidden = true; return; }
+  const m = RP.data.mails[id];
+  t.innerHTML = `<i class="ti ${m.box === 'out' ? 'ti-send' : 'ti-mail'}" aria-hidden="true"></i><div><b>${m.box === 'out' ? '메일 보냄' : '새 메일'}</b> · ${hhmm(m.at)}<div class="small">${h(m.from)} — ${h(m.subject)}</div></div>`;
+  t.hidden = false;
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+}
+function rpGo(n) {
+  RP.scene = Math.min(6, Math.max(1, n));
+  RP.open = null;
+  RP.box = null;
+  renderReplay();
+  window.scrollTo({ top: 0 });
+}
+function openDetail(scn, st) {
+  loadScenario(scn);
+  run();
+  if (st >= 3) for (const it of state.report.items) state.decisions[it.id] = scn === 5 ? 'approve' : it.class === 'expected' ? 'approve' : 'pending';
+  state.step = st;
+  if (st === 4 && !allDecided()) state.step = 3;
+  render();
+  setTab('demo');
+  window.scrollTo({ top: 0 });
+}
+
 // ---------------- 이벤트 ----------------
 document.addEventListener('click', async (e) => {
   const t = e.target.closest('button, tr.item');
   if (!t) return;
   if (t.matches('.top-tab')) { setTab(t.dataset.tab); return; }
+  if (t.dataset.scene) { rpGo(Number(t.dataset.scene)); return; }
+  if (t.dataset.rpmail) { RP.open = t.dataset.rpmail; renderReplay(); return; }
+  if (t.dataset.rpbox) { RP.box = t.dataset.rpbox; renderReplay(); return; }
+  if (t.dataset.act === 'rp-next') { rpGo(RP.scene + 1); return; }
+  if (t.dataset.act === 'rp-prev') { rpGo(RP.scene - 1); return; }
+  if (t.dataset.act === 'rp-detail') { openDetail(Number(t.dataset.sc), Number(t.dataset.st)); return; }
+  if (t.dataset.act === 'rp-download') { const D = RP.data; const csv = toFal5Csv(D.r5, D.d5); const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `crew-list-fal5-${D.hd.voyage?.value || 'demo'}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); return; }
   if (t.dataset.step) { goStep(Number(t.dataset.step)); return; }
   if (t.dataset.scenario) { loadScenario(Number(t.dataset.scenario)); run(); render(); return; }
   if (t.dataset.view) { state.view = t.dataset.view; render(); return; }
@@ -663,7 +930,16 @@ async function loadEval() {
 }
 
 // ---------------- 시작 ----------------
+async function loadAI() {
+  try {
+    const arr = await fetch('data/ai/scenario-ai.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+    for (const x of arr) { if (x.meta) AI.meta = x.meta; else if (x.id) AI.byId[x.id] = x; }
+  } catch { AI = { meta: null, byId: {} }; }
+}
+
 async function start() {
+  await loadAI();
+  await prepareReplay();
   loadScenario(state.scenario);
   run();
   if (params.get('item')) state.selected = params.get('item');
