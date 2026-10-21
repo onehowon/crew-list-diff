@@ -85,7 +85,7 @@ function scenario1() {
     'Best regards,',
     'Crewing Dept. (demo)',
   ].join('\n') + '\n';
-  return { id: 1, title: '교대 승선·하선', desc: '2명 하선·2명 승선과 진급 통보. 수정본은 엑셀에서 붙여 넣은 표라 날짜 형식·직급 표기·행 순서가 다릅니다.', a: falCsv(a), b: excelTsv(ordered), mail };
+  return { id: 1, title: '교대 승선·하선', ctx: { situation: '부산 입항 하루 전, 선사가 교대 승선·하선과 진급을 알리며 엑셀 수정본을 보냄', from: '선사 선원팀', at: '11/02(월) 16:05', v1: '10/30(금) 14:20 최초본', v2: '11/02(월) 16:05 수정본(엑셀 붙여넣기)', eta: '11/03(화) 09:00', due: '11/03(화) 07:00' }, desc: '2명 하선·2명 승선과 진급 통보. 수정본은 엑셀에서 붙여 넣은 표라 날짜 형식·직급 표기·행 순서가 다릅니다.', a: falCsv(a), b: excelTsv(ordered), mail };
 }
 
 function scenario2() {
@@ -112,7 +112,7 @@ function scenario2() {
     'Best regards,',
     'Crewing Dept. (demo)',
   ].join('\n') + '\n';
-  return { id: 2, title: '여권 갱신 + 오기', desc: '기관장 여권 갱신(메일 언급 없음), 생년월일 정정 요청 1건, 그리고 문자 혼동·일월 뒤바뀜·국적 코드·만료 여권이 섞인 수정본.', a: falCsv(a), b: falCsv(b), mail };
+  return { id: 2, title: '여권 갱신 + 오기', ctx: { situation: '부산 입항 전날 밤, 선사가 생년월일 정정 1건을 요청하며 수정본을 보냄. 그런데 수정본에는 요청하지 않은 변경도 섞여 있음', from: '선사 선원팀', at: '11/02(월) 21:40', v1: '10/30(금) 14:20 최초본', v2: '11/02(월) 21:40 수정본 V2', eta: '11/03(화) 09:00', due: '11/03(화) 07:00' }, desc: '기관장 여권 갱신(메일 언급 없음), 생년월일 정정 요청 1건, 그리고 문자 혼동·일월 뒤바뀜·국적 코드·만료 여권이 섞인 수정본.', a: falCsv(a), b: falCsv(b), mail };
 }
 
 function scenario3() {
@@ -139,7 +139,7 @@ function scenario3() {
     '감사합니다.',
     '선원관리팀 (데모)',
   ].join('\n') + '\n';
-  return { id: 3, title: '정정 요청 미반영', desc: '한국어 메일로 받은 정정·하선·직급 변경 요청 중 일부가 수정본에 반영되지 않았고, 중복 행과 판독 불가 칸이 있습니다.', a: falCsv(a), b: falCsv(b), mail };
+  return { id: 3, title: '정정 요청 미반영', ctx: { situation: '선원관리팀이 한국어 메일로 정정·하선·직급 변경을 요청하며 수정본을 보냄. 요청이 수정본에 다 반영됐는지 확인해야 함', from: '선원관리팀', at: '11/02(월) 18:30', v1: '10/30(금) 14:20 최초본', v2: '11/02(월) 18:30 수정본', eta: '11/03(화) 09:00', due: '11/03(화) 07:00' }, desc: '한국어 메일로 받은 정정·하선·직급 변경 요청 중 일부가 수정본에 반영되지 않았고, 중복 행과 판독 불가 칸이 있습니다.', a: falCsv(a), b: falCsv(b), mail };
 }
 
 // 처음 보는 서식: 일부 독일어 머리글, 알 수 없는 비고 열, 두 자리 연도 만료일
@@ -155,7 +155,7 @@ function scenario4() {
     ...b.map((r, i) => [i + 1, q(r.familyName), q(r.givenNames), ABBR[r.rank] || r.rank, r.nationality, r.dob, `ok ${i % 3}`, r.gender, r.idType, r.idNumber, r.idIssuer, yy(r.idExpiry)].join(',')),
   ].join('\n') + '\n';
   const mail = ['Dear Agent,', '', 'Please find attached the revised crew list (new template from owner).', '', 'Best regards,', 'Crewing Dept. (demo)'].join('\n') + '\n';
-  return { id: 4, title: '처음 보는 서식', desc: '선주가 바꾼 양식: 일부 독일어 머리글, 알 수 없는 비고 열, 두 자리 연도 만료일. 추정 매핑과 열 단위 서식 경보를 보여 줍니다.', a: falCsv(a), b: csv, mail };
+  return { id: 4, title: '처음 보는 서식', ctx: { situation: '선주가 명부 양식을 바꿔 보냄(독일어 머리글·두 자리 연도). 도구가 처음 보는 서식', from: '선사 선원팀', at: '11/02(월) 17:10', v1: '10/30(금) 14:20 최초본', v2: '11/02(월) 17:10 새 양식 수정본', eta: '11/03(화) 09:00', due: '11/03(화) 07:00' }, desc: '선주가 바꾼 양식: 일부 독일어 머리글, 알 수 없는 비고 열, 두 자리 연도 만료일. 추정 매핑과 열 단위 서식 경보를 보여 줍니다.', a: falCsv(a), b: csv, mail };
 }
 
 // 예시 5: 예시 2를 이어서. 담당자가 생년월일 정정만 채택하고 나머지 6건을 '확인 대기'로 둔 뒤,
@@ -187,7 +187,7 @@ function scenario5() {
     'Best regards,',
     'Master (demo)',
   ].join('\n') + '\n';
-  return { id: 5, title: '선장 회신 후 재대조', desc: '예시 2를 이어서: 확정한 정정만 반영한 기준본과, 선장 회신·다시 고친 수정본(V3)을 대조해 확인 대기를 모두 풀고 최종 명부를 만듭니다.', a: falCsv(a), b: falCsv(b), mail };
+  return { id: 5, title: '선장 회신 후 재대조', ctx: { situation: '확인 대기 6건을 선장에게 물었고, 선장이 회신과 함께 다시 고친 V3를 보냄. 확정한 정정만 반영한 기준본과 V3를 대조', from: '선장(DEMO HANBIT 3)', at: '11/03(화) 01:15', v1: '11/02(월) 22:10 기준본(확정한 결정만 반영)', v2: '11/03(화) 01:15 수정본 V3', eta: '11/03(화) 09:00', due: '11/03(화) 07:00', continues: 2 }, desc: '예시 2를 이어서: 확정한 정정만 반영한 기준본과, 선장 회신·다시 고친 수정본(V3)을 대조해 확인 대기를 모두 풀고 최종 명부를 만듭니다.', a: falCsv(a), b: falCsv(b), mail };
 }
 
 export const SCENARIOS = [scenario1(), scenario2(), scenario3(), scenario4(), scenario5()];

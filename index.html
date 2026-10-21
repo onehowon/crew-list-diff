@@ -18,9 +18,10 @@
 <header class="app-header">
   <div class="wrap app-header-inner">
     <div class="brand">
+      <span class="brand-mark" aria-hidden="true">CD</span>
       <span class="brand-name">CrewDiff</span>
-      <span class="brand-sub">선원명부 변경대조 도우미</span>
-      <span class="Label Label--secondary">PoC</span>
+      <span class="brand-sub">선박대리점 입출항 담당자용 · 선원명부 변경대조</span>
+      <span class="brand-tag">PoC</span>
     </div>
     <nav class="top-tabs" aria-label="화면 선택">
       <button type="button" class="top-tab" data-tab="demo">변경 대조 데모</button>
@@ -30,10 +31,11 @@
   </div>
 </header>
 <div class="demo-band" role="note">
-  <div class="wrap"><strong>데모</strong> 모든 인물·선박·번호는 가상입니다. 이 도구는 신고를 전송하지 않으며, 출력은 담당자가 확인할 준비 자료입니다.</div>
+  <div class="wrap"><strong>데모</strong> 모든 인물·선박·번호는 가상 · 신고를 전송하지 않음 · 출력은 담당자 확인용 준비 자료</div>
 </div>
 <main id="main" class="wrap main" tabindex="-1">
   <section id="tab-demo" class="tab-panel">
+    <div id="voyage"></div>
     <ol class="stepper" id="stepper" aria-label="진행 단계"></ol>
     <div id="stepBody"></div>
   </section>

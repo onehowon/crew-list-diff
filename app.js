@@ -97,7 +97,36 @@ function renderStepper() {
   }).join('');
 }
 
+function voyageBar() {
+  const sc = SCENARIOS[state.scenario - 1];
+  const ctx = sc?.ctx || {};
+  const hd = state.report?.B.header || {};
+  const pend = state.report ? pendingItems(state.report, state.decisions).length : 0;
+  let status = ['대조 전', 'idle'];
+  if (state.report && state.report.blocked) status = ['명부 판독 실패 · 사람 검토', 'bad'];
+  else if (state.step === 4 && pend) status = [`확인 대기 ${pend}건 · 선장 회신 대기`, 'wait'];
+  else if (state.step === 4) status = ['확정', 'ok'];
+  else if (state.report) status = ['대조·결정 중', 'work'];
+  const t = (cls, label, sub) => `<li class="${cls}"><span class="dot"></span><b>${label}</b><span>${h(sub || '')}</span></li>`;
+  const v1 = state.scenario === 5 ? '기준본' : '최초본 V1';
+  const v2 = state.scenario === 5 ? '회신 + V3' : '수정본 V2 + 메일';
+  return `<section class="voyage" aria-label="항차 정보">
+    <div class="v-main">
+      <div class="v-ship"><span class="v-icon" aria-hidden="true">⚓</span>${h(hd.shipName?.value || 'DEMO HANBIT 3')} <span class="v-voy">V.${h(hd.voyage?.value || '2611E')}</span></div>
+      <div class="v-meta">${h(({ BUSAN: '부산', ULSAN: '울산', INCHEON: '인천', GWANGYANG: '광양', PYEONGTAEK: '평택' })[hd.port?.value] || hd.port?.value || '부산')} 입항 <b>${h(ctx.eta || hd.date?.value || '')}</b> · 출입국 보고 마감 <b>${h(ctx.due || '입항 2시간 전')}</b> <span class="muted">(입항 2시간 전)</span></div>
+    </div>
+    <ol class="v-timeline">
+      ${t('done', v1, (ctx.v1 || '').replace(/\s*(최초본|기준본).*$/, ''))}
+      ${t(state.step === 4 ? 'done' : 'cur', v2, ctx.at)}
+      ${t(state.step === 4 ? (pend ? 'cur wait' : 'done ok') : '', pend && state.step === 4 ? '확인 요청 → 회신 대기' : '확정 명부', state.step === 4 ? (pend ? `${pend}건` : '모두 결정') : '')}
+    </ol>
+    <span class="v-status ${status[1]}">${status[0]}</span>
+  </section>
+  ${ctx.situation ? `<p class="situation"><b>상황</b> ${h(ctx.situation)}</p>` : ''}`;
+}
+
 function render() {
+  $('#voyage').innerHTML = voyageBar();
   renderStepper();
   const body = $('#stepBody');
   if (state.step === 1) body.innerHTML = step1();
@@ -113,33 +142,56 @@ function fmtInfo(text) {
   return `${delim} · ${lines}줄`;
 }
 
+// 메일 머리(보낸 사람·제목)와 본문 나누기 — 화면 표시용
+function splitMail(text) {
+  const head = {}, body = [];
+  for (const ln of String(text || '').split('\n')) {
+    const m = ln.match(/^\s*(from|subject|보낸\s*사람|제목)\s*[:：]\s*(.*)$/i);
+    if (m && !body.length) head[/^(from|보낸)/i.test(m[1]) ? 'from' : 'subject'] = m[2];
+    else if (body.length || ln.trim()) body.push(ln);
+  }
+  return { head, body: body.join('\n').trim() };
+}
+
 function step1() {
-  const sc = SCENARIOS.map((s) => `<button type="button" class="scenario" data-scenario="${s.id}" aria-pressed="${s.id === state.scenario}"><b>예시 ${s.id}. ${h(s.title)}</b><span>${h(s.desc)}</span></button>`).join('');
+  const sc = SCENARIOS[state.scenario - 1];
+  const ctx = sc?.ctx || {};
+  const m = splitMail(state.inputs.mail);
+  const rowsN = (k) => (state.report ? (k === 'a' ? state.report.A.rows.length : state.report.B.rows.length) : null);
+  const file = (k, label, sub) => `<div class="attach"><span class="attach-ic" aria-hidden="true">${k === 'a' ? 'V1' : 'V2'}</span><span><b>${label}</b><span class="muted small">${sub}${rowsN(k) != null ? ` · ${rowsN(k)}명` : ''}</span></span></div>`;
   const box = (key, title, sub) => `<div class="panel"><div class="panel-head"><h3>${title}</h3><span class="muted small">${sub}</span></div><textarea class="mono" data-input="${key}" spellcheck="false" aria-label="${title}">${h(state.inputs[key])}</textarea></div>`;
+  const others = SCENARIOS.map((x) => `<button type="button" class="case" data-scenario="${x.id}" aria-pressed="${x.id === state.scenario}"><b>${x.id}</b> ${h(x.title)}</button>`).join('');
   return `
-  <div class="intro panel">
-    <p class="intro-lead">선원명부 수정본이 오면, 바뀐 곳 가운데 <b>사람이 꼭 봐야 할 곳</b>만 근거와 함께 골라 줍니다.</p>
-    <p class="small" style="margin:6px 0 0">최초본·수정본·선사 메일을 넣으면 변경을 세 가지로 나눕니다.
-      <span class="cls expected">예상된 변경</span> 메일에 근거가 있음 ·
-      <span class="cls suspect">오류 의심</span> 여권번호 O/0 혼동, 일·월 뒤바뀜 등 오류 규칙에 걸림 ·
-      <span class="cls check">확인 필요</span> 그 밖의 변경</p>
-    <button type="button" class="btn btn-primary btn-large" data-act="quick" style="margin-top:12px">▶ 예시로 바로 보기 <span class="small">(오류 4건이 섞인 수정본)</span></button>
+  ${state.scenario === 2 && !state.rebased ? `<div class="intro">
+    <div><p class="intro-lead">수정본이 오면, 바뀐 곳 가운데 <b>사람이 꼭 봐야 할 곳</b>만 근거와 함께 골라 줍니다.</p>
+    <p class="intro-sub"><span class="cls suspect">오류 의심</span> 규칙에 걸린 변경 &nbsp; <span class="cls check">확인 필요</span> 근거 없는 변경 &nbsp; <span class="cls expected">예상된 변경</span> 메일에 근거 있음</p></div>
+    <button type="button" class="btn btn-primary btn-large" data-act="quick">▶ 이 메일 바로 대조해 보기</button>
+  </div>` : ''}
+  <div class="inbox">
+    <div class="mail">
+      <div class="mail-head">
+        <div class="mail-from"><span class="avatar" aria-hidden="true">${h((m.head.from || ctx.from || '선사').trim().charAt(0))}</span><div><b>${h(m.head.from || ctx.from || '보낸 사람 없음')}</b><span class="muted small">${h(ctx.at || '')}</span></div></div>
+        <div class="mail-subject">${h(m.head.subject || '(제목 없음)')}</div>
+      </div>
+      <pre class="mail-body">${h(m.body || '(메일 본문 없음)')}</pre>
+      <div class="attachments">${file('a', state.scenario === 5 ? '기준본 (확정한 결정만 반영)' : '최초본 선원명부', (ctx.v1 || '').replace(/\s*(최초본|기준본).*$/, '') || fmtInfo(state.inputs.a))}${file('b', state.scenario === 5 ? '수정본 V3' : '수정본 선원명부', (ctx.v2 || '').replace(/\s*수정본.*$/, '') || fmtInfo(state.inputs.b))}</div>
+    </div>
+    <aside class="inbox-side">
+      <div class="side-card"><h3>도구가 할 일</h3><ol class="todo"><li>두 명부를 FAL 5 항목으로 맞추고 같은 사람끼리 짝짓기</li><li>바뀐 곳마다 메일 근거·오류 규칙 찾기</li><li>사람이 볼 곳만 골라 보여 주기</li></ol>
+        <button type="button" class="btn btn-primary btn-block" data-act="next">변경 대조 결과 보기 →</button>
+        ${state.report ? '' : state.rebased ? '<p class="small muted" style="margin:8px 0 0">기준본이 최초본 칸에 들어갔습니다. 아래 원문 칸에 회신 후 수정본과 회신 메일을 붙여 넣으세요.</p>' : '<p class="small muted" style="margin:8px 0 0">입력을 고쳤습니다 — 누르면 다시 대조합니다.</p>'}</div>
+      <div class="side-card"><h3>다른 사례</h3><div class="cases">${others}</div></div>
+    </aside>
   </div>
-  <h2 class="section-title">1. 자료 받기</h2>
-  <p class="section-lead">예시를 고르면 바로 대조합니다. 아래 세 칸에 받은 자료를 직접 붙여 넣어도 됩니다(표는 CSV·엑셀 복사 모두 읽음).</p>
-  <div class="scenario-list">${sc}</div>
-  <div class="inputs">
-    ${box('a', '최초본 선원명부', fmtInfo(state.inputs.a))}
-    ${box('b', '수정본 선원명부', fmtInfo(state.inputs.b))}
-    ${box('mail', '수정 메일 원문', '교대 통보·정정 요청')}
-  </div>
-  <p class="note"><b>데모 범위:</b> 표(CSV·TSV)는 브라우저에서 실제로 파싱합니다. <b>메일 해석은 규칙 기반</b>이며, 이 프로토타입에는 AI(LLM) 추출이 들어 있지 않습니다. 실제 서비스에서는 LLM 추출 + 스키마 검증으로 PDF·메일에서 항목을 뽑으며, 그 성능은 아직 측정하지 않았습니다. 성능 평가는 대조·분류 엔진에 대한 것입니다.</p>
-  <div class="row-actions">
-    <span class="spacer"></span>
-    ${state.report ? '' : state.rebased ? '<span class="small muted">최초본 칸에 기준본(확정한 결정만 반영)이 들어갔습니다. 회신 후 수정본과 회신 메일을 붙여 넣고 다음을 누르세요</span>' : '<span class="small muted">입력을 고쳤습니다 — 다음을 누르면 다시 대조합니다</span>'}
-    <button type="button" class="btn btn-primary" data-act="next">다음: 변경 대조 결과 보기</button>
-  </div>
-  ${state.report ? normalizedView() : ''}`;
+  <details class="raw panel"${state.rebased ? ' open' : ''}><summary>원문 보기 · 직접 붙여 넣기 <span class="muted small">(표는 CSV·엑셀 복사 모두 읽음)</span></summary>
+    <div class="inputs">
+      ${box('a', state.scenario === 5 ? '기준본' : '최초본 선원명부', fmtInfo(state.inputs.a))}
+      ${box('b', '수정본 선원명부', fmtInfo(state.inputs.b))}
+      ${box('mail', '메일 원문', '교대 통보·정정 요청·회신')}
+    </div>
+  </details>
+  ${state.report ? `<details class="raw panel"><summary>FAL 5 항목으로 정리된 명부 보기</summary>${normalizedView()}</details>` : ''}
+  <p class="note"><b>데모 범위:</b> 표는 브라우저에서 실제로 읽습니다. 앱의 메일 해석은 규칙 기반이며(부정·취소·조건·인용 문장은 지시로 쓰지 않음), LLM 메일 해석은 '평가 결과' 탭의 시험으로 따로 측정했습니다.</p>`;
 }
 
 function normalizedView() {
@@ -210,6 +262,7 @@ function basisText(it) {
 function step2() {
   const r = state.report;
   const s = r.summary;
+  const stat = (k, label, n, sub) => `<button type="button" class="stat ${k}" data-filter="${k}" aria-pressed="${state.filter === k}"><span class="stat-n">${n}</span><span class="stat-l">${label}</span><span class="stat-s">${sub}</span></button>`;
   const chip = (k, label, n) => `<button type="button" class="chip" data-filter="${k}" aria-pressed="${state.filter === k}"><span class="dot ${k}"></span>${label} <span class="n">${n}</span></button>`;
   const items = sortedItems().filter((it) => state.filter === 'all' || it.class === state.filter);
   let lastPerson = null;
@@ -223,13 +276,13 @@ function step2() {
   return `
   <h2 class="section-title">2. 변경 대조</h2>
   <p class="section-lead">행 순서와 상관없이 같은 사람끼리 맞춘 뒤, 실제로 바뀐 항목만 보여 줍니다. <b>예상된 변경</b>은 메일에 근거 문장이 있을 때만, <b>오류 의심</b>은 정해 둔 오류 규칙 8가지(문자 혼동, 일·월 뒤바뀜, 메일 지시 미반영 등)에 걸릴 때만, 나머지는 모두 <b>확인 필요</b>입니다. 행을 누르면 두 원문과 근거가 나옵니다.</p>
-  <div class="chips">
-    ${chip('all', '전체', r.items.length)}
-    ${chip('suspect', CLASS_LABEL.suspect, s.suspect)}
-    ${chip('check', CLASS_LABEL.check, s.check)}
-    ${chip('expected', CLASS_LABEL.expected, s.expected)}
-    <span class="chip" style="cursor:default"><span class="dot cosmetic"></span>표기만 다름 <span class="n">${s.cosmetic}</span> <span class="muted small">접힘·경보 안 함</span></span>
+  <div class="stats">
+    ${stat('suspect', '오류 의심', s.suspect, '먼저 확인 · 규칙에 걸림')}
+    ${stat('check', '확인 필요', s.check, '근거 없는 변경')}
+    ${stat('expected', '예상된 변경', s.expected, '메일 근거 있음 · 근거 보고 채택')}
+    <div class="stat cosmetic"><span class="stat-n">${s.cosmetic}</span><span class="stat-l">표기만 다름</span><span class="stat-s">자동 정리 · 경보 안 함</span></div>
   </div>
+  <div class="chips">${chip('all', '전체 보기', r.items.length)}</div>
   ${documentAlertBox(r)}${columnAlertBox(r)}
   <div class="compare">
     <div>
