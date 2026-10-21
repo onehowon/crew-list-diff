@@ -16,38 +16,38 @@
 </head>
 <body>
 <a class="skip-link" href="#main">본문 바로가기</a>
-<header class="app-header">
-  <div class="wrap app-header-inner">
-    <div class="brand">
-      <span class="brand-mark" aria-hidden="true"><i class="ti ti-file-diff"></i></span>
-      <span class="brand-name">CrewDiff</span>
-      <span class="brand-sub">선박대리점 입출항 담당자용 · 선원명부 변경대조</span>
-      <span class="brand-tag">PoC</span>
-    </div>
-    <nav class="top-tabs" aria-label="화면 선택">
-      <button type="button" class="top-tab" data-tab="replay"><i class="ti ti-player-play" aria-hidden="true"></i> 현장 재현</button>
-      <button type="button" class="top-tab" data-tab="demo"><i class="ti ti-list-details" aria-hidden="true"></i> 단계별 상세</button>
-      <button type="button" class="top-tab" data-tab="eval"><i class="ti ti-chart-bar" aria-hidden="true"></i> 평가 결과</button>
-      <button type="button" class="top-tab" data-tab="scope"><i class="ti ti-scale" aria-hidden="true"></i> 범위·법령 근거</button>
-    </nav>
+<header class="sys-bar">
+  <button type="button" class="sys-burger" data-act="nav-toggle" aria-label="메뉴 열기" aria-expanded="false" aria-controls="sysNav"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"><i class="ti ti-file-diff"></i></span>
+    <span class="brand-name">CrewDiff</span>
+    <span class="brand-sub">선원명부 변경대조</span>
+    <span class="brand-tag">데모</span>
   </div>
+  <span class="sys-spacer"></span>
+  <button type="button" class="btn btn-sm sys-demo-btn" data-act="demo-start"><i class="ti ti-player-play" aria-hidden="true"></i><span class="lbl"> 시연 시작</span></button>
+  <div class="sys-clock" id="sysClock" aria-live="off"></div>
+  <button type="button" class="sys-bell" id="sysBell" data-act="bell" aria-label="새 메일"><i class="ti ti-bell" aria-hidden="true"></i><span class="sys-bell-n" id="sysBellN"></span></button>
+  <div class="sys-user"><span class="sys-avatar" aria-hidden="true">데</span><span class="sys-user-t"><b>데모 담당자</b><span>○○해운대리점 부산지점</span></span></div>
 </header>
-<div class="demo-band" role="note">
-  <div class="wrap"><strong>데모</strong><span id="replayBadge" class="replay-badge" hidden>재현(가상 상황)</span> 모든 인물·선박·번호는 가상 · 신고를 전송하지 않음 · 출력은 담당자 확인용 준비 자료</div>
+<div class="sys-layout">
+  <nav class="sys-nav" id="sysNav" aria-label="업무 메뉴"></nav>
+  <main id="main" class="sys-main" tabindex="-1">
+    <div id="demoBar"></div>
+    <section id="pg-ships" class="tab-panel" hidden></section>
+    <section id="pg-ship" class="tab-panel" hidden></section>
+    <section id="pg-work" class="tab-panel" hidden>
+      <div id="pgHead"></div>
+      <div id="voyage"></div>
+      <ol class="stepper" id="stepper" aria-label="처리 단계"></ol>
+      <div id="stepBody"></div>
+    </section>
+    <section id="pg-inquiry" class="tab-panel" hidden></section>
+    <section id="tab-eval" class="tab-panel" hidden></section>
+    <section id="tab-scope" class="tab-panel" hidden></section>
+    <footer class="app-footer">CrewDiff PoC · 해운 AX 공모전 출품용 개념 검증 · 모든 인물·선박·번호·메일은 가상 · 신고를 전송하지 않음 · MIT License</footer>
+  </main>
 </div>
-<main id="main" class="wrap main" tabindex="-1">
-  <section id="tab-replay" class="tab-panel" hidden></section>
-  <section id="tab-demo" class="tab-panel" hidden>
-    <div id="voyage"></div>
-    <ol class="stepper" id="stepper" aria-label="진행 단계"></ol>
-    <div id="stepBody"></div>
-  </section>
-  <section id="tab-eval" class="tab-panel" hidden></section>
-  <section id="tab-scope" class="tab-panel" hidden></section>
-</main>
-<footer class="wrap app-footer">
-  CrewDiff PoC · 해운 AX 공모전 출품용 개념 검증 · 합성 데이터 · MIT License
-</footer>
 <div id="toast" class="arrive-toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

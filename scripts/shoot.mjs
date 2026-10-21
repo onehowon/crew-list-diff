@@ -13,11 +13,17 @@ const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/M
 const PORT = 9334;
 
 const SCENES = [
-  { name: '1-input', q: '' },
-  { name: 'replay-2', q: 'tab=replay&scene=2', mobile: true },
-  { name: 'replay-3', q: 'tab=replay&scene=3' },
-  { name: 'replay-4', q: 'tab=replay&scene=4' },
-  { name: 'replay-6', q: 'tab=replay&scene=6', mobile: true },
+  { name: '0-ships', q: '', mobile: true },
+  { name: '0-ship', q: 'view=ship', mobile: true },
+  { name: '0-compare', q: 'view=compare' },
+  { name: '0-inquiry', q: 'view=inquiry', mobile: true },
+  { name: '0-report', q: 'view=report' },
+  { name: 'demo-1', q: 'demo=1', mobile: true },
+  { name: 'demo-2', q: 'demo=2' },
+  { name: 'demo-3', q: 'demo=3' },
+  { name: 'demo-4', q: 'demo=4' },
+  { name: 'demo-5', q: 'demo=5' },
+  { name: 'demo-6', q: 'demo=6', mobile: true },
   { name: '1-detail', q: 'step=1&scenario=2' },
   { name: '2-ai-compare', q: 'step=2&scenario=6&item=C001' },
   { name: '1-normalized', q: 'step=1&scenario=1&run=1' },
@@ -65,7 +71,7 @@ const LAYOUT_CHECK = `(() => {
       if (t.scrollWidth > t.clientWidth + 1) out.push('표 가로 잘림(스크롤 필요) ' + (t.scrollWidth - t.clientWidth) + 'px: ' + (t.querySelector('th')?.textContent || '').slice(0, 15));
     }
   }
-  for (const el of document.querySelectorAll('.btn, .cls, .chip, .Label, .top-tab, .stepper .st-title')) {
+  for (const el of document.querySelectorAll('.btn, .cls, .chip, .Label, .top-tab, .stepper .st-title, .st-badge, .nav-l')) {
     if (!visible(el)) continue;
     if (el.scrollWidth > el.clientWidth + 1) out.push('글자 잘림 「' + el.textContent.trim().slice(0, 20) + '」');
   }
