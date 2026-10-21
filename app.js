@@ -448,13 +448,34 @@ function renderEval() {
   const ds = ev.current.dataset;
   const missed = (r) => Object.entries(r.engine.review.missedErrorsByRule).map(([k, v]) => `${k} ${v}`).join(', ') || '없음';
   const total = ds.dev.labels + ds.holdout.labels + ev.h3.dataset.holdout3.labels + ev.h4.dataset.holdout4.labels;
+  const mr = ev.mail.runs;
+  const mrow = (label, f) => `<tr><td>${label}</td>${mr.map((r) => `<td class="${r.name.startsWith('LLM') ? 'engine' : ''}">${f(r)}</td>`).join('')}</tr>`;
+  const mailTable = `<div class="table-wrap"><table class="metric-table"><thead><tr><th>지표</th>${mr.map((r) => `<th>${h(r.name)}</th>`).join('')}</tr></thead><tbody>
+    ${mrow('반영할 지시 재현율 (맞힘/전체)', (r) => `${pc(r.recall)} (${r.tp}/${r.gold})`)}
+    ${mrow('정밀도 (맞힘/낸 지시)', (r) => `${pc(r.precision)} (${r.tp}/${r.tp + r.fp})`)}
+    <tr class="key">${mr.map((r, i) => (i ? '' : '<td>함정(부정·취소·조건·인용 등)을 반영으로 읽음</td>')).join('')}${mr.map((r) => `<td>${r.trapApplied} / ${r.trapTotal}</td>`).join('')}</tr>
+  </tbody></table></div>`;
+  const fcols = [['engine', '본 엔진'], ['baselineId', '기준선2 신분증번호 키'], ['baselineIdMail', '기준선3 + 같은 메일 지시']];
+  const frow = (label, f, cls = '') => `<tr class="${cls}"><td>${label}</td>${fcols.map(([c]) => `<td class="${c === 'engine' ? 'engine' : ''}">${f(ev.fin.splits.holdout[c])}</td>`).join('')}</tr>`;
+  const finTable = `<div class="table-wrap"><table class="metric-table"><thead><tr><th>지표 (H1·H2, 쌍 60, 실제 오류 84)</th>${fcols.map((c) => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
+    ${frow('개별 검토 비율 (÷ 수정본 칸 수)', (x) => pc(x.review.ratio))}
+    ${frow('일괄 승인 후보 (근거 확인 후 채택)', (x) => String(x.workload.batch))}
+    ${frow('검토 대상 밖으로 빠진 실제 오류', (x) => String(x.review.missedErrorsOutside), 'key')}
+  </tbody></table></div>`;
   el.innerHTML = `
-  <h2 class="section-title">평가 결과 — 대조·분류 엔진, 합성 데이터</h2>
+  <h2 class="section-title">평가 결과 — 합성 데이터</h2>
+  <div class="two-col">
+    <div class="panel"><div class="panel-head"><h3>① 메일 지시 해석: 규칙 파서 vs LLM</h3><span class="muted small">메일 ${ev.mail.runs[0].mails}통 · 별도 작성자 출제</span></div><div class="panel-body">${mailTable}
+      <p class="small" style="margin:8px 0 0">시험지(eval/mail-challenge)는 규칙 파서 코드를 보지 않은 별도 작성자가 명세만 보고 만들었고, 어느 쪽도 실행하기 전에 커밋했습니다. LLM은 정답을 보지 않고 고정 프롬프트로 메일만 읽었습니다(${h(ev.mail.llmMeta?.runner || '')}, ${h(ev.mail.llmMeta?.model || '')}). <b>한계:</b> 출제자와 해석자가 같은 계열 모델이라 문체가 익숙했을 수 있고, 실제 메일이 아닌 합성 102통이며, API 재실행 시 결과가 달라질 수 있습니다. 출력 원본: <code>eval/mail-challenge/llm-*.json</code>. 이 결과는 메일 해석만 잰 것이며, 앱 화면의 메일 해석은 아직 규칙 파서입니다.</p></div></div>
+    <div class="panel"><div class="panel-head"><h3>② 같은 메일 정보를 준 비교 (제출 버전, 참고값)</h3></div><div class="panel-body">${finTable}
+      <p class="small" style="margin:8px 0 0">기준선3은 단순 대조에 엔진과 <b>같은 메일 지시</b>를 줬습니다. 같은 정보를 주면 놓친 오류는 둘 다 0이고, 엔진의 차이는 <b>개별 검토량</b>(표기 차이·인물 대응·오류 규칙)에서 나옵니다. 이미 결과를 본 홀드아웃을 지금 코드로 다시 잰 값이라 참고값입니다(<code>docs/eval-final.md</code>, H3·H4 포함). H4는 60쌍 모두 문서 차단 → 수동 검토(절감 아님).</p></div></div>
+  </div>
+  <h3 class="section-title" style="margin-top:24px">개발 과정 기록 — 각 홀드아웃의 첫 측정</h3>
   <p class="section-lead">합성 수정본 쌍 320개(개발 140 · 홀드아웃 H1·H2 60 · H3 60 · H4 60), 라벨된 실질 변경 ${total}건. 각 홀드아웃은 한 번만 씁니다. <b>합성 데이터 결과라 실제 현장 명부·메일에서는 다를 수 있습니다.</b> 현장 업무시간 절감은 주장하지 않으며 후속 PoC 과제입니다.</p>
   <div class="panel eval-summary"><b>요약 — 세 홀드아웃의 1회차를 모두 공개하며 하나로 합치지 않습니다</b><ul class="facts small" style="margin:6px 0 0">
     <li><b>개발에 쓰지 않은 서식(H1·H2)</b>: 확인 대상에서 빠진 실제 오류 ${first.engine.review.missedErrorsOutside}건(단순 대조는 ${first.baselineRow.review.missedErrorsOutside}건·${first.baselineId.review.missedErrorsOutside}건), 담당자가 개별 확인할 범위 ${pc(first.engine.review.ratio)}.</li>
     <li><b>처음 보는 날짜·머리글(H3)</b>: 놓친 오류는 ${h3.engine.review.missedErrorsOutside}건이었지만 경보가 많아(쌍당 ${h3.engine.falseAlarms.perPair.toFixed(2)}건) 단순 신분증번호 대조(${h3.baselineId.falseAlarms.perPair.toFixed(2)}건)보다 확인 부담이 컸습니다.</li>
-    <li><b>처음 보는 언어의 머리글(H4)</b>: 명부를 읽지 못했습니다(실질 변경 재현율 ${pc(h4.engine.substantiveRecall.rate)}). 지금은 이런 문서를 자동으로 막고 사람에게 넘깁니다. 실서비스는 AI 추출로 보완할 계획이며 그 성능은 아직 측정하지 않았습니다.</li>
+    <li><b>처음 보는 언어의 머리글(H4)</b>: 명부를 읽지 못했습니다(실질 변경 재현율 ${pc(h4.engine.substantiveRecall.rate)}). 지금은 이런 문서를 자동으로 막고 사람에게 넘깁니다. 실서비스는 AI로 머리글을 매핑할 계획이며, 머리글 매핑 AI의 성능은 아직 측정하지 않았습니다(메일 해석 AI만 위 ①에서 측정).</li>
   </ul></div>
   <h3 class="section-title">1. 개발에 쓰지 않은 서식 — 첫 측정</h3>
   <div class="panel" style="margin-top:8px"><div class="panel-head"><h3>H1·H2 1회차(한국어 머리글 · 약어 머리글·미국식 날짜)</h3><span class="muted small">쌍 ${first.engine.pairs} · 라벨 ${first.engine.labels.total} · 오류 ${first.engine.labels.suspect}</span></div>
@@ -580,8 +601,8 @@ function download() {
 
 async function loadEval() {
   try {
-    const [cur, first, h3, h4] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json', 'docs/eval-H4-first-run.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
-    state.eval = { current: cur, first, h3, h4 };
+    const [cur, first, h3, h4, fin, mail] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json', 'docs/eval-H4-first-run.json', 'docs/eval-final.json', 'docs/mail-challenge-result.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
+    state.eval = { current: cur, first, h3, h4, fin, mail };
   } catch (err) {
     state.eval = { error: err.message };
   }
