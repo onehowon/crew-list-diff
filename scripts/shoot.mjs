@@ -13,7 +13,7 @@ const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/M
 const PORT = 9334;
 
 const SCENES = [
-  { name: '1-input', q: 'step=1&scenario=1' },
+  { name: '1-input', q: '' },
   { name: '1-normalized', q: 'step=1&scenario=1&run=1' },
   { name: '2-crew-change', q: 'step=2&scenario=1&item=C003', mobile: true },
   { name: '2-errors', q: 'step=2&scenario=2&item=C001', mobile: true },

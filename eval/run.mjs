@@ -256,7 +256,7 @@ export function toMarkdown(res, { titles = {}, header = true } = {}) {
   return L.join('\n');
 }
 
-// docs/eval-result.md: 대표값 H4 1회차 → 바로 아래 H3 1회차(개선 전/후 비교) → H1·H2 1회차(수정 전) → H1·H2 수정 후 → 개발 세트
+// docs/eval-result.md: H4 1회차 → 바로 아래 H3 1회차(개선 전/후 비교) → H1·H2 1회차(수정 전) → H1·H2 수정 후 → 개발 세트
 function compareTable(h4, h3) {
   const e4 = h4.splits.holdout4, e3 = h3.splits.holdout3;
   const rows = [

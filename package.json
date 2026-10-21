@@ -8,6 +8,7 @@
     "test": "node --test test/*.test.mjs",
     "gen": "node eval/gen.mjs",
     "eval": "node eval/run.mjs",
+    "bench": "node eval/bench.mjs",
     "serve": "python3 -m http.server 8810"
   },
   "license": "MIT"
