@@ -1,17 +1,17 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js';
-import { compareCrewLists } from './lib/engine.js';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js';
-import { colLetter, splitRows } from './lib/parse.js';
-import { CLASS_LABEL } from './lib/classify.js';
-import { RULES } from './lib/rules.js';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js';
-import { DIRECTIVE_LABEL } from './lib/notice.js';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js';
-import { DEMO_KID } from './lib/demo-key.js';
-import { decodeJws, b64uJson } from './lib/jose.js';
-import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js';
+import { SCENARIOS } from './data/scenarios.js?v=202610211536';
+import { compareCrewLists } from './lib/engine.js?v=202610211536';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610211536';
+import { colLetter, splitRows } from './lib/parse.js?v=202610211536';
+import { CLASS_LABEL } from './lib/classify.js?v=202610211536';
+import { RULES } from './lib/rules.js?v=202610211536';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610211536';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610211536';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610211536';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610211536';
+import { DEMO_KID } from './lib/demo-key.js?v=202610211536';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610211536';
+import { SHIPS, STAGE, HERO_CLOCK } from './data/ui-ships.js?v=202610211536';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
