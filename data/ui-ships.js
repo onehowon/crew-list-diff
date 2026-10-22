@@ -22,7 +22,7 @@ export const STAGE = {
   v2: { label: '대조 필요', tone: 'todo', sub: '수정본 대조 전' },
   asked: { label: '선사 문의 중', tone: 'wait', sub: '회신 대기' },
   reply: { label: '대조 필요', tone: 'todo', sub: '회신 도착 · 다시 대조' },
-  final: { label: '확정', tone: 'ok', sub: '신고 자료 준비 가능' },
+  final: { label: '확정', tone: 'ok', sub: '공통 명부 확정' },
 };
 
 // 대표 흐름(사례 2 → 5)의 단계별 시스템 시각(가상). 시연이 아닐 때 상단 시계에 쓴다.
