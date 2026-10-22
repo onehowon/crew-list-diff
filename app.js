@@ -1,19 +1,19 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js?v=202610220148';
-import { compareCrewLists } from './lib/engine.js?v=202610220148';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610220148';
-import { colLetter, splitRows } from './lib/parse.js?v=202610220148';
-import { CLASS_LABEL } from './lib/classify.js?v=202610220148';
-import { RULES } from './lib/rules.js?v=202610220148';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610220148';
-import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610220148';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610220148';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610220148';
-import { DEMO_KID } from './lib/demo-key.js?v=202610220148';
-import { decodeJws, b64uJson } from './lib/jose.js?v=202610220148';
-import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610220148';
-import { baselineIdKeyWithMail } from './eval/baselines.mjs?v=202610220148';
-import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610220148';
+import { SCENARIOS } from './data/scenarios.js?v=202610220155';
+import { compareCrewLists } from './lib/engine.js?v=202610220155';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610220155';
+import { colLetter, splitRows } from './lib/parse.js?v=202610220155';
+import { CLASS_LABEL } from './lib/classify.js?v=202610220155';
+import { RULES } from './lib/rules.js?v=202610220155';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610220155';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610220155';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610220155';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610220155';
+import { DEMO_KID } from './lib/demo-key.js?v=202610220155';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610220155';
+import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610220155';
+import { baselineIdKeyWithMail } from './eval/baselines.mjs?v=202610220155';
+import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610220155';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -575,22 +575,25 @@ function renderEval() {
     <tr class="key">${mr.map((r, i) => (i ? '' : '<td>함정(부정·취소·조건·인용 등)을 반영으로 읽음</td>')).join('')}${mr.map((r) => `<td>${r.trapApplied} / ${r.trapTotal}</td>`).join('')}</tr>
   </tbody></table></div>`;
   const fcols = [['engine', 'CrewDiff'], ['baselineId', '엑셀식 비교(여권번호로 짝지음)'], ['baselineIdMail', '엑셀식 비교 + 같은 메일 정보']];
-  const frow = (label, f, cls = '') => `<tr class="${cls}"><td>${label}</td>${fcols.map(([c]) => `<td class="${c === 'engine' ? 'engine' : ''}">${f(ev.fin.splits.holdout[c])}</td>`).join('')}</tr>`;
-  const finTable = `<div class="table-wrap"><table class="metric-table"><thead><tr><th>지표 (개발 때 쓰지 않은 양식 시험, 60쌍, 실제 오류 84)</th>${fcols.map((c) => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
-    ${frow('개별 검토 비율 (÷ 수정본 칸 수)', (x) => pc(x.review.ratio))}
-    ${frow('일괄 반영 후보 (근거 확인 후 반영)', (x) => String(x.workload.batch))}
-    ${frow('검토 대상 밖으로 빠진 실제 오류', (x) => String(x.review.missedErrorsOutside), 'key')}
+  const frow = (label, src, f, cls = '') => `<tr class="${cls}"><td>${label}</td>${fcols.map(([c]) => `<td class="${c === 'engine' ? 'engine' : ''}">${f(src[c])}</td>`).join('')}</tr>`;
+  const h5s = ev.h5.splits.holdout, fins = ev.fin.splits.holdout;
+  const perShip = (x) => `${x.review.units}곳 (명부당 ${(x.review.units / x.pairs).toFixed(1)}곳, ${pc(x.review.ratio)})`;
+  const finTable = `<div class="table-wrap"><table class="metric-table"><thead><tr><th>지표</th>${fcols.map((c) => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
+    ${frow(`<b>새 시험 ${h5s.engine.pairs}건(코드 고정 후 1회차)</b> 하나씩 볼 곳`, h5s, perShip, 'key')}
+    ${frow(`새 시험 — 빠진 실제 오류(${h5s.engine.labels.suspect}건 중)`, h5s, (x) => String(x.review.missedErrorsOutside))}
+    ${frow('기존 60건(재측정 참고값) 하나씩 볼 곳', fins, perShip)}
+    ${frow(`기존 60건 — 빠진 실제 오류(${fins.engine.labels.suspect}건 중)`, fins, (x) => String(x.review.missedErrorsOutside))}
   </tbody></table></div>`;
   const llm = mr.find((r) => /근거/.test(r.name)) || mr[mr.length - 1];
-  const fh = ev.fin.splits.holdout;
+  const fh = ev.h5.splits.holdout;
   el.innerHTML = `
   <h2 class="section-title">평가 결과${info('가상으로 만든 명부·메일로 시험한 결과입니다. 실제 현장 자료에서는 달라질 수 있습니다.')}</h2>
   <div class="eval-cards">
     <div class="eval-card"><i class="ti ti-mail-check" aria-hidden="true"></i><div class="eval-big">${llm.tp}<small>/${llm.gold}건</small></div><div><b>메일 요청을 AI가 맞게 읽음</b><div class="small muted" title="“하지 말라”, “취소”, 조건부, 이전 메일 인용 같은 함정 문장">함정 문장 오독 ${llm.trapApplied}/${llm.trapTotal}</div></div></div>
-    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${pc(fh.baselineIdMail.review.ratio)} <small>→</small> ${pc(fh.engine.review.ratio)}</div><div><b>사람이 하나씩 볼 칸</b><div class="small muted" title="같은 메일 정보를 준 엑셀식 비교 대비">놓친 실제 오류 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
+    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${(fh.baselineIdMail.review.units / fh.pairs).toFixed(1)} <small>→</small> ${(fh.engine.review.units / fh.pairs).toFixed(1)}<small>곳</small></div><div><b>명부 1건당 하나씩 볼 곳</b><div class="small muted" title="코드를 고정한 뒤 새로 만든 가상 사례 ${fh.pairs}건, 같은 메일 정보를 준 엑셀식 비교 대비. 대조 엔진 평가이며 LLM 메일 해석 시험과는 별도">새 시험 · 놓친 실제 오류 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
     <div class="eval-card"><i class="ti ti-hand-stop" aria-hidden="true"></i><div class="eval-big small-big">멈춤</div><div><b>못 읽는 양식은 사람에게 넘김</b><div class="small muted" title="명부를 읽지 못하면 결정 단계로 가지 못하게 막습니다">시험 60쌍 모두 차단</div></div></div>
   </div>
-  <div class="panel eval-fin"><div class="panel-head"><h3>엑셀식 비교와 견줌${info('같은 메일 정보를 준 엑셀식 비교와 비교. 이미 결과를 본 홀드아웃을 지금 코드로 다시 잰 참고값입니다.')}</h3></div><div class="panel-body">${finTable}</div></div>
+  <div class="panel eval-fin"><div class="panel-head"><h3>엑셀식 비교와 견줌${info('같은 메일 정보를 준 엑셀식 비교와 비교. 대조 엔진 평가이며(메일은 규칙 방식으로 읽음), LLM 메일 해석 시험과는 따로 수행했습니다. 새 시험은 코드를 고정한 뒤 처음 만든 사례로 한 번만 잰 값, 기존 60건은 결과를 본 뒤 고친 코드로 다시 잰 참고값입니다.')}</h3></div><div class="panel-body">${finTable}</div></div>
   <details class="raw panel eval-more"><summary>시험 방법·상세 표 보기</summary><div class="eval-more-body">
   <div class="two-col">
     <div class="panel"><div class="panel-head"><h3>① 메일 해석: 규칙 방식 vs AI</h3><span class="muted small">메일 ${ev.mail.runs[0].mails}통 · 별도 작성자 출제</span></div><div class="panel-body">${mailTable}
@@ -1265,8 +1268,8 @@ function download() {
 
 async function loadEval() {
   try {
-    const [cur, first, h3, h4, fin, mail] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json', 'docs/eval-H4-first-run.json', 'docs/eval-final.json', 'docs/mail-challenge-result.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
-    state.eval = { current: cur, first, h3, h4, fin, mail };
+    const [cur, first, h3, h4, fin, mail, h5] = await Promise.all(['docs/eval-result.json', 'docs/eval-holdout-first-run.json', 'docs/eval-H3-first-run.json', 'docs/eval-H4-first-run.json', 'docs/eval-final.json', 'docs/mail-challenge-result.json', 'docs/eval-H5-first-run.json'].map((u) => fetch(u).then((r) => { if (!r.ok) throw new Error(`${u} ${r.status}`); return r.json(); })));
+    state.eval = { current: cur, first, h3, h4, fin, mail, h5 };
   } catch (err) {
     state.eval = { error: err.message };
   }
