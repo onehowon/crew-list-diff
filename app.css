@@ -992,3 +992,5 @@ details.law-fold { margin-top: 24px; }
   .rt-map { min-height: 240px; height: 240px; }
   .rt-side { padding: 12px 12px; }
 }
+.excel-line { margin: 4px 0 14px; padding: 10px 14px; background: #f2f6fb; border: 1px solid var(--line, #dde3ea); border-radius: 10px; font-size: 13.5px; color: #3b4f68; }
+.excel-line b { color: var(--ink, #142033); }

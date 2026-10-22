@@ -1,18 +1,19 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js?v=202610220142';
-import { compareCrewLists } from './lib/engine.js?v=202610220142';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610220142';
-import { colLetter, splitRows } from './lib/parse.js?v=202610220142';
-import { CLASS_LABEL } from './lib/classify.js?v=202610220142';
-import { RULES } from './lib/rules.js?v=202610220142';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610220142';
-import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610220142';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610220142';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610220142';
-import { DEMO_KID } from './lib/demo-key.js?v=202610220142';
-import { decodeJws, b64uJson } from './lib/jose.js?v=202610220142';
-import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610220142';
-import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610220142';
+import { SCENARIOS } from './data/scenarios.js?v=202610220148';
+import { compareCrewLists } from './lib/engine.js?v=202610220148';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610220148';
+import { colLetter, splitRows } from './lib/parse.js?v=202610220148';
+import { CLASS_LABEL } from './lib/classify.js?v=202610220148';
+import { RULES } from './lib/rules.js?v=202610220148';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610220148';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610220148';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610220148';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610220148';
+import { DEMO_KID } from './lib/demo-key.js?v=202610220148';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610220148';
+import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610220148';
+import { baselineIdKeyWithMail } from './eval/baselines.mjs?v=202610220148';
+import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610220148';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -302,6 +303,15 @@ function basisText(it) {
   return parts.join(' · ');
 }
 
+// 같은 수정본·메일을 엑셀식 비교(여권번호로 짝지음 + 같은 메일 정보)로 돌렸을 때 하나씩 볼 곳 수(eval/baselines.mjs와 같은 코드)
+function excelCompareLine(r) {
+  if (r.blocked || !state.inputs?.a || !state.inputs?.b) return '';
+  let n;
+  try { n = baselineIdKeyWithMail(state.inputs.a, state.inputs.b, state.inputs.mail || '').alarms.filter((a) => a.explained == null).length; } catch { return ''; }
+  const mine = r.items.filter((it) => it.class !== 'expected').length;
+  return `<div class="excel-line"><i class="ti ti-table" aria-hidden="true"></i> 같은 자료를 엑셀식으로 비교했다면 하나씩 볼 곳 <b>${n}곳</b> → 이 도구 <b>${mine}곳</b>${r.summary.expected ? ` (+ 메일 근거 있는 변경 ${r.summary.expected}건)` : ''}${info('엑셀식 비교: 여권번호로 같은 사람을 짝지은 뒤 칸마다 글자를 비교하고, 같은 메일 지시와 값이 맞는 칸은 뺀 것. 평가에 쓴 기준선과 같은 코드로 이 화면에서 바로 계산함.')}</div>`;
+}
+
 function step2() {
   const r = state.report;
   const s = r.summary;
@@ -324,6 +334,7 @@ function step2() {
     ${stat('expected', '예상된 변경', s.expected, '메일 근거 있음 · 근거 보고 반영')}
     <div class="stat cosmetic" title="대소문자·공백·날짜 형식 차이. 자동 정리, 경보 안 함"><span class="stat-n">${s.cosmetic}</span><span class="stat-l">표기 차이</span></div>
   </div>
+  ${excelCompareLine(r)}
   ${documentAlertBox(r)}${columnAlertBox(r)}
   ${state.scenario === 6 && r.mailReader === 'ai' ? readerCompare() : ''}
   <div class="compare one">
@@ -907,7 +918,7 @@ function renderShips() {
     </button></li>`;
   }).join('');
   $('#pg-ships').innerHTML = `<div class="pg-head"><h1 class="pg-title">입항 예정 선박${info('입항 순. 마감은 출입국 보고 마감(입항 2시간 전). 배를 누르면 항차 탭이 열립니다.')}</h1></div>
-    ${!DEMO.on && !hintSeen() ? `<div class="demo-hint"><div>선사가 보낸 수정본과 정정 메일을 대조해 <b>바뀐 곳 중 꼭 봐야 할 곳만</b> 골라 줍니다. <b>시연 시작</b>을 눌러 보세요.</div><button type="button" class="btn btn-sm btn-primary" data-act="demo-start">시연 시작</button><button type="button" class="btn btn-sm" data-act="hint-close" aria-label="안내 닫기">닫기</button></div>` : ''}
+    ${!DEMO.on && !hintSeen() ? `<div class="demo-hint"><div>선사가 보낸 수정본과 정정 메일을 대조해 <b>바뀐 곳 중 꼭 봐야 할 곳만</b> 골라 줍니다. <b>대표 사례 따라 보기</b>를 눌러 보세요(수정본 도착 → 근거 확인 → 선사 문의 → 회신 반영 → 공통 명부 확정).</div><button type="button" class="btn btn-sm btn-primary" data-act="demo-start">대표 사례 따라 보기</button><button type="button" class="btn btn-sm" data-act="hint-close" aria-label="안내 닫기">닫기</button></div>` : ''}
     <div class="kpis">${kpi(cnt((s) => ['new', 'v2', 'reply'].includes(s.stage)), '대조할 명부', 'todo')}${kpi(cnt((s) => s.stage === 'asked'), '선사 문의 중', 'wait')}${kpi(cnt((s) => s.stage === 'final'), '확정', 'ok')}</div>
     <div class="panel ship-list-panel">
       <div class="ship-head" aria-hidden="true"><span>상태</span><span>선박</span><span>입항</span><span>마감까지</span><span>봐야 할 곳</span></div>
