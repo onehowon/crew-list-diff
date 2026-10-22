@@ -1,19 +1,19 @@
 // CrewDiff 데모 화면. 엔진(lib/)을 브라우저에서 그대로 돌린다. 서버·로그인·설치 없음.
-import { SCENARIOS } from './data/scenarios.js?v=202610220155';
-import { compareCrewLists } from './lib/engine.js?v=202610220155';
-import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610220155';
-import { colLetter, splitRows } from './lib/parse.js?v=202610220155';
-import { CLASS_LABEL } from './lib/classify.js?v=202610220155';
-import { RULES } from './lib/rules.js?v=202610220155';
-import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610220155';
-import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610220155';
-import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610220155';
-import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610220155';
-import { DEMO_KID } from './lib/demo-key.js?v=202610220155';
-import { decodeJws, b64uJson } from './lib/jose.js?v=202610220155';
-import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610220155';
-import { baselineIdKeyWithMail } from './eval/baselines.mjs?v=202610220155';
-import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610220155';
+import { SCENARIOS } from './data/scenarios.js?v=202610220557';
+import { compareCrewLists } from './lib/engine.js?v=202610220557';
+import { ROW_FIELDS, HEADER_FIELDS, FIELD, fieldLabel } from './lib/fields.js?v=202610220557';
+import { colLetter, splitRows } from './lib/parse.js?v=202610220557';
+import { CLASS_LABEL } from './lib/classify.js?v=202610220557';
+import { RULES } from './lib/rules.js?v=202610220557';
+import { LAWS, IMMIGRATION_PENALTY, impactOf } from './lib/impact.js?v=202610220557';
+import { DIRECTIVE_LABEL } from './lib/notice.js?v=202610220557';
+import { toFal5Csv, toBaseCsv, pendingItems, DECISION_LABEL } from './lib/export.js?v=202610220557';
+import { buildConfirmation, signConfirmation, verifyConfirmation } from './lib/receipt.js?v=202610220557';
+import { DEMO_KID } from './lib/demo-key.js?v=202610220557';
+import { decodeJws, b64uJson } from './lib/jose.js?v=202610220557';
+import { SHIPS, STAGE, HERO_CLOCK, ROUTES } from './data/ui-ships.js?v=202610220557';
+import { baselineIdKeyWithMail } from './eval/baselines.mjs?v=202610220557';
+import { SENDER, MASTER, ME, KIND_BY_SCENARIO, TAG, AI_TYPE_SHORT, AI_SKIP_SHORT } from './data/ui-mails.js?v=202610220557';
 
 const $ = (s, el = document) => el.querySelector(s);
 const h = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -590,7 +590,7 @@ function renderEval() {
   <h2 class="section-title">평가 결과${info('가상으로 만든 명부·메일로 시험한 결과입니다. 실제 현장 자료에서는 달라질 수 있습니다.')}</h2>
   <div class="eval-cards">
     <div class="eval-card"><i class="ti ti-mail-check" aria-hidden="true"></i><div class="eval-big">${llm.tp}<small>/${llm.gold}건</small></div><div><b>메일 요청을 AI가 맞게 읽음</b><div class="small muted" title="“하지 말라”, “취소”, 조건부, 이전 메일 인용 같은 함정 문장">함정 문장 오독 ${llm.trapApplied}/${llm.trapTotal}</div></div></div>
-    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${(fh.baselineIdMail.review.units / fh.pairs).toFixed(1)} <small>→</small> ${(fh.engine.review.units / fh.pairs).toFixed(1)}<small>곳</small></div><div><b>명부 1건당 하나씩 볼 곳</b><div class="small muted" title="코드를 고정한 뒤 새로 만든 가상 사례 ${fh.pairs}건, 같은 메일 정보를 준 엑셀식 비교 대비. 대조 엔진 평가이며 LLM 메일 해석 시험과는 별도">새 시험 · 놓친 실제 오류 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
+    <div class="eval-card"><i class="ti ti-zoom-check" aria-hidden="true"></i><div class="eval-big">${(fh.baselineIdMail.review.units / fh.baselineIdMail.pairs).toFixed(1)} <small>→</small> ${(fh.engine.review.units / fh.engine.pairs).toFixed(1)}<small>곳</small></div><div><b>명부 1건당 하나씩 볼 곳</b><div class="small muted" title="코드를 고정한 뒤 새로 만든 가상 사례 ${fh.engine.pairs}건, 같은 메일 정보를 준 엑셀식 비교 대비. 대조 엔진 평가이며 LLM 메일 해석 시험과는 별도">새 시험 ${fh.engine.pairs}건 · 놓친 실제 오류 ${fh.engine.review.missedErrorsOutside}건</div></div></div>
     <div class="eval-card"><i class="ti ti-hand-stop" aria-hidden="true"></i><div class="eval-big small-big">멈춤</div><div><b>못 읽는 양식은 사람에게 넘김</b><div class="small muted" title="명부를 읽지 못하면 결정 단계로 가지 못하게 막습니다">시험 60쌍 모두 차단</div></div></div>
   </div>
   <div class="panel eval-fin"><div class="panel-head"><h3>엑셀식 비교와 견줌${info('같은 메일 정보를 준 엑셀식 비교와 비교. 대조 엔진 평가이며(메일은 규칙 방식으로 읽음), LLM 메일 해석 시험과는 따로 수행했습니다. 새 시험은 코드를 고정한 뒤 처음 만든 사례로 한 번만 잰 값, 기존 60건은 결과를 본 뒤 고친 코드로 다시 잰 참고값입니다.')}</h3></div><div class="panel-body">${finTable}</div></div>
