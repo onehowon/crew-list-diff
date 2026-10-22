@@ -1,0 +1,40 @@
+{
+  "seed": 20261205,
+  "pairs": 60,
+  "normal": {
+    "requested": 154,
+    "reqExpected": 150,
+    "reqShownForReview": 4,
+    "reqMissed": 0,
+    "unreflected": 22,
+    "unreflectedCaught": 22,
+    "otherErrors": 80,
+    "otherErrorsCaught": 80,
+    "errorsAsExpected": 0,
+    "review": 185
+  },
+  "oneMissed": {
+    "requested": 154,
+    "reqExpected": 100,
+    "reqShownForReview": 54,
+    "reqMissed": 0,
+    "unreflected": 22,
+    "unreflectedCaught": 13,
+    "otherErrors": 80,
+    "otherErrorsCaught": 80,
+    "errorsAsExpected": 0,
+    "review": 228
+  },
+  "allMissed": {
+    "requested": 154,
+    "reqExpected": 0,
+    "reqShownForReview": 154,
+    "reqMissed": 0,
+    "unreflected": 22,
+    "unreflectedCaught": 0,
+    "otherErrors": 80,
+    "otherErrorsCaught": 80,
+    "errorsAsExpected": 0,
+    "review": 316
+  }
+}
