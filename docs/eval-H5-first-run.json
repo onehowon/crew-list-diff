@@ -1,0 +1,427 @@
+{
+  "seed": 20261205,
+  "generatedAt": "2026-10-22T01:47:24.536Z",
+  "splits": {
+    "holdout": {
+      "engine": {
+        "pairs": 60,
+        "cellsInRevised": 13233,
+        "labels": {
+          "total": 335,
+          "expected": 154,
+          "check": 79,
+          "suspect": 102
+        },
+        "cosmeticCells": 1045,
+        "substantiveRecall": {
+          "detected": 335,
+          "total": 335,
+          "missed": 0,
+          "rate": 1
+        },
+        "falseAlarms": {
+          "total": 0,
+          "perPair": 0,
+          "cosmeticAlarms": 0
+        },
+        "review": {
+          "units": 185,
+          "perPair": 3.0833333333333335,
+          "ratio": 0.013980201012619965,
+          "missedErrorsOutside": 0,
+          "missedErrorsByRule": {},
+          "errorsTotal": 102
+        },
+        "perRule": {
+          "R1": {
+            "n": 7,
+            "detected": 7,
+            "asSuspect": 7,
+            "ruleCorrect": 7
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7,
+            "asSuspect": 7,
+            "ruleCorrect": 7
+          },
+          "R3": {
+            "n": 20,
+            "detected": 20,
+            "asSuspect": 20,
+            "ruleCorrect": 20
+          },
+          "R4": {
+            "n": 11,
+            "detected": 11,
+            "asSuspect": 11,
+            "ruleCorrect": 11
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9,
+            "asSuspect": 9,
+            "ruleCorrect": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12,
+            "asSuspect": 12,
+            "ruleCorrect": 12
+          },
+          "R7": {
+            "n": 14,
+            "detected": 14,
+            "asSuspect": 14,
+            "ruleCorrect": 14
+          },
+          "R8": {
+            "n": 22,
+            "detected": 22,
+            "asSuspect": 22,
+            "ruleCorrect": 22
+          }
+        },
+        "workload": {
+          "review": 185,
+          "batch": 150,
+          "blockedPairs": 0,
+          "blockedLabels": 0,
+          "blockedErrors": 0,
+          "missedErrorsOutside": 0
+        },
+        "suspect": {
+          "tp": 102,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.9714285714285714,
+          "recall": 1
+        },
+        "expected": {
+          "n": 154,
+          "correct": 150,
+          "predicted": 150,
+          "predictedWrong": 0,
+          "predictedButTruthSuspect": 0,
+          "accuracy": 0.974025974025974,
+          "precision": 1
+        },
+        "confusion": {
+          "expected>expected": 150,
+          "check>check": 79,
+          "suspect>suspect": 102,
+          "expected>check": 1,
+          "expected>suspect": 3
+        },
+        "evidence": {
+          "items": 335,
+          "ok": 335,
+          "rate": 1
+        },
+        "matching": {
+          "pairs": 1134,
+          "correct": 1134,
+          "accuracy": 1
+        },
+        "hardNegatives": {
+          "n": 10,
+          "expected": 10,
+          "suspect": 0
+        },
+        "items": 335,
+        "columnAlerts": {
+          "total": 0,
+          "perPair": 0
+        },
+        "missedChangesSample": []
+      },
+      "baselineRow": {
+        "pairs": 60,
+        "cellsInRevised": 13233,
+        "labels": {
+          "total": 335,
+          "expected": 154,
+          "check": 79,
+          "suspect": 102
+        },
+        "cosmeticCells": 1045,
+        "substantiveRecall": {
+          "detected": 316,
+          "total": 335,
+          "missed": 19,
+          "rate": 0.9432835820895522
+        },
+        "falseAlarms": {
+          "total": 4322,
+          "perPair": 72.03333333333333,
+          "cosmeticAlarms": 570
+        },
+        "review": {
+          "units": 5321,
+          "perPair": 88.68333333333334,
+          "ratio": 0.4021008085845991,
+          "missedErrorsOutside": 19,
+          "missedErrorsByRule": {
+            "R8": 19
+          },
+          "errorsTotal": 102
+        },
+        "perRule": {
+          "R1": {
+            "n": 7,
+            "detected": 7
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7
+          },
+          "R3": {
+            "n": 20,
+            "detected": 20
+          },
+          "R4": {
+            "n": 11,
+            "detected": 11
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12
+          },
+          "R7": {
+            "n": 14,
+            "detected": 14
+          },
+          "R8": {
+            "n": 22,
+            "detected": 3
+          }
+        },
+        "workload": {
+          "review": 5321,
+          "batch": 0,
+          "blockedPairs": 0,
+          "blockedLabels": 0,
+          "blockedErrors": 0,
+          "missedErrorsOutside": 19
+        }
+      },
+      "baselineId": {
+        "pairs": 60,
+        "cellsInRevised": 13233,
+        "labels": {
+          "total": 335,
+          "expected": 154,
+          "check": 79,
+          "suspect": 102
+        },
+        "cosmeticCells": 1045,
+        "substantiveRecall": {
+          "detected": 316,
+          "total": 335,
+          "missed": 19,
+          "rate": 0.9432835820895522
+        },
+        "falseAlarms": {
+          "total": 990,
+          "perPair": 16.5,
+          "cosmeticAlarms": 990
+        },
+        "review": {
+          "units": 1330,
+          "perPair": 22.166666666666668,
+          "ratio": 0.10050630998261921,
+          "missedErrorsOutside": 19,
+          "missedErrorsByRule": {
+            "R8": 19
+          },
+          "errorsTotal": 102
+        },
+        "perRule": {
+          "R1": {
+            "n": 7,
+            "detected": 7
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7
+          },
+          "R3": {
+            "n": 20,
+            "detected": 20
+          },
+          "R4": {
+            "n": 11,
+            "detected": 11
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12
+          },
+          "R7": {
+            "n": 14,
+            "detected": 14
+          },
+          "R8": {
+            "n": 22,
+            "detected": 3
+          }
+        },
+        "workload": {
+          "review": 1330,
+          "batch": 0,
+          "blockedPairs": 0,
+          "blockedLabels": 0,
+          "blockedErrors": 0,
+          "missedErrorsOutside": 19
+        }
+      },
+      "baselineIdMail": {
+        "pairs": 60,
+        "cellsInRevised": 13233,
+        "labels": {
+          "total": 335,
+          "expected": 154,
+          "check": 79,
+          "suspect": 102
+        },
+        "cosmeticCells": 1045,
+        "substantiveRecall": {
+          "detected": 335,
+          "total": 335,
+          "missed": 0,
+          "rate": 1
+        },
+        "falseAlarms": {
+          "total": 990,
+          "perPair": 16.5,
+          "cosmeticAlarms": 990
+        },
+        "review": {
+          "units": 1236,
+          "perPair": 20.6,
+          "ratio": 0.09340285649512582,
+          "missedErrorsOutside": 0,
+          "missedErrorsByRule": {},
+          "errorsTotal": 102
+        },
+        "perRule": {
+          "R1": {
+            "n": 7,
+            "detected": 7
+          },
+          "R2": {
+            "n": 7,
+            "detected": 7
+          },
+          "R3": {
+            "n": 20,
+            "detected": 20
+          },
+          "R4": {
+            "n": 11,
+            "detected": 11
+          },
+          "R5": {
+            "n": 9,
+            "detected": 9
+          },
+          "R6": {
+            "n": 12,
+            "detected": 12
+          },
+          "R7": {
+            "n": 14,
+            "detected": 14
+          },
+          "R8": {
+            "n": 22,
+            "detected": 22
+          }
+        },
+        "workload": {
+          "review": 1236,
+          "batch": 129,
+          "blockedPairs": 0,
+          "blockedLabels": 0,
+          "blockedErrors": 0,
+          "missedErrorsOutside": 0
+        }
+      }
+    }
+  },
+  "dataset": {
+    "dev": {
+      "pairs": 140,
+      "persons": 2724,
+      "labels": 776,
+      "byTruth": {
+        "expected": 364,
+        "check": 200,
+        "suspect": 212
+      },
+      "byRule": {
+        "R5": 24,
+        "R8": 47,
+        "R6": 19,
+        "R1": 16,
+        "R7": 21,
+        "R3": 40,
+        "R4": 33,
+        "R2": 12
+      },
+      "cosmetic": 2307,
+      "shuffled": 43,
+      "layouts": {
+        "D1": 47,
+        "D2": 47,
+        "D3": 46
+      }
+    },
+    "holdout": {
+      "pairs": 60,
+      "persons": 1181,
+      "labels": 335,
+      "byTruth": {
+        "expected": 154,
+        "check": 79,
+        "suspect": 102
+      },
+      "byRule": {
+        "R1": 7,
+        "R2": 7,
+        "R8": 22,
+        "R3": 20,
+        "R7": 14,
+        "R6": 12,
+        "R4": 11,
+        "R5": 9
+      },
+      "cosmetic": 1045,
+      "shuffled": 18,
+      "layouts": {
+        "H1": 30,
+        "H2": 30
+      }
+    }
+  },
+  "parserWarnings": {
+    "holdout": [
+      "추정 매핑: \"NAT'Y\" (4열) → nationality (값 모양: ISO 국가 코드) ×59",
+      "추정 매핑: \"TRAVEL DOC.\" (9열) → idType (값 모양: 신분증 종류 값) ×59",
+      "7번째 줄: 조건부 표현이 있어 지시로 쓰지 않음 — 관련 변경은 메일 근거 없는 변경으로 남음 ×6",
+      "8번째 줄: 조건부 표현이 있어 지시로 쓰지 않음 — 관련 변경은 메일 근거 없는 변경으로 남음 ×3",
+      "5번째 줄: 조건부 표현이 있어 지시로 쓰지 않음 — 관련 변경은 메일 근거 없는 변경으로 남음 ×2",
+      "9번째 줄: 조건부 표현이 있어 지시로 쓰지 않음 — 관련 변경은 메일 근거 없는 변경으로 남음 ×1",
+      "6번째 줄: 조건부 표현이 있어 지시로 쓰지 않음 — 관련 변경은 메일 근거 없는 변경으로 남음 ×1"
+    ]
+  },
+  "note": "H5 1회차: 새 시드 20261205, 엔진 커밋 fc115c6 고정, 결과를 본 뒤 코드 수정 없음"
+}
